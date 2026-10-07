@@ -1,0 +1,1377 @@
+import React, { useState, useMemo } from 'react';
+import { usePlanner } from '../../context/PlannerContext';
+import { RingProgress } from '../ui/RingProgress';
+import { Modal } from '../ui/Modal';
+import {
+  Wallet,
+  Plus,
+  Check,
+  RotateCcw,
+  AlertCircle,
+  Calendar,
+  ArrowRight,
+  TrendingUp,
+  TrendingDown,
+  Layers,
+  Settings2,
+  Trash2,
+  Edit2,
+  Sliders,
+  DollarSign,
+  PiggyBank,
+} from 'lucide-react';
+import { BillItem, FinancialTransaction } from '../../types/planner';
+
+const CATEGORY_COLORS: Record<string, { bg: string; dot: string; text: string }> = {
+  Food: { bg: 'bg-teal-500', dot: 'bg-teal-500', text: 'text-teal-600' },
+  Transport: { bg: 'bg-blue-500', dot: 'bg-blue-500', text: 'text-blue-600' },
+  Home: { bg: 'bg-amber-500', dot: 'bg-amber-500', text: 'text-amber-600' },
+  Personal: { bg: 'bg-purple-500', dot: 'bg-purple-500', text: 'text-purple-600' },
+  Health: { bg: 'bg-rose-500', dot: 'bg-rose-500', text: 'text-rose-600' },
+  Entertainment: { bg: 'bg-indigo-500', dot: 'bg-indigo-500', text: 'text-indigo-600' },
+  Savings: { bg: 'bg-emerald-500', dot: 'bg-emerald-500', text: 'text-emerald-600' },
+};
+
+const FALLBACK_PALETTE = [
+  { bg: 'bg-emerald-500', dot: 'bg-emerald-500', text: 'text-emerald-600' },
+  { bg: 'bg-cyan-500', dot: 'bg-cyan-500', text: 'text-cyan-600' },
+  { bg: 'bg-pink-500', dot: 'bg-pink-500', text: 'text-pink-600' },
+  { bg: 'bg-violet-500', dot: 'bg-violet-500', text: 'text-violet-600' },
+];
+
+function getCategoryColor(category: string, idx: number) {
+  if (CATEGORY_COLORS[category]) {
+    return CATEGORY_COLORS[category];
+  }
+  return FALLBACK_PALETTE[idx % FALLBACK_PALETTE.length];
+}
+
+export const BudgetBillsView: React.FC = () => {
+  const {
+    settings,
+    updateSettings,
+    cashFlow,
+    bills,
+    markBillPaid,
+    unpayBill,
+    deleteBill,
+    updateBill,
+    addBill,
+    transactions,
+    addTransaction,
+    updateTransaction,
+    deleteTransaction,
+    currentDate,
+  } = usePlanner();
+
+  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'bills'>('overview');
+
+  // Mark Paid Modal state
+  const [payingBill, setPayingBill] = useState<BillItem | null>(null);
+  const [actualPaidAmount, setActualPaidAmount] = useState<number>(0);
+  const [paidDate, setPaidDate] = useState<string>(currentDate);
+
+  // Unpay Confirm Modal
+  const [unpayingBill, setUnpayingBill] = useState<BillItem | null>(null);
+
+  // Add / Edit Transaction Modal state
+  const [isTxModalOpen, setIsTxModalOpen] = useState(false);
+  const [editingTx, setEditingTx] = useState<FinancialTransaction | null>(null);
+  const [txType, setTxType] = useState<'expense' | 'income' | 'transfer'>('expense');
+  const [txAmount, setTxAmount] = useState<number>(35);
+  const [txCategory, setTxCategory] = useState('Food');
+  const [txDate, setTxDate] = useState(currentDate);
+  const [txNote, setTxNote] = useState('');
+
+  // Add / Edit Bill Modal state
+  const [isBillModalOpen, setIsBillModalOpen] = useState(false);
+  const [editingBill, setEditingBill] = useState<BillItem | null>(null);
+  const [billTitle, setBillTitle] = useState('');
+  const [billCategory, setBillCategory] = useState('Home');
+  const [billPlannedAmt, setBillPlannedAmt] = useState<number>(50);
+  const [billDueDate, setBillDueDate] = useState(currentDate);
+  const [billRepeat, setBillRepeat] = useState<'monthly' | 'none'>('monthly');
+
+  // Edit Budget Plan & Allocations Modal state
+  const [isBudgetPlanModalOpen, setIsBudgetPlanModalOpen] = useState(false);
+  const [planOpeningBalance, setPlanOpeningBalance] = useState<number>(100);
+  const [planPlannedIncome, setPlanPlannedIncome] = useState<number>(1200);
+  const [planPlannedSavings, setPlanPlannedSavings] = useState<number>(250);
+  const [planPeriodType, setPlanPeriodType] = useState<'monthly' | 'weekly' | 'paycheck' | 'custom'>('monthly');
+  const [planCategoryLimits, setPlanCategoryLimits] = useState<Record<string, number>>({
+    Food: 250,
+    Transport: 100,
+    Home: 200,
+    Personal: 150,
+  });
+  const [newCatName, setNewCatName] = useState('');
+  const [newCatLimit, setNewCatLimit] = useState<number>(100);
+
+  // Dynamic category calculations strictly derived from ledger
+  const categoryLimitsMap = useMemo(() => {
+    return (
+      settings.budgetCategoryLimits ?? {
+        Food: 250,
+        Transport: 100,
+        Home: 200,
+        Personal: 150,
+      }
+    );
+  }, [settings.budgetCategoryLimits]);
+
+  // Actual spent per category from expense transactions
+  const categorySpentMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    transactions
+      .filter((t) => t.type === 'expense')
+      .forEach((t) => {
+        const cat = t.category || 'Other';
+        map[cat] = Math.round(((map[cat] || 0) + t.amount) * 100) / 100;
+      });
+    return map;
+  }, [transactions]);
+
+  // Unified list of categories (union of configured limits and actual recorded spending)
+  const categoryRows = useMemo(() => {
+    const allCatNames = Array.from(
+      new Set([...Object.keys(categoryLimitsMap), ...Object.keys(categorySpentMap)])
+    );
+
+    // Order: standard primary categories first, then alphabetically
+    const priority = ['Food', 'Transport', 'Home', 'Personal'];
+    allCatNames.sort((a, b) => {
+      const ia = priority.indexOf(a);
+      const ib = priority.indexOf(b);
+      if (ia !== -1 && ib !== -1) return ia - ib;
+      if (ia !== -1) return -1;
+      if (ib !== -1) return 1;
+      return a.localeCompare(b);
+    });
+
+    return allCatNames.map((name) => {
+      const limit = categoryLimitsMap[name] || 0;
+      const spent = categorySpentMap[name] || 0;
+      const remaining = Math.round((limit - spent) * 100) / 100;
+      const isOver = remaining < 0;
+      const pct = limit > 0 ? Math.min(100, Math.round((spent / limit) * 100)) : 100;
+      return {
+        name,
+        limit,
+        spent,
+        remaining,
+        isOver,
+        pct,
+      };
+    });
+  }, [categoryLimitsMap, categorySpentMap]);
+
+  // Total limits and total spent derived from the unified ledger
+  const totalLimits = useMemo(
+    () => Object.values(categoryLimitsMap).reduce((s, v) => s + v, 0),
+    [categoryLimitsMap]
+  );
+  const totalSpent = useMemo(
+    () => Math.round(Object.values(categorySpentMap).reduce((s, v) => s + v, 0) * 100) / 100,
+    [categorySpentMap]
+  );
+  const totalRemaining = Math.round((totalLimits - totalSpent) * 100) / 100;
+
+  // Categories with positive spending for the chart breakdown
+  const chartCategories = useMemo(() => {
+    return categoryRows.filter((c) => c.spent > 0);
+  }, [categoryRows]);
+
+  const openMarkPaid = (b: BillItem) => {
+    setPayingBill(b);
+    setActualPaidAmount(b.plannedAmount);
+    setPaidDate(currentDate);
+  };
+
+  const confirmMarkPaid = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!payingBill) return;
+    markBillPaid(payingBill.id, actualPaidAmount, paidDate);
+    setPayingBill(null);
+  };
+
+  const confirmUnpay = () => {
+    if (!unpayingBill) return;
+    unpayBill(unpayingBill.id);
+    setUnpayingBill(null);
+  };
+
+  // Transaction handlers
+  const openAddTransaction = () => {
+    setEditingTx(null);
+    setTxType('expense');
+    setTxAmount(35);
+    setTxCategory('Food');
+    setTxDate(currentDate);
+    setTxNote('');
+    setIsTxModalOpen(true);
+  };
+
+  const openEditTransaction = (tx: FinancialTransaction) => {
+    setEditingTx(tx);
+    setTxType(tx.type);
+    setTxAmount(tx.amount);
+    setTxCategory(tx.category);
+    setTxDate(tx.date);
+    setTxNote(tx.note || '');
+    setIsTxModalOpen(true);
+  };
+
+  const handleSaveTransaction = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (txAmount <= 0) return;
+
+    if (editingTx) {
+      updateTransaction(editingTx.id, {
+        type: txType,
+        amount: txAmount,
+        category: txCategory,
+        date: txDate,
+        note: txNote || undefined,
+      });
+    } else {
+      addTransaction({
+        type: txType,
+        amount: txAmount,
+        category: txCategory,
+        date: txDate,
+        note: txNote || undefined,
+      });
+    }
+    setIsTxModalOpen(false);
+    setEditingTx(null);
+    setTxNote('');
+  };
+
+  // Bill handlers
+  const openAddBill = () => {
+    setEditingBill(null);
+    setBillTitle('');
+    setBillCategory('Home');
+    setBillPlannedAmt(50);
+    setBillDueDate(currentDate);
+    setBillRepeat('monthly');
+    setIsBillModalOpen(true);
+  };
+
+  const openEditBill = (b: BillItem) => {
+    setEditingBill(b);
+    setBillTitle(b.title);
+    setBillCategory(b.category);
+    setBillPlannedAmt(b.plannedAmount);
+    setBillDueDate(b.dueDate);
+    setBillRepeat(b.repeatInterval === 'monthly' ? 'monthly' : 'none');
+    setIsBillModalOpen(true);
+  };
+
+  const handleSaveBill = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!billTitle.trim() || billPlannedAmt <= 0) return;
+
+    if (editingBill) {
+      updateBill(editingBill.id, {
+        title: billTitle.trim(),
+        category: billCategory,
+        plannedAmount: billPlannedAmt,
+        dueDate: billDueDate,
+        repeatInterval: billRepeat,
+      });
+    } else {
+      addBill({
+        title: billTitle.trim(),
+        category: billCategory,
+        plannedAmount: billPlannedAmt,
+        dueDate: billDueDate,
+        repeatInterval: billRepeat,
+      });
+    }
+    setIsBillModalOpen(false);
+    setEditingBill(null);
+    setBillTitle('');
+  };
+
+  // Budget plan editing handlers
+  const openBudgetPlanModal = () => {
+    setPlanOpeningBalance(settings.budgetOpeningBalance ?? 100);
+    setPlanPlannedIncome(settings.budgetPlannedIncome ?? 1200);
+    setPlanPlannedSavings(settings.budgetPlannedSavings ?? 250);
+    setPlanPeriodType(settings.budgetPeriodType ?? 'monthly');
+    setPlanCategoryLimits(
+      settings.budgetCategoryLimits ?? {
+        Food: 250,
+        Transport: 100,
+        Home: 200,
+        Personal: 150,
+      }
+    );
+    setNewCatName('');
+    setNewCatLimit(100);
+    setIsBudgetPlanModalOpen(true);
+  };
+
+  const handleSaveBudgetPlan = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateSettings({
+      budgetOpeningBalance: planOpeningBalance,
+      budgetPlannedIncome: planPlannedIncome,
+      budgetPlannedSavings: planPlannedSavings,
+      budgetPeriodType: planPeriodType,
+      budgetCategoryLimits: planCategoryLimits,
+    });
+    setIsBudgetPlanModalOpen(false);
+  };
+
+  const handleAddCategoryLimit = () => {
+    if (!newCatName.trim()) return;
+    setPlanCategoryLimits((prev) => ({
+      ...prev,
+      [newCatName.trim()]: newCatLimit,
+    }));
+    setNewCatName('');
+    setNewCatLimit(100);
+  };
+
+  const handleDeleteCategoryLimit = (name: string) => {
+    setPlanCategoryLimits((prev) => {
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+  };
+
+  const currentMonthLabel = useMemo(() => {
+    try {
+      const parts = currentDate.split('-');
+      const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
+      const monthName = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      const lastDay = new Date(parseInt(parts[0]), parseInt(parts[1]), 0).getDate();
+      return `${monthName.split(' ')[0]} 1 – ${lastDay}, ${parts[0]} · Monthly schedule`;
+    } catch {
+      return 'Monthly schedule';
+    }
+  }, [currentDate]);
+
+  return (
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+      {/* Top Header */}
+      <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
+        <div>
+          <h2 className="text-xl font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+            Budget & Bills
+          </h2>
+          <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
+            {currentMonthLabel}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-[#526782]">
+            {(['overview', 'transactions', 'bills'] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setActiveTab(t)}
+                className={`px-3 py-1.5 rounded-lg capitalize transition-colors cursor-pointer ${
+                  activeTab === t
+                    ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                    : ''
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={openBudgetPlanModal}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
+            title="Edit opening balance, planned income, savings and category limits"
+          >
+            <Sliders className="w-3.5 h-3.5 text-[#087F83] dark:text-[#38D0C5]" />
+            <span>Edit budget plan</span>
+          </button>
+
+          <button
+            onClick={openAddTransaction}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add transaction</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Top 4 Key Metric Cards (Board 10) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Left to spend */}
+        <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
+          <div className="text-xs text-[#526782] dark:text-[#A8B8CE] font-medium">
+            Left to spend (Oct 1 – 31)
+          </div>
+          <div className="text-3xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] mt-1">
+            ${cashFlow.leftToSpend.toFixed(0)}
+          </div>
+          <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE] mt-1.5 leading-snug">
+            ${cashFlow.actualBalance.toFixed(0)} balance − ${cashFlow.unpaidBills.toFixed(0)} bills − ${cashFlow.plannedSavingsDue.toFixed(0)} savings
+          </div>
+        </div>
+
+        {/* Actual balance */}
+        <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
+          <div className="text-xs text-[#526782] dark:text-[#A8B8CE] font-medium">
+            Actual balance
+          </div>
+          <div className="text-2xl font-bold font-mono text-[#087F83] dark:text-[#38D0C5] mt-1">
+            ${cashFlow.actualBalance.toFixed(0)}
+          </div>
+          <div className="text-[11px] text-[#526782] mt-1.5">
+            Posted spending ledger
+          </div>
+        </div>
+
+        {/* Unpaid planned bills */}
+        <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
+          <div className="text-xs text-[#526782] dark:text-[#A8B8CE] font-medium">
+            Unpaid planned bills
+          </div>
+          <div className="text-2xl font-bold font-mono text-rose-600 dark:text-rose-400 mt-1">
+            ${cashFlow.unpaidBills.toFixed(0)}
+          </div>
+          <div className="text-[11px] text-[#526782] mt-1.5">
+            Due this month
+          </div>
+        </div>
+
+        {/* Planned savings still due */}
+        <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
+          <div className="text-xs text-[#526782] dark:text-[#A8B8CE] font-medium">
+            Planned savings still due
+          </div>
+          <div className="text-2xl font-bold font-mono text-amber-600 dark:text-amber-400 mt-1">
+            ${cashFlow.plannedSavingsDue.toFixed(0)}
+          </div>
+          <div className="text-[11px] text-[#526782] mt-1.5">
+            Scheduled transfers
+          </div>
+        </div>
+      </div>
+
+      {activeTab === 'overview' && (
+        <div className="space-y-6">
+          {/* Monthly Cash Flow Calculation Banner */}
+          <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-bold text-[#526782] uppercase tracking-wider">
+                Monthly cash flow (for budget)
+              </h3>
+              <button
+                onClick={openBudgetPlanModal}
+                className="text-[11px] font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <Edit2 className="w-3 h-3" />
+                <span>Edit plan parameters</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center text-xs">
+              <div
+                onClick={openBudgetPlanModal}
+                className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                title="Click to edit opening balance"
+              >
+                <span className="text-[#526782] block text-[10px] flex items-center justify-center gap-1">
+                  <span>Opening balance</span>
+                  <Edit2 className="w-2.5 h-2.5 opacity-60" />
+                </span>
+                <span className="text-base font-bold font-mono mt-0.5 block">
+                  ${cashFlow.openingBalance.toFixed(0)}
+                </span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300">
+                <span className="opacity-80 block text-[10px]">+ Actual income</span>
+                <span className="text-base font-bold font-mono mt-0.5 block">
+                  ${cashFlow.actualIncome.toFixed(0)}
+                </span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300">
+                <span className="opacity-80 block text-[10px]">− Actual expenses</span>
+                <span className="text-base font-bold font-mono mt-0.5 block">
+                  ${cashFlow.actualExpenses.toFixed(0)}
+                </span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300">
+                <span className="opacity-80 block text-[10px]">− Savings transfers</span>
+                <span className="text-base font-bold font-mono mt-0.5 block">
+                  ${cashFlow.savingsTransfers.toFixed(0)}
+                </span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#087F83]/10 text-[#087F83] dark:text-[#38D0C5]">
+                <span className="opacity-80 block text-[10px]">= Current balance</span>
+                <span className="text-base font-bold font-mono mt-0.5 block">
+                  ${cashFlow.actualBalance.toFixed(0)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 2-Column Grid: Category Limits & Spending Breakdown */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Category limits (7 cols) - Strictly dynamic from ledger */}
+            <div className="lg:col-span-7 bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
+                <div>
+                  <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                    Category limits
+                  </h3>
+                  <span className="text-xs text-[#526782]">Monthly budget allocations</span>
+                </div>
+
+                <button
+                  onClick={openBudgetPlanModal}
+                  className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Edit2 className="w-3 h-3 text-[#087F83]" />
+                  <span>Edit limits</span>
+                </button>
+              </div>
+
+              <div className="space-y-3.5">
+                {categoryRows.map((cat, idx) => {
+                  const color = getCategoryColor(cat.name, idx);
+
+                  return (
+                    <div key={cat.name} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-1.5">
+                          <span className={`w-2 h-2 rounded-full ${color.dot}`} />
+                          <span>{cat.name}</span>
+                        </span>
+                        <div className="space-x-3 font-mono">
+                          <span className="text-[#526782]">
+                            Limit: ${cat.limit}
+                          </span>
+                          <span className="text-[#526782]">
+                            Spent: ${cat.spent}
+                          </span>
+                          <span
+                            className={`font-semibold ${
+                              cat.isOver ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600'
+                            }`}
+                          >
+                            {cat.isOver
+                              ? `-$${Math.abs(cat.remaining)} over`
+                              : `$${cat.remaining} left`}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${
+                            cat.isOver ? 'bg-rose-500' : color.bg
+                          }`}
+                          style={{ width: `${cat.pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Dynamic Footer Totals calculated directly from ledger */}
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between text-xs font-bold font-mono">
+                <span>Total (limits): ${totalLimits.toFixed(0)}</span>
+                <span>Spent: ${totalSpent.toFixed(0)}</span>
+                <span className={totalRemaining >= 0 ? 'text-emerald-600' : 'text-rose-600'}>
+                  {totalRemaining >= 0
+                    ? `$${totalRemaining.toFixed(0)} remaining`
+                    : `-$${Math.abs(totalRemaining).toFixed(0)} over`}
+                </span>
+              </div>
+            </div>
+
+            {/* Spending by Category & Unallocated Budget (5 cols) */}
+            <div className="lg:col-span-5 space-y-6">
+              {/* Dynamic Spending by Category Card */}
+              <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
+                <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF] mb-3">
+                  Spending by category
+                </h3>
+
+                <div className="flex items-center gap-6 my-4">
+                  <RingProgress
+                    progress={totalLimits > 0 ? Math.min(100, Math.round((totalSpent / totalLimits) * 100)) : 100}
+                    size={84}
+                    strokeWidth={8}
+                    color="#087F83"
+                  >
+                    <div className="text-center font-mono">
+                      <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF] block leading-none">
+                        ${totalSpent.toFixed(0)}
+                      </span>
+                      <span className="text-[9px] text-[#526782] block leading-none mt-0.5">
+                        total
+                      </span>
+                    </div>
+                  </RingProgress>
+
+                  <div className="space-y-1.5 flex-1 text-xs max-h-36 overflow-y-auto">
+                    {chartCategories.length === 0 ? (
+                      <span className="text-xs text-[#526782]">No expenses recorded yet.</span>
+                    ) : (
+                      chartCategories.map((cat, idx) => {
+                        const color = getCategoryColor(cat.name, idx);
+                        const pctOfTotal = totalSpent > 0 ? Math.round((cat.spent / totalSpent) * 100) : 0;
+
+                        return (
+                          <div key={cat.name} className="flex justify-between items-center">
+                            <span className="flex items-center gap-2">
+                              <span className={`w-2.5 h-2.5 rounded-full ${color.dot}`} />
+                              <span>{cat.name}</span>
+                            </span>
+                            <span className="font-mono font-semibold">
+                              ${cat.spent.toFixed(0)} ({pctOfTotal}%)
+                            </span>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Unallocated Budget Card (fully dynamic) */}
+              <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs text-[#526782] font-semibold">
+                    Unallocated budget
+                  </div>
+                  <button
+                    onClick={openBudgetPlanModal}
+                    className="text-[10px] font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline cursor-pointer"
+                  >
+                    Adjust plan
+                  </button>
+                </div>
+                <div className="text-2xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] mt-1">
+                  ${cashFlow.unallocatedBudget.toFixed(0)}
+                </div>
+                <div className="text-[11px] text-[#526782] mt-1 leading-relaxed">
+                  From: ${cashFlow.openingBalance.toFixed(0)} opening + ${cashFlow.plannedIncome.toFixed(0)} planned income − ${cashFlow.categoryLimitsTotal.toFixed(0)} category limits − ${cashFlow.plannedSavingsTotal.toFixed(0)} planned savings
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Transactions Tab */}
+      {activeTab === 'transactions' && (
+        <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
+            <div>
+              <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                Transactions ledger
+              </h3>
+              <p className="text-xs text-[#526782]">
+                Posted income, expenses, and savings transfers
+              </p>
+            </div>
+
+            <button
+              onClick={openAddTransaction}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add entry</span>
+            </button>
+          </div>
+
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            {transactions.length === 0 ? (
+              <div className="py-8 text-center text-xs text-[#526782]">
+                No transactions recorded.
+              </div>
+            ) : (
+              transactions.map((tx) => (
+                <div
+                  key={tx.id}
+                  className="py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/40 px-2 rounded-xl transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                        tx.type === 'income'
+                          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                          : tx.type === 'transfer'
+                          ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+                          : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
+                      }`}
+                    >
+                      {tx.type === 'income' ? '+' : tx.type === 'transfer' ? '⇄' : '−'}
+                    </span>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
+                          {tx.category}
+                        </span>
+                        {tx.linkedBillId && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 font-semibold">
+                            Bill linked
+                          </span>
+                        )}
+                        {tx.linkedPotId && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-semibold">
+                            Savings transfer
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-[#526782] font-mono">
+                        {tx.date} {tx.note && `· ${tx.note}`}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`font-mono font-bold text-xs ${
+                        tx.type === 'income'
+                          ? 'text-emerald-600'
+                          : tx.type === 'transfer'
+                          ? 'text-blue-600'
+                          : 'text-rose-600'
+                      }`}
+                    >
+                      {tx.type === 'income' ? '+' : '-'}
+                      ${tx.amount.toFixed(2)}
+                    </span>
+
+                    <button
+                      onClick={() => openEditTransaction(tx)}
+                      className="p-1 rounded-md text-slate-400 hover:text-[#087F83] cursor-pointer"
+                      title="Edit transaction"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
+                      onClick={() => deleteTransaction(tx.id)}
+                      className="p-1 rounded-md text-slate-400 hover:text-rose-600 cursor-pointer"
+                      title="Delete transaction"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Bills Tab */}
+      {(activeTab === 'overview' || activeTab === 'bills') && (
+        <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
+            <div>
+              <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                Bills this month
+              </h3>
+              <p className="text-xs text-[#526782]">
+                Marking paid creates one linked expense automatically; unpaying reverses it cleanly
+              </p>
+            </div>
+
+            <button
+              onClick={openAddBill}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add bill</span>
+            </button>
+          </div>
+
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            {bills.map((bill) => (
+              <div
+                key={bill.id}
+                className="py-3.5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/40 px-2 rounded-xl transition-colors"
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                      {bill.title}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-[#526782]">
+                      {bill.category}
+                    </span>
+                    {bill.repeatInterval && bill.repeatInterval !== 'none' && (
+                      <span className="px-1.5 py-0.5 rounded text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 font-medium">
+                        {bill.repeatInterval}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-[#526782] mt-0.5 font-mono">
+                    Due: {bill.dueDate}{' '}
+                    {bill.isPaid && (
+                      <span className="text-emerald-600 font-semibold ml-2">
+                        · Paid ${bill.actualPaidAmount} on {bill.paidDate}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF]">
+                    ${bill.plannedAmount.toFixed(0)}
+                  </span>
+
+                  {bill.isPaid ? (
+                    <div className="flex items-center gap-1.5">
+                      <span className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
+                        Paid
+                      </span>
+                      <button
+                        onClick={() => setUnpayingBill(bill)}
+                        className="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px] font-medium text-[#526782] hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                        title="Unpay bill (reverse expense)"
+                      >
+                        Unpay
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => openMarkPaid(bill)}
+                      className="px-3 py-1 rounded-lg bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] text-white dark:text-[#071A3A] text-xs font-semibold cursor-pointer shadow-xs"
+                    >
+                      Mark paid
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => openEditBill(bill)}
+                    className="p-1 rounded-md text-slate-400 hover:text-[#087F83] cursor-pointer"
+                    title="Edit bill"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+
+                  <button
+                    onClick={() => deleteBill(bill.id)}
+                    className="p-1 rounded-md text-slate-400 hover:text-rose-600 cursor-pointer"
+                    title="Delete bill"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Edit Budget Plan & Category Allocations Modal */}
+      <Modal
+        isOpen={isBudgetPlanModalOpen}
+        onClose={() => setIsBudgetPlanModalOpen(false)}
+        title="Edit Budget Plan & Allocations"
+        subtitle="Configure opening balance, planned income, savings and category limits"
+      >
+        <form onSubmit={handleSaveBudgetPlan} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                Opening Balance ($)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                required
+                value={planOpeningBalance}
+                onChange={(e) => setPlanOpeningBalance(parseFloat(e.target.value) || 0)}
+                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-mono font-semibold"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                Planned Income ($)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                required
+                value={planPlannedIncome}
+                onChange={(e) => setPlanPlannedIncome(parseFloat(e.target.value) || 0)}
+                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-mono font-semibold"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                Planned Savings ($)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                required
+                value={planPlannedSavings}
+                onChange={(e) => setPlanPlannedSavings(parseFloat(e.target.value) || 0)}
+                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-mono font-semibold"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              Budget Period Cadence
+            </label>
+            <select
+              value={planPeriodType}
+              onChange={(e) => setPlanPeriodType(e.target.value as any)}
+              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
+            >
+              <option value="monthly">Monthly</option>
+              <option value="weekly">Weekly</option>
+              <option value="paycheck">Paycheck-to-paycheck</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+
+          {/* Category Limits / Allocations Editor */}
+          <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                Category Budget Allocations (Limits)
+              </span>
+              <span className="text-[11px] font-mono font-semibold text-[#087F83] dark:text-[#38D0C5]">
+                Total: ${Object.values(planCategoryLimits).reduce((a, b) => a + b, 0)}
+              </span>
+            </div>
+
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+              {Object.entries(planCategoryLimits).map(([cat, limit]) => (
+                <div
+                  key={cat}
+                  className="flex items-center justify-between gap-3 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60"
+                >
+                  <span className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] flex-1">
+                    {cat}
+                  </span>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-[#526782] font-mono">$</span>
+                    <input
+                      type="number"
+                      step="1"
+                      min="0"
+                      value={limit}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0;
+                        setPlanCategoryLimits((prev) => ({
+                          ...prev,
+                          [cat]: val,
+                        }));
+                      }}
+                      className="w-24 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-mono font-semibold text-right"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCategoryLimit(cat)}
+                      className="p-1 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 cursor-pointer"
+                      title="Remove category allocation"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Add new category allocation inline */}
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="text"
+                placeholder="New category (e.g. Health)"
+                value={newCatName}
+                onChange={(e) => setNewCatName(e.target.value)}
+                className="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs"
+              />
+              <input
+                type="number"
+                min="0"
+                value={newCatLimit}
+                onChange={(e) => setNewCatLimit(parseFloat(e.target.value) || 0)}
+                className="w-20 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-mono"
+              />
+              <button
+                type="button"
+                onClick={handleAddCategoryLimit}
+                className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-xs font-semibold cursor-pointer"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+
+          {/* Live Unallocated Calculation Preview */}
+          <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200/80 text-xs text-[#087F83] dark:text-[#38D0C5] flex items-center justify-between">
+            <span>Projected Unallocated Budget:</span>
+            <span className="font-bold font-mono text-sm">
+              $
+              {(
+                planOpeningBalance +
+                planPlannedIncome -
+                Object.values(planCategoryLimits).reduce((a, b) => a + b, 0) -
+                planPlannedSavings
+              ).toFixed(0)}
+            </span>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsBudgetPlanModalOpen(false)}
+              className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-[#526782]"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+            >
+              Save budget plan
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Mark Bill Paid Modal */}
+      <Modal
+        isOpen={!!payingBill}
+        onClose={() => setPayingBill(null)}
+        title="Mark bill as paid"
+        subtitle="Mark a planned bill as paid. Creates one linked expense in your ledger."
+      >
+        {payingBill && (
+          <form onSubmit={confirmMarkPaid} className="space-y-4">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs">
+              <span className="font-semibold text-[#071A3A] dark:text-[#EDF4FF] block">
+                {payingBill.title}
+              </span>
+              <span className="text-[#526782]">
+                Category: {payingBill.category} · Planned: ${payingBill.plannedAmount.toFixed(2)} · Due: {payingBill.dueDate}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                  Actual amount *
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  required
+                  value={actualPaidAmount}
+                  onChange={(e) => setActualPaidAmount(parseFloat(e.target.value) || 0)}
+                  className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-mono font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                  Payment date *
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={paidDate}
+                  onChange={(e) => setPaidDate(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 text-xs text-[#087F83] dark:text-[#38D0C5] flex items-start gap-2">
+              <Check className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>
+                Creates a single linked expense under {payingBill.category}. Your actual balance and {payingBill.category} spending update together.
+              </span>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setPayingBill(null)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-[#526782]"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+              >
+                Mark paid
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* Unpay Confirmation Modal */}
+      <Modal
+        isOpen={!!unpayingBill}
+        onClose={() => setUnpayingBill(null)}
+        title="Unpay this bill?"
+        subtitle="Reverse the linked expense transaction"
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-[#526782] leading-relaxed">
+            Reversing this paid bill will delete its linked expense from your transactions ledger and restore it as an unpaid obligation. Category spending and balances adjust automatically.
+          </p>
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              onClick={() => setUnpayingBill(null)}
+              className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-[#526782]"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmUnpay}
+              className="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700"
+            >
+              Unpay bill
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Add / Edit Transaction Modal */}
+      <Modal
+        isOpen={isTxModalOpen}
+        onClose={() => {
+          setIsTxModalOpen(false);
+          setEditingTx(null);
+        }}
+        title={editingTx ? 'Edit transaction' : 'Add transaction'}
+        subtitle="Record or modify income, expenses, and savings transfers"
+      >
+        <form onSubmit={handleSaveTransaction} className="space-y-4">
+          <div className="grid grid-cols-3 gap-2">
+            {(['expense', 'income', 'transfer'] as const).map((t) => (
+              <button
+                type="button"
+                key={t}
+                onClick={() => setTxType(t)}
+                className={`py-2 rounded-xl text-xs font-semibold capitalize border cursor-pointer ${
+                  txType === t
+                    ? 'bg-[#087F83] text-white border-[#087F83]'
+                    : 'border-slate-200 dark:border-slate-700 text-[#526782]'
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                Amount *
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                required
+                value={txAmount}
+                onChange={(e) => setTxAmount(parseFloat(e.target.value) || 0)}
+                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-mono font-semibold"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                Category
+              </label>
+              <select
+                value={txCategory}
+                onChange={(e) => setTxCategory(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
+              >
+                <option value="Food">Food</option>
+                <option value="Transport">Transport</option>
+                <option value="Home">Home</option>
+                <option value="Personal">Personal</option>
+                <option value="Salary">Salary</option>
+                <option value="Savings">Savings</option>
+                <option value="Health">Health</option>
+                <option value="Entertainment">Entertainment</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              Date
+            </label>
+            <input
+              type="date"
+              required
+              value={txDate}
+              onChange={(e) => setTxDate(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-mono"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              Note (optional)
+            </label>
+            <input
+              type="text"
+              value={txNote}
+              onChange={(e) => setTxNote(e.target.value)}
+              placeholder="e.g. Weekly market groceries"
+              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setIsTxModalOpen(false);
+                setEditingTx(null);
+              }}
+              className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-[#526782]"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+            >
+              {editingTx ? 'Update transaction' : 'Save transaction'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Add / Edit Bill Modal */}
+      <Modal
+        isOpen={isBillModalOpen}
+        onClose={() => {
+          setIsBillModalOpen(false);
+          setEditingBill(null);
+        }}
+        title={editingBill ? 'Edit planned bill' : 'Add planned bill'}
+        subtitle="Schedule recurring or one-off commitments"
+      >
+        <form onSubmit={handleSaveBill} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              Bill title *
+            </label>
+            <input
+              type="text"
+              required
+              value={billTitle}
+              onChange={(e) => setBillTitle(e.target.value)}
+              placeholder="e.g. Electricity, Water"
+              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                Planned amount *
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                required
+                value={billPlannedAmt}
+                onChange={(e) => setBillPlannedAmt(parseFloat(e.target.value) || 0)}
+                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-mono font-semibold"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                Category
+              </label>
+              <select
+                value={billCategory}
+                onChange={(e) => setBillCategory(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
+              >
+                <option value="Home">Home</option>
+                <option value="Personal">Personal</option>
+                <option value="Transport">Transport</option>
+                <option value="Food">Food</option>
+                <option value="Health">Health</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                Due date
+              </label>
+              <input
+                type="date"
+                required
+                value={billDueDate}
+                onChange={(e) => setBillDueDate(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                Repeat interval
+              </label>
+              <select
+                value={billRepeat}
+                onChange={(e) => setBillRepeat(e.target.value as any)}
+                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
+              >
+                <option value="monthly">Monthly</option>
+                <option value="none">One-off</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setIsBillModalOpen(false);
+                setEditingBill(null);
+              }}
+              className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-[#526782]"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+            >
+              {editingBill ? 'Update bill' : 'Save bill'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+    </div>
+  );
+};
