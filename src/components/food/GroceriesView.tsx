@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
+import { getWeekDaysForDate, getWeekStartDate } from '../../utils/formatters';
 import { RingProgress } from '../ui/RingProgress';
 import { Modal } from '../ui/Modal';
 import {
@@ -16,6 +17,7 @@ import { GroceryItem } from '../../types/planner';
 
 export const GroceriesView: React.FC = () => {
   const {
+    settings,
     currentDate,
     groceries,
     toggleGroceryPurchased,
@@ -25,28 +27,17 @@ export const GroceriesView: React.FC = () => {
     regenerateGroceries,
   } = usePlanner();
 
-  // Dynamic current week range calculation
+  // Dynamic current week range calculation based on settings.weekStartsOn
   const currentWeekMondayStr = useMemo(() => {
-    const parts = currentDate.split('-');
-    const cur = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-    const day = cur.getDay();
-    const diff = cur.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(cur.setDate(diff));
-    const year = monday.getFullYear();
-    const month = String(monday.getMonth() + 1).padStart(2, '0');
-    const d = String(monday.getDate()).padStart(2, '0');
-    return `${year}-${month}-${d}`;
-  }, [currentDate]);
+    return getWeekStartDate(currentDate, settings.weekStartsOn);
+  }, [currentDate, settings.weekStartsOn]);
 
   const weekRangeLabel = useMemo(() => {
-    const parts = currentWeekMondayStr.split('-');
-    const mon = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-    const sun = new Date(mon);
-    sun.setDate(mon.getDate() + 6);
-    const monStr = mon.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
-    const sunStr = sun.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-    return `${monStr} – ${sunStr}`;
-  }, [currentWeekMondayStr]);
+    const list = getWeekDaysForDate(currentDate, settings.weekStartsOn);
+    const start = list[0];
+    const end = list[6];
+    return `${start.dayName}, ${start.dayNum} ${start.monthName} – ${end.dayName}, ${end.dayNum} ${end.monthName}`;
+  }, [currentDate, settings.weekStartsOn]);
 
   // Selected item for detail inspection
   const [selectedItem, setSelectedItem] = useState<GroceryItem | null>(null);

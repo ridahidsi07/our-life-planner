@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
 import { RingProgress } from '../ui/RingProgress';
+import { getWeekDaysForDate, getCurrencySymbol } from '../../utils/formatters';
 import {
   AlertCircle,
   ArrowRight,
@@ -60,6 +61,8 @@ export const TodayDashboard: React.FC = () => {
     setActiveView,
     setActiveModal,
   } = usePlanner();
+
+  const currencySymbol = settings.currencySymbol || getCurrencySymbol(settings.currency) || '$';
 
   // Formatted date representations
   const formattedCurrentDate = useMemo(() => {
@@ -202,33 +205,17 @@ export const TodayDashboard: React.FC = () => {
       ? Math.round((completedCount / totalCompletable) * 100)
       : 0;
 
-  // Week strip calculation (Mon-Sun around currentDate)
+  // Week strip calculation (based on settings.weekStartsOn)
   const weekDays = useMemo(() => {
-    const parts = currentDate.split('-');
-    const cur = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-    const day = cur.getDay();
-    const diff = cur.getDate() - day + (day === 0 ? -6 : 1); // Monday
-    const monday = new Date(cur.setDate(diff));
-
-    const days = [];
-    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const dateNum = String(d.getDate()).padStart(2, '0');
-      const iso = `${year}-${month}-${dateNum}`;
-      days.push({
-        name: dayNames[i],
-        dayNum: d.getDate(),
-        dateStr: iso,
-        isRealToday: iso === todayDate,
-        isSelected: iso === currentDate,
-      });
-    }
-    return days;
-  }, [currentDate, todayDate]);
+    const list = getWeekDaysForDate(currentDate, settings.weekStartsOn);
+    return list.map((d) => ({
+      name: d.dayName,
+      dayNum: d.dayNum,
+      dateStr: d.dateStr,
+      isRealToday: d.dateStr === todayDate,
+      isSelected: d.dateStr === currentDate,
+    }));
+  }, [currentDate, todayDate, settings.weekStartsOn]);
 
   // Helper to compile dynamic schedule items for any given date
   const getScheduleItemsForDate = (dateStr: string) => {
@@ -339,7 +326,7 @@ export const TodayDashboard: React.FC = () => {
           if (b.isPaid) unpayBill(b.id);
           else markBillPaid(b.id, b.plannedAmount, dateStr);
         },
-        subtext: `$${b.plannedAmount} · ${b.isPaid ? 'Paid' : 'Due today'}`,
+        subtext: `${currencySymbol}${b.plannedAmount} · ${b.isPaid ? 'Paid' : 'Due today'}`,
       });
     });
 
@@ -445,68 +432,74 @@ export const TodayDashboard: React.FC = () => {
       )}
 
       {/* 2. Week Strip & Daily Progress Meter */}
-      <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] flex flex-col md:flex-row items-center justify-between gap-5 shadow-2xs">
+      <div className="bg-white dark:bg-[#152238] rounded-2xl p-4 md:p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] flex flex-col md:flex-row items-center justify-between gap-4 md:gap-5 shadow-2xs">
         {/* Week navigation & days */}
-        <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF] whitespace-nowrap">
-              This week
-            </span>
-            {!isViewingToday && (
+        <div className="flex flex-col md:flex-row md:items-center gap-3 w-full md:w-auto">
+          <div className="flex items-center justify-between md:justify-start gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF] whitespace-nowrap">
+                This week
+              </span>
+              {!isViewingToday && (
+                <button
+                  onClick={goToToday}
+                  className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-100 cursor-pointer"
+                >
+                  Today
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-1 text-[#526782]">
               <button
-                onClick={goToToday}
-                className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-100 cursor-pointer"
+                onClick={() => {
+                  const parts = currentDate.split('-');
+                  const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                  d.setDate(d.getDate() - 7);
+                  const year = d.getFullYear();
+                  const month = String(d.getMonth() + 1).padStart(2, '0');
+                  const dateNum = String(d.getDate()).padStart(2, '0');
+                  setCurrentDate(`${year}-${month}-${dateNum}`);
+                }}
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                aria-label="Previous week"
               >
-                Today
+                <ChevronLeft className="w-4 h-4" />
               </button>
-            )}
-          </div>
-          <div className="flex items-center gap-1 text-[#526782]">
-            <button
-              onClick={() => {
-                const parts = currentDate.split('-');
-                const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-                d.setDate(d.getDate() - 7);
-                const year = d.getFullYear();
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                const dateNum = String(d.getDate()).padStart(2, '0');
-                setCurrentDate(`${year}-${month}-${dateNum}`);
-              }}
-              className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-              aria-label="Previous week"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => {
-                const parts = currentDate.split('-');
-                const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-                d.setDate(d.getDate() + 7);
-                const year = d.getFullYear();
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                const dateNum = String(d.getDate()).padStart(2, '0');
-                setCurrentDate(`${year}-${month}-${dateNum}`);
-              }}
-              className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-              aria-label="Next week"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+              <button
+                onClick={() => {
+                  const parts = currentDate.split('-');
+                  const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                  d.setDate(d.getDate() + 7);
+                  const year = d.getFullYear();
+                  const month = String(d.getMonth() + 1).padStart(2, '0');
+                  const dateNum = String(d.getDate()).padStart(2, '0');
+                  setCurrentDate(`${year}-${month}-${dateNum}`);
+                }}
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                aria-label="Next week"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto py-1">
+          <div className="grid grid-cols-7 gap-1 w-full md:flex md:items-center md:gap-2 md:w-auto py-0.5">
             {weekDays.map((w) => (
               <button
                 key={w.dateStr}
+                type="button"
+                aria-pressed={w.isSelected}
+                aria-current={w.isRealToday ? 'date' : undefined}
+                aria-label={`${w.name} ${w.dayNum}${w.isRealToday ? ', Today' : ''}${w.isSelected ? ', Selected' : ''}`}
                 onClick={() => setCurrentDate(w.dateStr)}
-                className={`relative flex flex-col items-center justify-center w-10 py-1.5 rounded-xl text-xs transition-colors cursor-pointer ${
+                className={`relative flex flex-col items-center justify-center w-full md:w-10 min-w-0 px-0.5 py-1.5 rounded-xl text-xs transition-colors cursor-pointer ${
                   w.isSelected
                     ? 'bg-[#087F83] text-white font-bold shadow-xs'
                     : 'text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
-                <span className="text-[10px] uppercase">{w.name}</span>
-                <span className="text-sm font-semibold">{w.dayNum}</span>
+                <span className="text-[9px] uppercase tracking-tighter truncate w-full">{w.name}</span>
+                <span className="text-xs sm:text-sm font-semibold">{w.dayNum}</span>
                 {w.isRealToday && (
                   <span
                     className={`absolute bottom-0.5 w-1 h-1 rounded-full ${
@@ -520,7 +513,7 @@ export const TodayDashboard: React.FC = () => {
         </div>
 
         {/* Completion Ring */}
-        <div className="flex items-center gap-4 shrink-0">
+        <div className="flex items-center gap-4 shrink-0 w-full md:w-auto pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-800">
           <RingProgress
             progress={completionPercentage}
             size={56}
@@ -584,13 +577,16 @@ export const TodayDashboard: React.FC = () => {
                       </span>
                       {item.onToggle ? (
                         <button
+                          type="button"
+                          role="checkbox"
+                          aria-checked={item.isCompleted}
                           onClick={item.onToggle}
                           className={`w-5 h-5 rounded-md flex items-center justify-center cursor-pointer transition-colors ${
                             item.isCompleted
                               ? 'bg-[#087F83] text-white'
                               : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
                           }`}
-                          aria-label={`Mark ${item.title}`}
+                          aria-label={`Mark ${item.title} as ${item.isCompleted ? 'incomplete' : 'complete'}`}
                         >
                           {item.isCompleted && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                         </button>
@@ -705,6 +701,10 @@ export const TodayDashboard: React.FC = () => {
                   >
                     <div className="flex items-center gap-2.5">
                       <button
+                        type="button"
+                        role="checkbox"
+                        aria-checked={isChecked}
+                        aria-label={`Mark habit "${habit.title}" as ${isChecked ? 'incomplete' : 'complete'}`}
                         onClick={() => toggleHabitCheck(habit.id, currentDate)}
                         className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
                           isChecked
@@ -822,10 +822,10 @@ export const TodayDashboard: React.FC = () => {
 
             <div className="flex items-baseline justify-between mb-4">
               <span className="text-2xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF]">
-                ${cashFlow.leftToSpend.toFixed(0)}
+                {currencySymbol}{cashFlow.leftToSpend.toFixed(0)}
               </span>
               <span className="text-xs font-mono text-[#526782] dark:text-[#A8B8CE]">
-                of ${cashFlow.actualBalance.toFixed(0)} balance
+                of {currencySymbol}{cashFlow.actualBalance.toFixed(0)} balance
               </span>
             </div>
 
@@ -834,7 +834,7 @@ export const TodayDashboard: React.FC = () => {
                 <div className="flex justify-between font-mono mb-1">
                   <span className="text-[#526782] dark:text-[#A8B8CE]">Savings</span>
                   <span className="font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
-                    $600 / $1,100 (55%)
+                    {currencySymbol}600 / {currencySymbol}1,100 (55%)
                   </span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
@@ -846,7 +846,7 @@ export const TodayDashboard: React.FC = () => {
                 <div className="flex justify-between font-mono mb-1">
                   <span className="text-[#526782] dark:text-[#A8B8CE]">Debt remaining</span>
                   <span className="font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
-                    $1,000 (25% repaid)
+                    {currencySymbol}1,000 (25% repaid)
                   </span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">

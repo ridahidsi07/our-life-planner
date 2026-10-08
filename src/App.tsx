@@ -94,8 +94,12 @@ const PlannerAppContent: React.FC = () => {
         </main>
       </div>
 
-      {/* Mobile Navigation Bottom Bar */}
-      <MobileNav />
+      {/* Mobile Navigation Bottom Bar & Navigation Sheet */}
+      <MobileNav
+        isMoreOpen={isMobileDrawerOpen}
+        onOpenMore={() => setIsMobileDrawerOpen(true)}
+        onCloseMore={() => setIsMobileDrawerOpen(false)}
+      />
 
       {/* Global Modals */}
       <QuickAddModal />

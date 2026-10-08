@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo, useRef } from 'react';
 import {
   BillItem,
   BrainDumpItem,
@@ -231,6 +231,43 @@ export const getRealTodayDate = (timeZone?: string): string => {
   return `${year}-${month}-${day}`;
 };
 
+export const applyThemeToDocument = (theme: 'light' | 'dark' | 'system') => {
+  if (typeof window === 'undefined') return;
+  const isDark =
+    theme === 'dark'
+      ? true
+      : theme === 'light'
+      ? false
+      : Boolean(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  const root = document.documentElement;
+  const body = document.body;
+
+  if (isDark) {
+    root.classList.add('dark');
+    root.classList.remove('light');
+    root.setAttribute('data-theme', 'dark');
+    root.style.colorScheme = 'dark';
+    if (body) {
+      body.classList.add('dark');
+      body.classList.remove('light');
+      body.style.backgroundColor = '#0B1220';
+      body.style.color = '#EDF4FF';
+    }
+  } else {
+    root.classList.remove('dark');
+    root.classList.add('light');
+    root.setAttribute('data-theme', 'light');
+    root.style.colorScheme = 'light';
+    if (body) {
+      body.classList.remove('dark');
+      body.classList.add('light');
+      body.style.backgroundColor = '#F3F8FC';
+      body.style.color = '#071A3A';
+    }
+  }
+};
+
 export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Settings & general state
   const [settings, setSettings] = useState<UserSettings>(() => {
@@ -258,6 +295,27 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     settings.edition === 'downloaded' ? 'saved_local' : 'saved_online'
   );
   const [conflictItem, setConflictItem] = useState<ConflictItem | null>(null);
+
+  const settingsRef = useRef<UserSettings>(settings);
+  useEffect(() => {
+    settingsRef.current = settings;
+  }, [settings]);
+
+  // Reactive theme application: explicit Light and Dark override system; only System follows it.
+  useEffect(() => {
+    applyThemeToDocument(settings.theme || 'light');
+
+    if (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia) {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const listener = () => {
+        applyThemeToDocument('system');
+      };
+      mediaQuery.addEventListener('change', listener);
+      return () => {
+        mediaQuery.removeEventListener('change', listener);
+      };
+    }
+  }, [settings.theme]);
 
   // Midnight rollover check (every 30 seconds)
   useEffect(() => {
@@ -360,11 +418,21 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (parsed.hydrationTargets) setHydrationTargets(parsed.hydrationTargets);
           if (parsed.calendarEvents) setCalendarEvents(parsed.calendarEvents);
           if (parsed.settings) {
-            const loadedSettings = { ...parsed.settings };
+            let loadedSettings = { ...parsed.settings };
+            try {
+              const rawStg = localStorage.getItem(STORAGE_KEY_SETTINGS);
+              if (rawStg) {
+                const parsedStg = JSON.parse(rawStg);
+                loadedSettings = { ...loadedSettings, ...parsedStg };
+              }
+            } catch (e) {
+              console.warn('Could not parse settings from storage:', e);
+            }
             if (loadedSettings.currency) {
               loadedSettings.currencySymbol = getCurrencySymbol(loadedSettings.currency);
             }
             setSettings(loadedSettings);
+            settingsRef.current = loadedSettings;
           }
         }
       }
@@ -377,7 +445,7 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const triggerSave = (newSettings?: UserSettings) => {
     setSavingState('saving');
     try {
-      const stg = newSettings || settings;
+      const stg = newSettings || settingsRef.current;
       const backup: PlannerBackupData = {
         version: '1.0.0',
         exportedAt: new Date().toISOString(),
@@ -450,8 +518,11 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const updateSettings = (newSettings: Partial<UserSettings>) => {
     setSettings((prev) => {
       const next = { ...prev, ...newSettings };
-      if (newSettings.currency && (!newSettings.currencySymbol || newSettings.currencySymbol === '$')) {
+      if (newSettings.currency) {
         next.currencySymbol = getCurrencySymbol(newSettings.currency);
+      }
+      if (newSettings.theme) {
+        applyThemeToDocument(newSettings.theme);
       }
       if (newSettings.timeZone && newSettings.timeZone !== prev.timeZone) {
         const freshToday = getRealTodayDate(newSettings.timeZone);
@@ -460,6 +531,7 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
           setCurrentDate(freshToday);
         }
       }
+      settingsRef.current = next;
       triggerSave(next);
       return next;
     });

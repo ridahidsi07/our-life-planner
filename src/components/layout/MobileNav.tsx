@@ -3,9 +3,44 @@ import { usePlanner } from '../../context/PlannerContext';
 import { Clock, Calendar, Plus, MoreHorizontal } from 'lucide-react';
 import { MoreSheet } from './MoreSheet';
 
-export const MobileNav: React.FC = () => {
-  const { activeView, setActiveView, setActiveModal } = usePlanner();
-  const [isMoreOpen, setIsMoreOpen] = useState(false);
+interface MobileNavProps {
+  isMoreOpen?: boolean;
+  onOpenMore?: () => void;
+  onCloseMore?: () => void;
+}
+
+export const MobileNav: React.FC<MobileNavProps> = ({
+  isMoreOpen: controlledIsMoreOpen,
+  onOpenMore,
+  onCloseMore,
+}) => {
+  const { activeView, setActiveView, setActiveModal, activeModal } = usePlanner();
+  const [internalIsMoreOpen, setInternalIsMoreOpen] = useState(false);
+
+  const isMoreSheetOpen = Boolean(
+    controlledIsMoreOpen ||
+      internalIsMoreOpen ||
+      activeModal === 'menu' ||
+      activeModal === 'more_sheet'
+  );
+
+  const handleOpenMore = () => {
+    setActiveModal('more_sheet');
+    setInternalIsMoreOpen(true);
+    if (onOpenMore) {
+      onOpenMore();
+    }
+  };
+
+  const handleCloseMore = () => {
+    if (onCloseMore) {
+      onCloseMore();
+    }
+    setInternalIsMoreOpen(false);
+    if (activeModal === 'menu' || activeModal === 'more_sheet') {
+      setActiveModal(null);
+    }
+  };
 
   return (
     <>
@@ -47,9 +82,12 @@ export const MobileNav: React.FC = () => {
 
         {/* More */}
         <button
-          onClick={() => setIsMoreOpen(true)}
+          onClick={handleOpenMore}
+          aria-label="All tools and views"
+          aria-controls="all-tools-menu"
+          aria-expanded={isMoreSheetOpen}
           className={`flex flex-col items-center justify-center w-16 h-full transition-colors cursor-pointer ${
-            isMoreOpen || (activeView !== 'today' && activeView !== 'calendar')
+            isMoreSheetOpen || (activeView !== 'today' && activeView !== 'calendar')
               ? 'text-[#087F83] dark:text-[#38D0C5]'
               : 'text-[#526782] dark:text-[#A8B8CE]'
           }`}
@@ -59,7 +97,7 @@ export const MobileNav: React.FC = () => {
         </button>
       </nav>
 
-      <MoreSheet isOpen={isMoreOpen} onClose={() => setIsMoreOpen(false)} />
+      <MoreSheet isOpen={isMoreSheetOpen} onClose={handleCloseMore} />
     </>
   );
 };

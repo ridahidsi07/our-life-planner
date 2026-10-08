@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
+import { getCurrencySymbol } from '../../utils/formatters';
 import { RingProgress } from '../ui/RingProgress';
 import { Modal } from '../ui/Modal';
 import {
@@ -17,6 +18,7 @@ import { SavingsPot } from '../../types/planner';
 
 export const SavingsPotsView: React.FC = () => {
   const {
+    settings,
     savingsPots,
     addSavingsPot,
     updateSavingsPot,
@@ -24,6 +26,8 @@ export const SavingsPotsView: React.FC = () => {
     addSavingsDeposit,
     currentDate,
   } = usePlanner();
+
+  const currencySymbol = settings.currencySymbol || getCurrencySymbol(settings.currency) || '$';
 
   const [selectedPotId, setSelectedPotId] = useState<string>(
     savingsPots.length > 0 ? savingsPots[0].id : ''
@@ -132,10 +136,10 @@ export const SavingsPotsView: React.FC = () => {
         <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
           <div className="text-xs text-[#526782] dark:text-[#A8B8CE]">Total saved</div>
           <div className="text-3xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] mt-1">
-            ${combinedMetrics.totalSaved.toFixed(0)}
+            {currencySymbol}{combinedMetrics.totalSaved.toFixed(0)}
           </div>
           <div className="text-xs font-mono text-[#526782] mt-1">
-            of ${combinedMetrics.totalTarget.toFixed(0)} target
+            of {currencySymbol}{combinedMetrics.totalTarget.toFixed(0)} target
           </div>
         </div>
 
@@ -176,7 +180,7 @@ export const SavingsPotsView: React.FC = () => {
         <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
           <div className="text-xs text-[#526782]">Total remaining</div>
           <div className="text-2xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] mt-1">
-            ${combinedMetrics.remaining.toFixed(0)}
+            {currencySymbol}{combinedMetrics.remaining.toFixed(0)}
           </div>
           <div className="text-xs text-[#526782] mt-1">
             to reach all targets
@@ -215,7 +219,7 @@ export const SavingsPotsView: React.FC = () => {
                       {pot.name}
                     </h3>
                     <div className="text-xs font-mono text-[#526782] mt-0.5">
-                      ${currentBal.toFixed(0)} of ${pot.targetAmount.toFixed(0)}
+                      {currencySymbol}{currentBal.toFixed(0)} of {currencySymbol}{pot.targetAmount.toFixed(0)}
                     </div>
                   </div>
 
@@ -238,7 +242,7 @@ export const SavingsPotsView: React.FC = () => {
                   {isComplete ? (
                     <span className="text-emerald-600 font-semibold">Complete</span>
                   ) : (
-                    <span>${(pot.targetAmount - currentBal).toFixed(0)} remaining</span>
+                    <span>{currencySymbol}{(pot.targetAmount - currentBal).toFixed(0)} remaining</span>
                   )}
                 </div>
               </div>
@@ -294,10 +298,10 @@ export const SavingsPotsView: React.FC = () => {
 
                 <div>
                   <div className="text-2xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF]">
-                    ${selectedPotMetrics.currentBalance.toFixed(0)}
+                    {currencySymbol}{selectedPotMetrics.currentBalance.toFixed(0)}
                   </div>
                   <div className="text-xs text-[#526782]">
-                    of ${selectedPot.targetAmount.toFixed(0)} · ${selectedPotMetrics.remaining.toFixed(0)} remaining
+                    of {currencySymbol}{selectedPot.targetAmount.toFixed(0)} · {currencySymbol}{selectedPotMetrics.remaining.toFixed(0)} remaining
                   </div>
                 </div>
               </div>
@@ -307,19 +311,19 @@ export const SavingsPotsView: React.FC = () => {
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
                   <span className="text-[#526782] block text-[10px]">Opening balance</span>
                   <span className="text-sm font-bold font-mono mt-0.5 block">
-                    ${selectedPot.openingBalance.toFixed(0)}
+                    {currencySymbol}{selectedPot.openingBalance.toFixed(0)}
                   </span>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
                   <span className="text-[#526782] block text-[10px]">Total deposits</span>
                   <span className="text-sm font-bold font-mono mt-0.5 block">
-                    ${selectedPotMetrics.totalDeposits.toFixed(0)}
+                    {currencySymbol}{selectedPotMetrics.totalDeposits.toFixed(0)}
                   </span>
                 </div>
                 <div className="p-3 rounded-xl bg-[#087F83]/10 text-[#087F83] dark:text-[#38D0C5]">
                   <span className="opacity-80 block text-[10px]">Current balance</span>
                   <span className="text-sm font-bold font-mono mt-0.5 block">
-                    ${selectedPotMetrics.currentBalance.toFixed(0)}
+                    {currencySymbol}{selectedPotMetrics.currentBalance.toFixed(0)}
                   </span>
                 </div>
               </div>
@@ -342,7 +346,7 @@ export const SavingsPotsView: React.FC = () => {
                       </div>
                     </div>
                     <span className="font-mono font-bold">
-                      ${selectedPot.openingBalance.toFixed(0)}
+                      {currencySymbol}{selectedPot.openingBalance.toFixed(0)}
                     </span>
                   </div>
 
@@ -361,7 +365,7 @@ export const SavingsPotsView: React.FC = () => {
                         </div>
                       </div>
                       <span className="font-mono font-bold text-emerald-600">
-                        +${dep.amount.toFixed(0)}
+                        +{currencySymbol}{dep.amount.toFixed(0)}
                       </span>
                     </div>
                   ))}
@@ -432,7 +436,7 @@ export const SavingsPotsView: React.FC = () => {
                     Planner spending balance
                   </span>
                   <span className="text-[11px] text-[#526782]">
-                    This reduces your spending balance by ${depAmount} (creates linked transfer).
+                    This reduces your spending balance by {currencySymbol}{depAmount} (creates linked transfer).
                   </span>
                 </div>
               </label>
@@ -500,7 +504,7 @@ export const SavingsPotsView: React.FC = () => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
-                Target amount *
+                Target amount ({currencySymbol}) *
               </label>
               <input
                 type="number"
@@ -528,7 +532,7 @@ export const SavingsPotsView: React.FC = () => {
 
           <div>
             <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
-              Opening balance
+              Opening balance ({currencySymbol})
             </label>
             <input
               type="number"

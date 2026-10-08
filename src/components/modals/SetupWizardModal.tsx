@@ -73,8 +73,12 @@ export const SetupWizardModal: React.FC = () => {
         {step === 1 ? (
           <form onSubmit={handleStep1Submit} className="space-y-5">
             {/* Edition selection */}
-            <div className="grid grid-cols-2 gap-3">
-              <div
+            <div role="radiogroup" aria-label="Planner edition" className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={edition === 'online'}
+                aria-label="Online planner: Synchronize across your devices."
                 onClick={() => setEdition('online')}
                 className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
                   edition === 'online'
@@ -89,9 +93,13 @@ export const SetupWizardModal: React.FC = () => {
                 <div className="text-[10px] text-[#526782] mt-0.5">
                   Synchronize across your devices.
                 </div>
-              </div>
+              </button>
 
-              <div
+              <button
+                type="button"
+                role="radio"
+                aria-checked={edition === 'downloaded'}
+                aria-label="Independent download: No account or internet required."
                 onClick={() => setEdition('downloaded')}
                 className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
                   edition === 'downloaded'
@@ -106,18 +114,23 @@ export const SetupWizardModal: React.FC = () => {
                 <div className="text-[10px] text-[#526782] mt-0.5">
                   No account or internet required.
                 </div>
-              </div>
+              </button>
             </div>
 
             {/* Inputs */}
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="setup-owner-name"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Your name *
                 </label>
                 <input
+                  id="setup-owner-name"
                   type="text"
                   required
+                  aria-label="Your name"
                   value={ownerName}
                   onChange={(e) => setOwnerName(e.target.value)}
                   placeholder="Rida"
@@ -127,10 +140,15 @@ export const SetupWizardModal: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                  <label
+                    htmlFor="setup-week-start"
+                    className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                  >
                     Week starts on
                   </label>
                   <select
+                    id="setup-week-start"
+                    aria-label="Week starts on"
                     value={weekStart}
                     onChange={(e) => setWeekStart(e.target.value as any)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium"
@@ -141,10 +159,15 @@ export const SetupWizardModal: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                  <label
+                    htmlFor="setup-currency"
+                    className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                  >
                     Currency
                   </label>
                   <select
+                    id="setup-currency"
+                    aria-label="Currency"
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium"

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { HabitItem } from '../../types/planner';
 import { calculateHabitStreak } from '../../utils/calculations';
+import { getWeekDaysForDate } from '../../utils/formatters';
 
 export const HabitsView: React.FC = () => {
   const {
@@ -25,6 +26,7 @@ export const HabitsView: React.FC = () => {
     deleteHabit,
     toggleHabitCheck,
     currentDate,
+    settings,
   } = usePlanner();
 
   const [activeTab, setActiveTab] = useState<'this_week' | 'month' | 'insights'>('this_week');
@@ -85,27 +87,16 @@ export const HabitsView: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  // Week days (Mon-Sun)
+  // Week days based on settings.weekStartsOn
   const weekDays = useMemo(() => {
-    const cur = new Date(currentDate);
-    const day = cur.getDay();
-    const diff = cur.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(cur.setDate(diff));
-
-    const list = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      const iso = d.toISOString().split('T')[0];
-      list.push({
-        iso,
-        dayNum: d.getDate(),
-        dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
-        isToday: iso === currentDate,
-      });
-    }
-    return list;
-  }, [currentDate]);
+    const list = getWeekDaysForDate(currentDate, settings.weekStartsOn);
+    return list.map((d) => ({
+      iso: d.dateStr,
+      dayNum: d.dayNum,
+      dayName: d.dayName,
+      isToday: d.dateStr === currentDate,
+    }));
+  }, [currentDate, settings.weekStartsOn]);
 
   // Selected habit
   const selectedHabit =
@@ -320,6 +311,10 @@ export const HabitsView: React.FC = () => {
                         return (
                           <div key={w.iso} className="col-span-1 flex justify-center">
                             <button
+                              type="button"
+                              role="checkbox"
+                              aria-checked={isChecked}
+                              aria-label={`${habit.title}, ${w.dayName} ${w.dayNum}: ${isChecked ? 'completed' : 'not completed'}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 toggleHabitCheck(habit.id, w.iso);
@@ -370,8 +365,10 @@ export const HabitsView: React.FC = () => {
                     <span>Edit</span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => deleteHabit(selectedHabit.id)}
-                    className="p-1.5 rounded-lg hover:bg-rose-100 text-rose-600"
+                    className="p-1.5 rounded-lg hover:bg-rose-100 text-rose-600 cursor-pointer"
+                    aria-label={`Delete habit "${selectedHabit.title}"`}
                     title="Delete habit"
                   >
                     <Trash2 className="w-4 h-4" />

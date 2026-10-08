@@ -41,6 +41,7 @@ export const RoutinesView: React.FC = () => {
     toggleRoutinePause,
     currentDate,
     todayDate,
+    settings,
   } = usePlanner();
 
   const [activeTab, setActiveTab] = useState<'active' | 'paused' | 'history'>('active');
@@ -344,6 +345,10 @@ export const RoutinesView: React.FC = () => {
                     {/* Toggle button if scheduled today */}
                     {isScheduledToday ? (
                       <button
+                        type="button"
+                        role="checkbox"
+                        aria-checked={isDoneToday}
+                        aria-label={`Mark routine "${routine.title}" as ${isDoneToday ? 'incomplete' : 'complete'}`}
                         onClick={() => toggleRoutineCompletion(routine.id, currentDate)}
                         title={isDoneToday ? 'Completed today (click to undo)' : 'Click to complete for today'}
                         className={`w-5 h-5 mt-0.5 sm:mt-0 rounded-full flex items-center justify-center cursor-pointer transition-colors shrink-0 ${
@@ -841,15 +846,26 @@ export const RoutinesView: React.FC = () => {
                 Repeat on weekdays
               </label>
               <div className="flex gap-1.5">
-                {[
-                  { num: 1, label: 'Mon' },
-                  { num: 2, label: 'Tue' },
-                  { num: 3, label: 'Wed' },
-                  { num: 4, label: 'Thu' },
-                  { num: 5, label: 'Fri' },
-                  { num: 6, label: 'Sat' },
-                  { num: 0, label: 'Sun' },
-                ].map((d) => (
+                {(settings.weekStartsOn === 'Sunday'
+                  ? [
+                      { num: 0, label: 'Sun' },
+                      { num: 1, label: 'Mon' },
+                      { num: 2, label: 'Tue' },
+                      { num: 3, label: 'Wed' },
+                      { num: 4, label: 'Thu' },
+                      { num: 5, label: 'Fri' },
+                      { num: 6, label: 'Sat' },
+                    ]
+                  : [
+                      { num: 1, label: 'Mon' },
+                      { num: 2, label: 'Tue' },
+                      { num: 3, label: 'Wed' },
+                      { num: 4, label: 'Thu' },
+                      { num: 5, label: 'Fri' },
+                      { num: 6, label: 'Sat' },
+                      { num: 0, label: 'Sun' },
+                    ]
+                ).map((d) => (
                   <button
                     type="button"
                     key={d.num}

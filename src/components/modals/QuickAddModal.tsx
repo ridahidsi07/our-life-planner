@@ -121,7 +121,7 @@ export const QuickAddModal: React.FC = () => {
     >
       <div className="space-y-4">
         {/* Category icons row */}
-        <div className="grid grid-cols-6 gap-2">
+        <div role="radiogroup" aria-label="Item category" className="grid grid-cols-6 gap-2">
           {[
             { id: 'task', label: 'Task', icon: CheckSquare },
             { id: 'expense', label: 'Expense', icon: DollarSign },
@@ -136,6 +136,9 @@ export const QuickAddModal: React.FC = () => {
               <button
                 key={item.id}
                 type="button"
+                role="radio"
+                aria-checked={isSelected}
+                aria-label={`Category: ${item.label}`}
                 onClick={() => setActiveTab(item.id as any)}
                 className={`flex flex-col items-center justify-center p-2 rounded-xl border text-center transition-all cursor-pointer ${
                   isSelected

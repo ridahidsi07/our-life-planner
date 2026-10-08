@@ -35,6 +35,7 @@ const PRESET_EXERCISES = [
 
 export const WorkoutsView: React.FC = () => {
   const {
+    settings,
     workouts,
     addWorkoutSession,
     updateWorkoutSession,
@@ -115,14 +116,16 @@ export const WorkoutsView: React.FC = () => {
         anchor.setUTCDate(anchor.getUTCDate() + weekOffset * 7);
       }
       const dow = anchor.getUTCDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-      const mondayOffset = dow === 0 ? -6 : 1 - dow;
-      const monday = new Date(anchor);
-      monday.setUTCDate(anchor.getUTCDate() + mondayOffset);
+      const startOffset = settings.weekStartsOn === 'Sunday' ? -dow : (dow === 0 ? -6 : 1 - dow);
+      const startDay = new Date(anchor);
+      startDay.setUTCDate(anchor.getUTCDate() + startOffset);
 
-      const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const DAY_NAMES = settings.weekStartsOn === 'Sunday'
+        ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+        : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       return Array.from({ length: 7 }, (_, i) => {
-        const dObj = new Date(monday);
-        dObj.setUTCDate(monday.getUTCDate() + i);
+        const dObj = new Date(startDay);
+        dObj.setUTCDate(startDay.getUTCDate() + i);
         const iso = dObj.toISOString().split('T')[0];
         const dayNum = dObj.getUTCDate();
         const dayName = DAY_NAMES[i];
@@ -162,7 +165,7 @@ export const WorkoutsView: React.FC = () => {
     } catch {
       return [];
     }
-  }, [currentDate, weekOffset, todayDate, selectedDate, workouts]);
+  }, [currentDate, weekOffset, todayDate, selectedDate, workouts, settings.weekStartsOn]);
 
   // Selected session resolution
   const selectedSession = useMemo(() => {

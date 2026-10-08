@@ -17,9 +17,11 @@ import {
   getRoutineOccurrence,
   formatRecurrenceRule,
 } from '../../utils/routineRecurrence';
+import { getWeekDaysForDate } from '../../utils/formatters';
 
 export const CalendarView: React.FC = () => {
   const {
+    settings,
     currentDate,
     setCurrentDate,
     todayDate,
@@ -129,28 +131,17 @@ export const CalendarView: React.FC = () => {
     setEntryNotes('');
   };
 
-  // Week days (Mon-Sun)
+  // Week days based on settings.weekStartsOn
   const weekDays = useMemo(() => {
-    const cur = new Date(selectedDate);
-    const day = cur.getDay();
-    const diff = cur.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(cur.setDate(diff));
-
-    const list = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      const iso = d.toISOString().split('T')[0];
-      list.push({
-        dateStr: iso,
-        dayNum: d.getDate(),
-        dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
-        isToday: iso === todayDate,
-        isSelected: iso === selectedDate,
-      });
-    }
-    return list;
-  }, [selectedDate, todayDate]);
+    const list = getWeekDaysForDate(selectedDate, settings.weekStartsOn);
+    return list.map((d) => ({
+      dateStr: d.dateStr,
+      dayNum: d.dayNum,
+      dayName: d.dayName,
+      isToday: d.dateStr === todayDate,
+      isSelected: d.dateStr === selectedDate,
+    }));
+  }, [selectedDate, todayDate, settings.weekStartsOn]);
 
   // Items for selected day
   const selectedDayItems = useMemo(() => {
@@ -307,22 +298,31 @@ export const CalendarView: React.FC = () => {
 
   // Month grid dates calculation
   const monthGridDays = useMemo(() => {
-    const cur = new Date(selectedDate);
-    const year = cur.getFullYear();
-    const month = cur.getMonth();
+    const [yStr, mStr] = selectedDate.split('-');
+    const year = parseInt(yStr, 10);
+    const month = parseInt(mStr, 10) - 1;
 
     const firstDay = new Date(year, month, 1);
     const dayOfWeek = firstDay.getDay(); // 0 is Sunday
-    const startOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Mon=0
+    const startOffset =
+      settings.weekStartsOn === 'Sunday'
+        ? dayOfWeek
+        : dayOfWeek === 0
+        ? 6
+        : dayOfWeek - 1; // Mon=0
 
     const days = [];
-    const prevMonthLast = new Date(year, month, 0).getDate();
+    const prevMonthDate = new Date(year, month, 0);
+    const prevMonthLast = prevMonthDate.getDate();
+    const prevMonthYear = prevMonthDate.getFullYear();
+    const prevMonthNum = prevMonthDate.getMonth() + 1;
 
     for (let i = startOffset - 1; i >= 0; i--) {
+      const pDay = prevMonthLast - i;
       days.push({
-        dayNum: prevMonthLast - i,
+        dayNum: pDay,
         isCurrentMonth: false,
-        dateStr: `${year}-${String(month).padStart(2, '0')}-${String(prevMonthLast - i).padStart(2, '0')}`,
+        dateStr: `${prevMonthYear}-${String(prevMonthNum).padStart(2, '0')}-${String(pDay).padStart(2, '0')}`,
       });
     }
 
@@ -338,19 +338,29 @@ export const CalendarView: React.FC = () => {
       });
     }
 
-    const remaining = 35 - days.length;
+    const totalSlots = days.length > 35 ? 42 : 35;
+    const remaining = totalSlots - days.length;
+    const nextMonthDate = new Date(year, month + 1, 1);
+    const nextMonthYear = nextMonthDate.getFullYear();
+    const nextMonthNum = nextMonthDate.getMonth() + 1;
+
     for (let i = 1; i <= remaining; i++) {
       days.push({
         dayNum: i,
         isCurrentMonth: false,
-        dateStr: `${year}-${String(month + 2).padStart(2, '0')}-${String(i).padStart(2, '0')}`,
+        dateStr: `${nextMonthYear}-${String(nextMonthNum).padStart(2, '0')}-${String(i).padStart(2, '0')}`,
       });
     }
     return days;
-  }, [selectedDate, currentDate]);
+  }, [selectedDate, currentDate, settings.weekStartsOn]);
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+      {/* Screen reader live announcement */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {`Viewing calendar date ${selectedDate}. Showing ${selectedDayItems.length} scheduled items.`}
+      </div>
+
       {/* Top Header & View Controls */}
       <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
         <div>
@@ -468,23 +478,57 @@ export const CalendarView: React.FC = () => {
             <div>
               {/* Day Headers */}
               <div className="grid grid-cols-7 text-center font-bold text-xs text-[#526782] py-2 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
-                <span>Mon</span>
-                <span>Tue</span>
-                <span>Wed</span>
-                <span>Thu</span>
-                <span>Fri</span>
-                <span>Sat</span>
-                <span>Sun</span>
+                {settings.weekStartsOn === 'Sunday' ? (
+                  <>
+                    <span>Sun</span>
+                    <span>Mon</span>
+                    <span>Tue</span>
+                    <span>Wed</span>
+                    <span>Thu</span>
+                    <span>Fri</span>
+                    <span>Sat</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Mon</span>
+                    <span>Tue</span>
+                    <span>Wed</span>
+                    <span>Thu</span>
+                    <span>Fri</span>
+                    <span>Sat</span>
+                    <span>Sun</span>
+                  </>
+                )}
               </div>
 
               {/* Month Grid Cells */}
               <div className="grid grid-cols-7 gap-1 pt-2">
                 {monthGridDays.map((cell, idx) => {
+                  let formattedCellLabel = `${cell.dayNum}`;
+                  try {
+                    const [y, m, d] = cell.dateStr.split('-');
+                    const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+                    formattedCellLabel = dateObj.toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric',
+                    });
+                  } catch {
+                    formattedCellLabel = cell.dateStr;
+                  }
+                  if (cell.isToday) formattedCellLabel += ', Today';
+                  if (cell.isSelected) formattedCellLabel += ', Selected';
+
                   return (
-                    <div
+                    <button
                       key={idx}
+                      type="button"
+                      aria-label={formattedCellLabel}
+                      aria-pressed={cell.isSelected}
+                      aria-current={cell.isToday ? 'date' : undefined}
                       onClick={() => setSelectedDate(cell.dateStr)}
-                      className={`min-h-[85px] p-1.5 rounded-xl border text-left cursor-pointer transition-colors flex flex-col justify-between ${
+                      className={`min-h-[85px] p-1.5 rounded-xl border text-left cursor-pointer transition-colors flex flex-col justify-between w-full min-w-0 ${
                         cell.isSelected
                           ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20'
                           : cell.isCurrentMonth
@@ -492,7 +536,7 @@ export const CalendarView: React.FC = () => {
                           : 'border-transparent text-slate-300 dark:text-slate-700 bg-slate-50/30'
                       }`}
                     >
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between w-full">
                         <span
                           className={`text-xs font-semibold ${
                             cell.isToday
@@ -523,7 +567,7 @@ export const CalendarView: React.FC = () => {
                             <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
                           )}
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -533,19 +577,23 @@ export const CalendarView: React.FC = () => {
           {viewMode === 'week' && (
             <div>
               {/* Week header row */}
-              <div className="grid grid-cols-7 gap-2 pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A] text-center">
+              <div className="grid grid-cols-7 gap-1 sm:gap-2 pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A] text-center w-full">
                 {weekDays.map((w) => (
                   <button
                     key={w.dateStr}
+                    type="button"
+                    aria-label={`${w.dayName}, ${w.dayNum}${w.isSelected ? ', Selected' : ''}`}
+                    aria-pressed={w.isSelected}
+                    aria-current={w.dateStr === currentDate ? 'date' : undefined}
                     onClick={() => setSelectedDate(w.dateStr)}
-                    className={`py-2 rounded-xl transition-colors cursor-pointer ${
+                    className={`py-2 px-0.5 rounded-xl transition-colors cursor-pointer min-w-0 ${
                       w.isSelected
                         ? 'bg-[#087F83] text-white font-bold shadow-xs'
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782]'
                     }`}
                   >
-                    <div className="text-[11px] uppercase">{w.dayName}</div>
-                    <div className="text-base font-bold">{w.dayNum}</div>
+                    <div className="text-[9px] sm:text-[11px] uppercase tracking-tighter truncate w-full">{w.dayName}</div>
+                    <div className="text-sm sm:text-base font-bold">{w.dayNum}</div>
                   </button>
                 ))}
               </div>

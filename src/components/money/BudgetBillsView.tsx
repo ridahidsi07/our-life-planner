@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
+import { getCurrencySymbol } from '../../utils/formatters';
 import { RingProgress } from '../ui/RingProgress';
 import { Modal } from '../ui/Modal';
 import {
@@ -63,6 +64,8 @@ export const BudgetBillsView: React.FC = () => {
     deleteTransaction,
     currentDate,
   } = usePlanner();
+
+  const currencySymbol = settings.currencySymbol || getCurrencySymbol(settings.currency) || '$';
 
   const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'bills'>('overview');
 
@@ -412,10 +415,10 @@ export const BudgetBillsView: React.FC = () => {
             Left to spend (Oct 1 – 31)
           </div>
           <div className="text-3xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] mt-1">
-            ${cashFlow.leftToSpend.toFixed(0)}
+            {currencySymbol}{cashFlow.leftToSpend.toFixed(0)}
           </div>
           <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE] mt-1.5 leading-snug">
-            ${cashFlow.actualBalance.toFixed(0)} balance − ${cashFlow.unpaidBills.toFixed(0)} bills − ${cashFlow.plannedSavingsDue.toFixed(0)} savings
+            {currencySymbol}{cashFlow.actualBalance.toFixed(0)} balance − {currencySymbol}{cashFlow.unpaidBills.toFixed(0)} bills − {currencySymbol}{cashFlow.plannedSavingsDue.toFixed(0)} savings
           </div>
         </div>
 
@@ -425,7 +428,7 @@ export const BudgetBillsView: React.FC = () => {
             Actual balance
           </div>
           <div className="text-2xl font-bold font-mono text-[#087F83] dark:text-[#38D0C5] mt-1">
-            ${cashFlow.actualBalance.toFixed(0)}
+            {currencySymbol}{cashFlow.actualBalance.toFixed(0)}
           </div>
           <div className="text-[11px] text-[#526782] mt-1.5">
             Posted spending ledger
@@ -438,7 +441,7 @@ export const BudgetBillsView: React.FC = () => {
             Unpaid planned bills
           </div>
           <div className="text-2xl font-bold font-mono text-rose-600 dark:text-rose-400 mt-1">
-            ${cashFlow.unpaidBills.toFixed(0)}
+            {currencySymbol}{cashFlow.unpaidBills.toFixed(0)}
           </div>
           <div className="text-[11px] text-[#526782] mt-1.5">
             Due this month
@@ -451,7 +454,7 @@ export const BudgetBillsView: React.FC = () => {
             Planned savings still due
           </div>
           <div className="text-2xl font-bold font-mono text-amber-600 dark:text-amber-400 mt-1">
-            ${cashFlow.plannedSavingsDue.toFixed(0)}
+            {currencySymbol}{cashFlow.plannedSavingsDue.toFixed(0)}
           </div>
           <div className="text-[11px] text-[#526782] mt-1.5">
             Scheduled transfers
@@ -487,35 +490,35 @@ export const BudgetBillsView: React.FC = () => {
                   <Edit2 className="w-2.5 h-2.5 opacity-60" />
                 </span>
                 <span className="text-base font-bold font-mono mt-0.5 block">
-                  ${cashFlow.openingBalance.toFixed(0)}
+                  {currencySymbol}{cashFlow.openingBalance.toFixed(0)}
                 </span>
               </div>
 
               <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300">
                 <span className="opacity-80 block text-[10px]">+ Actual income</span>
                 <span className="text-base font-bold font-mono mt-0.5 block">
-                  ${cashFlow.actualIncome.toFixed(0)}
+                  {currencySymbol}{cashFlow.actualIncome.toFixed(0)}
                 </span>
               </div>
 
               <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300">
                 <span className="opacity-80 block text-[10px]">− Actual expenses</span>
                 <span className="text-base font-bold font-mono mt-0.5 block">
-                  ${cashFlow.actualExpenses.toFixed(0)}
+                  {currencySymbol}{cashFlow.actualExpenses.toFixed(0)}
                 </span>
               </div>
 
               <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300">
                 <span className="opacity-80 block text-[10px]">− Savings transfers</span>
                 <span className="text-base font-bold font-mono mt-0.5 block">
-                  ${cashFlow.savingsTransfers.toFixed(0)}
+                  {currencySymbol}{cashFlow.savingsTransfers.toFixed(0)}
                 </span>
               </div>
 
               <div className="p-3 rounded-xl bg-[#087F83]/10 text-[#087F83] dark:text-[#38D0C5]">
                 <span className="opacity-80 block text-[10px]">= Current balance</span>
                 <span className="text-base font-bold font-mono mt-0.5 block">
-                  ${cashFlow.actualBalance.toFixed(0)}
+                  {currencySymbol}{cashFlow.actualBalance.toFixed(0)}
                 </span>
               </div>
             </div>
@@ -555,10 +558,10 @@ export const BudgetBillsView: React.FC = () => {
                         </span>
                         <div className="space-x-3 font-mono">
                           <span className="text-[#526782]">
-                            Limit: ${cat.limit}
+                            Limit: {currencySymbol}{cat.limit}
                           </span>
                           <span className="text-[#526782]">
-                            Spent: ${cat.spent}
+                            Spent: {currencySymbol}{cat.spent}
                           </span>
                           <span
                             className={`font-semibold ${
@@ -566,8 +569,8 @@ export const BudgetBillsView: React.FC = () => {
                             }`}
                           >
                             {cat.isOver
-                              ? `-$${Math.abs(cat.remaining)} over`
-                              : `$${cat.remaining} left`}
+                              ? `-${currencySymbol}${Math.abs(cat.remaining)} over`
+                              : `${currencySymbol}${cat.remaining} left`}
                           </span>
                         </div>
                       </div>
@@ -587,12 +590,12 @@ export const BudgetBillsView: React.FC = () => {
 
               {/* Dynamic Footer Totals calculated directly from ledger */}
               <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between text-xs font-bold font-mono">
-                <span>Total (limits): ${totalLimits.toFixed(0)}</span>
-                <span>Spent: ${totalSpent.toFixed(0)}</span>
+                <span>Total (limits): {currencySymbol}{totalLimits.toFixed(0)}</span>
+                <span>Spent: {currencySymbol}{totalSpent.toFixed(0)}</span>
                 <span className={totalRemaining >= 0 ? 'text-emerald-600' : 'text-rose-600'}>
                   {totalRemaining >= 0
-                    ? `$${totalRemaining.toFixed(0)} remaining`
-                    : `-$${Math.abs(totalRemaining).toFixed(0)} over`}
+                    ? `${currencySymbol}${totalRemaining.toFixed(0)} remaining`
+                    : `-${currencySymbol}${Math.abs(totalRemaining).toFixed(0)} over`}
                 </span>
               </div>
             </div>
@@ -614,7 +617,7 @@ export const BudgetBillsView: React.FC = () => {
                   >
                     <div className="text-center font-mono">
                       <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF] block leading-none">
-                        ${totalSpent.toFixed(0)}
+                        {currencySymbol}{totalSpent.toFixed(0)}
                       </span>
                       <span className="text-[9px] text-[#526782] block leading-none mt-0.5">
                         total
@@ -637,7 +640,7 @@ export const BudgetBillsView: React.FC = () => {
                               <span>{cat.name}</span>
                             </span>
                             <span className="font-mono font-semibold">
-                              ${cat.spent.toFixed(0)} ({pctOfTotal}%)
+                              {currencySymbol}{cat.spent.toFixed(0)} ({pctOfTotal}%)
                             </span>
                           </div>
                         );
@@ -661,10 +664,10 @@ export const BudgetBillsView: React.FC = () => {
                   </button>
                 </div>
                 <div className="text-2xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] mt-1">
-                  ${cashFlow.unallocatedBudget.toFixed(0)}
+                  {currencySymbol}{cashFlow.unallocatedBudget.toFixed(0)}
                 </div>
                 <div className="text-[11px] text-[#526782] mt-1 leading-relaxed">
-                  From: ${cashFlow.openingBalance.toFixed(0)} opening + ${cashFlow.plannedIncome.toFixed(0)} planned income − ${cashFlow.categoryLimitsTotal.toFixed(0)} category limits − ${cashFlow.plannedSavingsTotal.toFixed(0)} planned savings
+                  From: {currencySymbol}{cashFlow.openingBalance.toFixed(0)} opening + {currencySymbol}{cashFlow.plannedIncome.toFixed(0)} planned income − {currencySymbol}{cashFlow.categoryLimitsTotal.toFixed(0)} category limits − {currencySymbol}{cashFlow.plannedSavingsTotal.toFixed(0)} planned savings
                 </div>
               </div>
             </div>
@@ -750,7 +753,7 @@ export const BudgetBillsView: React.FC = () => {
                       }`}
                     >
                       {tx.type === 'income' ? '+' : '-'}
-                      ${tx.amount.toFixed(2)}
+                      {currencySymbol}{tx.amount.toFixed(2)}
                     </span>
 
                     <button
@@ -822,7 +825,7 @@ export const BudgetBillsView: React.FC = () => {
                     Due: {bill.dueDate}{' '}
                     {bill.isPaid && (
                       <span className="text-emerald-600 font-semibold ml-2">
-                        · Paid ${bill.actualPaidAmount} on {bill.paidDate}
+                        · Paid {currencySymbol}{bill.actualPaidAmount} on {bill.paidDate}
                       </span>
                     )}
                   </div>
@@ -830,7 +833,7 @@ export const BudgetBillsView: React.FC = () => {
 
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF]">
-                    ${bill.plannedAmount.toFixed(0)}
+                    {currencySymbol}{bill.plannedAmount.toFixed(0)}
                   </span>
 
                   {bill.isPaid ? (
@@ -839,8 +842,10 @@ export const BudgetBillsView: React.FC = () => {
                         Paid
                       </span>
                       <button
+                        type="button"
                         onClick={() => setUnpayingBill(bill)}
                         className="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px] font-medium text-[#526782] hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                        aria-label={`Unpay bill "${bill.title}"`}
                         title="Unpay bill (reverse expense)"
                       >
                         Unpay
@@ -848,24 +853,30 @@ export const BudgetBillsView: React.FC = () => {
                     </div>
                   ) : (
                     <button
+                      type="button"
                       onClick={() => openMarkPaid(bill)}
                       className="px-3 py-1 rounded-lg bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] text-white dark:text-[#071A3A] text-xs font-semibold cursor-pointer shadow-xs"
+                      aria-label={`Mark bill "${bill.title}" as paid`}
                     >
                       Mark paid
                     </button>
                   )}
 
                   <button
+                    type="button"
                     onClick={() => openEditBill(bill)}
                     className="p-1 rounded-md text-slate-400 hover:text-[#087F83] cursor-pointer"
+                    aria-label={`Edit bill "${bill.title}"`}
                     title="Edit bill"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => deleteBill(bill.id)}
                     className="p-1 rounded-md text-slate-400 hover:text-rose-600 cursor-pointer"
+                    aria-label={`Delete bill "${bill.title}"`}
                     title="Delete bill"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -888,7 +899,7 @@ export const BudgetBillsView: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
-                Opening Balance ($)
+                Opening Balance ({currencySymbol})
               </label>
               <input
                 type="number"
@@ -902,7 +913,7 @@ export const BudgetBillsView: React.FC = () => {
 
             <div>
               <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
-                Planned Income ($)
+                Planned Income ({currencySymbol})
               </label>
               <input
                 type="number"
@@ -916,7 +927,7 @@ export const BudgetBillsView: React.FC = () => {
 
             <div>
               <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
-                Planned Savings ($)
+                Planned Savings ({currencySymbol})
               </label>
               <input
                 type="number"
@@ -952,7 +963,7 @@ export const BudgetBillsView: React.FC = () => {
                 Category Budget Allocations (Limits)
               </span>
               <span className="text-[11px] font-mono font-semibold text-[#087F83] dark:text-[#38D0C5]">
-                Total: ${Object.values(planCategoryLimits).reduce((a, b) => a + b, 0)}
+                Total: {currencySymbol}{Object.values(planCategoryLimits).reduce((a, b) => a + b, 0)}
               </span>
             </div>
 
@@ -967,7 +978,7 @@ export const BudgetBillsView: React.FC = () => {
                   </span>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-[#526782] font-mono">$</span>
+                    <span className="text-xs text-[#526782] font-mono">{currencySymbol}</span>
                     <input
                       type="number"
                       step="1"
@@ -1025,7 +1036,7 @@ export const BudgetBillsView: React.FC = () => {
           <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200/80 text-xs text-[#087F83] dark:text-[#38D0C5] flex items-center justify-between">
             <span>Projected Unallocated Budget:</span>
             <span className="font-bold font-mono text-sm">
-              $
+              {currencySymbol}
               {(
                 planOpeningBalance +
                 planPlannedIncome -
@@ -1067,7 +1078,7 @@ export const BudgetBillsView: React.FC = () => {
                 {payingBill.title}
               </span>
               <span className="text-[#526782]">
-                Category: {payingBill.category} · Planned: ${payingBill.plannedAmount.toFixed(2)} · Due: {payingBill.dueDate}
+                Category: {payingBill.category} · Planned: {currencySymbol}{payingBill.plannedAmount.toFixed(2)} · Due: {payingBill.dueDate}
               </span>
             </div>
 
@@ -1185,7 +1196,7 @@ export const BudgetBillsView: React.FC = () => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
-                Amount *
+                Amount ({currencySymbol}) *
               </label>
               <input
                 type="number"
@@ -1293,7 +1304,7 @@ export const BudgetBillsView: React.FC = () => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
-                Planned amount *
+                Planned amount ({currencySymbol}) *
               </label>
               <input
                 type="number"

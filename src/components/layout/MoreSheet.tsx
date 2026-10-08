@@ -31,6 +31,16 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   const { setActiveView, setActiveModal } = usePlanner();
   const [searchTerm, setSearchTerm] = useState('');
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const toolCategories = [
@@ -85,8 +95,14 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   })).filter((cat) => cat.items.length > 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="fixed inset-0" onClick={onClose} />
+    <div
+      id="all-tools-menu"
+      role="dialog"
+      aria-modal="true"
+      aria-label="All Tools & Views"
+      className="fixed inset-0 z-50 flex flex-col justify-end bg-black/50 backdrop-blur-xs animate-in fade-in duration-200"
+    >
+      <div className="fixed inset-0" onClick={onClose} aria-hidden="true" />
       <div className="relative bg-white dark:bg-[#152238] rounded-t-3xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl z-10 border-t border-[#E2E8F0] dark:border-[#1E2D4A]">
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-4 pb-2 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
@@ -100,7 +116,8 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782]"
+            aria-label="Close menu"
+            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>

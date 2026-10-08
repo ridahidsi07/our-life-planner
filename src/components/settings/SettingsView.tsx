@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { usePlanner } from '../../context/PlannerContext';
+import React, { useState, useEffect } from 'react';
+import { usePlanner, applyThemeToDocument } from '../../context/PlannerContext';
 import { Modal } from '../ui/Modal';
 import {
   Settings,
@@ -46,6 +46,18 @@ export const SettingsView: React.FC = () => {
 
   const [savedFeedback, setSavedFeedback] = useState(false);
 
+  // Sync state when settings update
+  useEffect(() => {
+    setName(settings.ownerName);
+    setWeekStart(settings.weekStartsOn);
+    setTimeZone(settings.timeZone);
+    setCurrency(settings.currency);
+    setWeightUnit(settings.weightUnit);
+    setHeightUnit(settings.heightUnit);
+    setWaterUnit(settings.waterUnit);
+    setEdition(settings.edition);
+  }, [settings]);
+
   const handleSaveGeneral = (e: React.FormEvent) => {
     e.preventDefault();
     updateSettings({
@@ -60,22 +72,12 @@ export const SettingsView: React.FC = () => {
       edition,
     });
     setSavedFeedback(true);
-    setTimeout(() => setSavedFeedback(false), 2000);
+    setTimeout(() => setSavedFeedback(false), 2500);
   };
 
   const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
     updateSettings({ theme });
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else if (theme === 'light') {
-      document.documentElement.classList.remove('dark');
-    } else {
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }
+    applyThemeToDocument(theme);
   };
 
   const handleConfirmReset = () => {
@@ -119,12 +121,17 @@ export const SettingsView: React.FC = () => {
         <form onSubmit={handleSaveGeneral} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="settings-owner-name"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Owner name
               </label>
               <input
+                id="settings-owner-name"
                 type="text"
                 required
+                aria-label="Owner name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
@@ -132,10 +139,15 @@ export const SettingsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="settings-week-start"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Week starts on
               </label>
               <select
+                id="settings-week-start"
+                aria-label="Week starts on"
                 value={weekStart}
                 onChange={(e) => setWeekStart(e.target.value as any)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
@@ -149,10 +161,15 @@ export const SettingsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="settings-timezone"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Timezone
               </label>
               <select
+                id="settings-timezone"
+                aria-label="Timezone"
                 value={timeZone}
                 onChange={(e) => setTimeZone(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
@@ -168,10 +185,15 @@ export const SettingsView: React.FC = () => {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="settings-currency"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Currency
               </label>
               <select
+                id="settings-currency"
+                aria-label="Currency"
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
@@ -182,16 +204,21 @@ export const SettingsView: React.FC = () => {
                 <option value="CAD">CAD ($)</option>
                 <option value="AUD">AUD ($)</option>
               </select>
-              <span className="text-[10px] text-[#526782] mt-1 block">
-                Display & denomination setting only. Formats all budgets, bills, savings pots, and financial ledgers with {getCurrencySymbol(currency)} without altering or converting existing nominal figures.
+              <span className="text-[10px] text-[#526782] dark:text-[#A8B8CE] mt-1 block leading-relaxed">
+                <strong>Display &amp; denomination setting only:</strong> Updates the currency symbol ({getCurrencySymbol(currency)}) and code ({currency}) displayed across your budget, bills, transactions, and savings pots. Existing figures are retained nominally (no automatic currency or exchange-rate conversion is performed).
               </span>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="settings-weight-unit"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Weight unit
               </label>
               <select
+                id="settings-weight-unit"
+                aria-label="Weight unit"
                 value={weightUnit}
                 onChange={(e) => setWeightUnit(e.target.value as any)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
@@ -205,10 +232,15 @@ export const SettingsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="settings-height-unit"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Height unit
               </label>
               <select
+                id="settings-height-unit"
+                aria-label="Height unit"
                 value={heightUnit}
                 onChange={(e) => setHeightUnit(e.target.value as any)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
@@ -219,10 +251,15 @@ export const SettingsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="settings-water-unit"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Water unit
               </label>
               <select
+                id="settings-water-unit"
+                aria-label="Water unit"
                 value={waterUnit}
                 onChange={(e) => setWaterUnit(e.target.value as any)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
@@ -233,7 +270,13 @@ export const SettingsView: React.FC = () => {
             </div>
           </div>
 
-          <div className="pt-2 flex justify-end">
+          <div className="pt-2 flex items-center justify-end gap-3">
+            {savedFeedback && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-semibold animate-in fade-in">
+                <Check className="w-3.5 h-3.5" />
+                <span>Preferences saved</span>
+              </div>
+            )}
             <button
               type="submit"
               className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer shadow-xs"
@@ -253,7 +296,7 @@ export const SettingsView: React.FC = () => {
           Choose how Our Life Planner looks across light and dark modes.
         </p>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div role="radiogroup" aria-label="Theme preference" className="grid grid-cols-3 gap-3">
           {[
             { id: 'light', label: 'Light', icon: Sun },
             { id: 'dark', label: 'Dark', icon: Moon },
@@ -264,6 +307,9 @@ export const SettingsView: React.FC = () => {
             return (
               <button
                 key={theme.id}
+                role="radio"
+                aria-checked={isSelected}
+                aria-label={`${theme.label} mode`}
                 onClick={() => handleThemeChange(theme.id as any)}
                 className={`p-3.5 rounded-xl border flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer transition-all ${
                   isSelected

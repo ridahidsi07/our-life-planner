@@ -12,6 +12,38 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+        try {
+          var stored = localStorage.getItem('our_life_planner_settings_v1') || localStorage.getItem('life_planner_settings_v1');
+          var theme = 'light';
+          if (stored) {
+            var parsed = JSON.parse(stored);
+            if (parsed && parsed.theme) theme = parsed.theme;
+          }
+          var isDark = false;
+          if (theme === 'dark') {
+            isDark = true;
+          } else if (theme === 'light') {
+            isDark = false;
+          } else {
+            isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          }
+          var root = document.documentElement;
+          if (isDark) {
+            root.classList.add('dark');
+            root.classList.remove('light');
+            root.setAttribute('data-theme', 'dark');
+            root.style.colorScheme = 'dark';
+          } else {
+            root.classList.remove('dark');
+            root.classList.add('light');
+            root.setAttribute('data-theme', 'light');
+            root.style.colorScheme = 'light';
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body class="bg-[#F3F8FC] dark:bg-[#0B1220] text-[#071A3A] dark:text-[#EDF4FF] antialiased">
     <div id="root"></div>

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
+import { getWeekDaysForDate } from '../../utils/formatters';
 import { RingProgress } from '../ui/RingProgress';
 import { Modal } from '../ui/Modal';
 import {
@@ -27,6 +28,7 @@ export const TasksView: React.FC = () => {
     deleteTask,
     toggleTaskCompletion,
     currentDate,
+    settings,
   } = usePlanner();
 
   const [activeTab, setActiveTab] = useState<'list' | 'insights'>('list');
@@ -35,6 +37,8 @@ export const TasksView: React.FC = () => {
   const [assignedFilter, setAssignedFilter] = useState('Anyone');
   const [priorityFilter, setPriorityFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [selectedDateFilter, setSelectedDateFilter] = useState<string>('all');
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   // Task Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -116,9 +120,26 @@ export const TasksView: React.FC = () => {
       if (statusFilter !== 'All' && t.status !== statusFilter.toLowerCase().replace(' ', '_')) {
         return false;
       }
+      if (selectedDateFilter !== 'all' && t.dueDate !== selectedDateFilter) {
+        return false;
+      }
       return true;
     });
-  }, [tasks, searchQuery, categoryFilter, assignedFilter, priorityFilter, statusFilter]);
+  }, [tasks, searchQuery, categoryFilter, assignedFilter, priorityFilter, statusFilter, selectedDateFilter]);
+
+  const activeFilterCount =
+    (categoryFilter !== 'All' ? 1 : 0) +
+    (priorityFilter !== 'All' ? 1 : 0) +
+    (statusFilter !== 'All' ? 1 : 0) +
+    (selectedDateFilter !== 'all' ? 1 : 0);
+
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setCategoryFilter('All');
+    setPriorityFilter('All');
+    setStatusFilter('All');
+    setSelectedDateFilter('all');
+  };
 
   // Overall Task Metrics (Calculated honestly from filtered data)
   const totalCount = filteredTasks.length;
@@ -169,26 +190,21 @@ export const TasksView: React.FC = () => {
     return assignees;
   }, [filteredTasks]);
 
-  // Deadlines next 7 days
+  // Deadlines next 7 days based on settings.weekStartsOn
   const next7DaysCounts = useMemo(() => {
-    const cur = new Date(currentDate);
-    const day = cur.getDay();
-    const diff = cur.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(cur.setDate(diff));
-
-    const days = [];
-    const names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      const iso = d.toISOString().split('T')[0];
-      const count = filteredTasks.filter(
-        (t) => t.dueDate === iso && t.status !== 'completed'
+    const list = getWeekDaysForDate(currentDate, settings.weekStartsOn);
+    return list.map((d) => {
+      const count = tasks.filter(
+        (t) => t.dueDate === d.dateStr && t.status !== 'completed'
       ).length;
-      days.push({ name: names[i], dayNum: d.getDate(), count, iso });
-    }
-    return days;
-  }, [filteredTasks, currentDate]);
+      return {
+        name: d.dayName,
+        dayNum: d.dayNum,
+        count,
+        iso: d.dateStr,
+      };
+    });
+  }, [tasks, currentDate, settings.weekStartsOn]);
 
   const priorityBadge = (priority: Priority) => {
     switch (priority) {
@@ -220,6 +236,11 @@ export const TasksView: React.FC = () => {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+      {/* Screen reader live announcement for task count and filters */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {`Tasks list updated: ${totalCount} tasks total, ${completedCount} completed, ${overdueCount} overdue. ${selectedDateFilter !== 'all' ? `Filtered by date ${selectedDateFilter}.` : ''}`}
+      </div>
+
       {/* Top Header & New Task button */}
       <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
         <div>
@@ -268,8 +289,8 @@ export const TasksView: React.FC = () => {
         </div>
       </div>
 
-      {/* Metric Cards Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Desktop Metric Cards Row */}
+      <div className="hidden md:grid md:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-[#152238] rounded-2xl p-4 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
           <div className="text-xs text-[#526782] dark:text-[#A8B8CE] font-medium">
             Total tasks
@@ -315,12 +336,188 @@ export const TasksView: React.FC = () => {
         </div>
       </div>
 
+      {/* Mobile Condensed Summary */}
+      <div className="md:hidden bg-white dark:bg-[#152238] rounded-xl p-3 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
+        <div className="grid grid-cols-4 gap-1 text-center divide-x divide-slate-100 dark:divide-slate-800">
+          <div className="px-1">
+            <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] font-medium">Total</div>
+            <div className="text-base font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] mt-0.5">{totalCount}</div>
+          </div>
+          <div className="px-1">
+            <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] font-medium">Done</div>
+            <div className="text-base font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">{completedCount}</div>
+          </div>
+          <div className="px-1">
+            <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] font-medium">Overdue</div>
+            <div className="text-base font-bold font-mono text-rose-600 dark:text-rose-400 mt-0.5">{overdueCount}</div>
+          </div>
+          <div className="px-1">
+            <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] font-medium">Rate</div>
+            <div className="text-base font-bold font-mono text-[#087F83] dark:text-[#38D0C5] mt-0.5">{completionPct}%</div>
+          </div>
+        </div>
+      </div>
+
+      {/* 7-Day Week Selector Strip (No horizontal scrolling on phone width) */}
+      <div className="bg-white dark:bg-[#152238] rounded-xl p-3 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+              Weekly dates
+            </span>
+            {selectedDateFilter !== 'all' && (
+              <span className="text-[10px] font-semibold text-[#087F83] dark:text-[#38D0C5]">
+                Filtered ({selectedDateFilter})
+              </span>
+            )}
+          </div>
+          {selectedDateFilter !== 'all' && (
+            <button
+              onClick={() => setSelectedDateFilter('all')}
+              className="text-[11px] font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline cursor-pointer"
+            >
+              All dates
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-7 gap-1 w-full text-center">
+          {next7DaysCounts.map((d) => {
+            const isSelected = selectedDateFilter === d.iso;
+            const isToday = d.iso === currentDate;
+            return (
+              <button
+                key={d.iso}
+                type="button"
+                aria-pressed={isSelected}
+                aria-current={isToday ? 'date' : undefined}
+                aria-label={`${d.name} ${d.dayNum}, ${d.count} tasks due${isSelected ? ' (Selected)' : ''}`}
+                onClick={() => setSelectedDateFilter(isSelected ? 'all' : d.iso)}
+                className={`flex flex-col items-center justify-center py-1.5 px-0.5 rounded-lg transition-all cursor-pointer min-w-0 ${
+                  isSelected
+                    ? 'bg-[#087F83] text-white font-bold shadow-xs'
+                    : isToday
+                    ? 'bg-teal-50 dark:bg-teal-950/40 text-[#087F83] dark:text-[#38D0C5] border border-teal-200 dark:border-teal-800'
+                    : 'text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+                title={`${d.name} (${d.iso})`}
+              >
+                <span className="text-[9px] uppercase tracking-tighter truncate w-full">{d.name}</span>
+                <span className="text-xs font-semibold leading-tight">{d.dayNum}</span>
+                <span
+                  className={`text-[9px] px-1 rounded-full font-mono mt-0.5 ${
+                    isSelected
+                      ? 'bg-white/20 text-white font-bold'
+                      : d.count > 0
+                      ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-bold'
+                      : 'text-slate-400 dark:text-slate-500'
+                  }`}
+                >
+                  {d.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* List Tab View */}
       {activeTab === 'list' && (
-        <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
-          {/* Search & Filters toolbar */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
-            <div className="relative sm:col-span-2">
+        <div className="bg-white dark:bg-[#152238] rounded-2xl p-4 md:p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
+          {/* Mobile Search & Filters: Single control toggle */}
+          <div className="md:hidden space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 absolute left-3 top-2.5 text-[#526782]" />
+                <input
+                  type="text"
+                  placeholder="Search tasks…"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:ring-2 focus:ring-[#087F83]"
+                />
+              </div>
+
+              <button
+                onClick={() => setIsMobileFilterOpen((prev) => !prev)}
+                aria-expanded={isMobileFilterOpen}
+                aria-label="Toggle task filters"
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors cursor-pointer shrink-0 ${
+                  isMobileFilterOpen || activeFilterCount > 0
+                    ? 'bg-teal-50 dark:bg-teal-950/50 border-[#087F83] text-[#087F83] dark:text-[#38D0C5]'
+                    : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-[#526782] dark:text-[#A8B8CE]'
+                }`}
+              >
+                <Filter className="w-3.5 h-3.5" />
+                <span>Filters</span>
+                {activeFilterCount > 0 && (
+                  <span className="w-4 h-4 rounded-full bg-[#087F83] text-white text-[10px] flex items-center justify-center font-bold">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Collapsible Mobile Filters */}
+            {isMobileFilterOpen && (
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/80 space-y-2">
+                <div className="flex items-center justify-between text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
+                  <span>Filter Options</span>
+                  {activeFilterCount > 0 && (
+                    <button
+                      onClick={handleClearFilters}
+                      className="text-[11px] text-[#087F83] dark:text-[#38D0C5] hover:underline cursor-pointer"
+                    >
+                      Reset filters
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium"
+                  >
+                    <option value="All">Category: All</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Career">Career</option>
+                    <option value="Health">Health</option>
+                    <option value="Finances">Finances</option>
+                    <option value="Relationships">Relationships</option>
+                  </select>
+
+                  <select
+                    value={priorityFilter}
+                    onChange={(e) => setPriorityFilter(e.target.value)}
+                    className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium"
+                  >
+                    <option value="All">Priority: All</option>
+                    <option value="Urgent">Urgent</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                    <option value="Lowest">Lowest</option>
+                  </select>
+
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium"
+                  >
+                    <option value="All">Status: All</option>
+                    <option value="Not started">Not started</option>
+                    <option value="In progress">In progress</option>
+                    <option value="On hold">On hold</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Search & Filters toolbar */}
+          <div className="hidden md:grid md:grid-cols-5 gap-3">
+            <div className="relative md:col-span-2">
               <Search className="w-4 h-4 absolute left-3 top-3 text-[#526782]" />
               <input
                 type="text"
@@ -370,8 +567,131 @@ export const TasksView: React.FC = () => {
             </select>
           </div>
 
-          {/* Table of Tasks */}
-          <div className="overflow-x-auto">
+          {/* Mobile Task Cards (All vital details visible together) */}
+          <div className="md:hidden space-y-2.5">
+            {filteredTasks.length === 0 ? (
+              <div className="py-8 text-center text-xs text-[#526782]">
+                No tasks found matching your filters.
+              </div>
+            ) : (
+              filteredTasks.map((task) => {
+                const isOverdue =
+                  task.status !== 'completed' &&
+                  task.dueDate &&
+                  task.dueDate < currentDate;
+                return (
+                  <div
+                    key={task.id}
+                    className="p-3 rounded-xl bg-white dark:bg-[#152238] border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs flex items-start gap-3 transition-colors"
+                  >
+                    {/* Completion Checkbox */}
+                    <button
+                      type="button"
+                      role="checkbox"
+                      aria-checked={task.status === 'completed'}
+                      onClick={() => toggleTaskCompletion(task.id)}
+                      className={`w-5 h-5 mt-0.5 rounded-md flex items-center justify-center shrink-0 cursor-pointer transition-colors ${
+                        task.status === 'completed'
+                          ? 'bg-[#087F83] text-white'
+                          : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
+                      }`}
+                      aria-label={`Mark task "${task.title}" as ${task.status === 'completed' ? 'incomplete' : 'complete'}`}
+                    >
+                      {task.status === 'completed' && (
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      )}
+                    </button>
+
+                    {/* Task Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <span
+                          className={`text-xs font-semibold leading-snug break-words ${
+                            task.status === 'completed'
+                              ? 'line-through text-[#526782] dark:text-[#7A8FA6]'
+                              : 'text-[#071A3A] dark:text-[#EDF4FF]'
+                          }`}
+                        >
+                          {task.title}
+                        </span>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-1 shrink-0 -mt-1 -mr-1">
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(task)}
+                            className="p-1 rounded-md text-[#526782] hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+                            aria-label={`Edit task "${task.title}"`}
+                            title="Edit task"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => deleteTask(task.id)}
+                            className="p-1 rounded-md text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
+                            aria-label={`Delete task "${task.title}"`}
+                            title="Delete task"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Visible Together: Due Date, Priority, Status, Category */}
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px]">
+                        {/* Due Date & Time */}
+                        {task.dueDate ? (
+                          <span
+                            className={`inline-flex items-center gap-1 font-mono px-1.5 py-0.5 rounded ${
+                              isOverdue
+                                ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-semibold'
+                                : 'bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE]'
+                            }`}
+                          >
+                            <Calendar className="w-2.5 h-2.5 shrink-0" />
+                            <span>{task.dueDate}</span>
+                            {task.dueTime && <span>· {task.dueTime}</span>}
+                            {isOverdue && <span className="font-bold ml-0.5">Overdue</span>}
+                          </span>
+                        ) : (
+                          <span className="text-[#526782] text-[10px]">No due date</span>
+                        )}
+
+                        {/* Priority Badge */}
+                        <span
+                          className={`font-semibold capitalize px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 ${priorityBadge(
+                            task.priority
+                          )}`}
+                        >
+                          {task.priority}
+                        </span>
+
+                        {/* Status Badge */}
+                        <span
+                          className={`px-1.5 py-0.5 rounded font-medium capitalize ${statusBadge(
+                            task.status
+                          )}`}
+                        >
+                          {task.status.replace('_', ' ')}
+                        </span>
+
+                        {/* Category */}
+                        {task.category && (
+                          <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE]">
+                            {task.category}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Desktop Table of Tasks */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-[#E2E8F0] dark:border-[#1E2D4A] text-[#526782] font-semibold">
@@ -405,6 +725,10 @@ export const TasksView: React.FC = () => {
                       >
                         <td className="py-3 px-3">
                           <button
+                            type="button"
+                            role="checkbox"
+                            aria-checked={task.status === 'completed'}
+                            aria-label={`Mark task "${task.title}" as ${task.status === 'completed' ? 'incomplete' : 'complete'}`}
                             onClick={() => toggleTaskCompletion(task.id)}
                             className={`w-4.5 h-4.5 rounded-md flex items-center justify-center cursor-pointer transition-colors ${
                               task.status === 'completed'
@@ -413,7 +737,7 @@ export const TasksView: React.FC = () => {
                             }`}
                           >
                             {task.status === 'completed' && (
-                              <Check className="w-3 h-3 stroke-[3]" />
+                              <Check className="w-3.5 h-3.5 stroke-[3]" />
                             )}
                           </button>
                         </td>
@@ -482,15 +806,19 @@ export const TasksView: React.FC = () => {
                         <td className="py-3 px-3 text-right">
                           <div className="flex items-center justify-end gap-1">
                             <button
+                              type="button"
                               onClick={() => openEditModal(task)}
-                              className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 text-[#526782]"
+                              className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 text-[#526782] cursor-pointer"
+                              aria-label={`Edit task "${task.title}"`}
                               title="Edit task"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
                             <button
+                              type="button"
                               onClick={() => deleteTask(task.id)}
-                              className="p-1 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600"
+                              className="p-1 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 cursor-pointer"
+                              aria-label={`Delete task "${task.title}"`}
                               title="Delete task"
                             >
                               <Trash2 className="w-3.5 h-3.5" />

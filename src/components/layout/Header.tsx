@@ -6,7 +6,7 @@ import { Logo } from '../ui/Logo';
 export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({
   onOpenMobileMenu,
 }) => {
-  const { settings, currentDate, setActiveModal, activeView } = usePlanner();
+  const { settings, currentDate, setActiveModal, activeModal } = usePlanner();
 
   // Greeting based on time of day
   const greeting = React.useMemo(() => {
@@ -37,9 +37,14 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({
       <div className="flex items-center gap-3">
         {/* Mobile menu trigger */}
         <button
-          onClick={onOpenMobileMenu}
-          className="p-2 -ml-2 rounded-lg text-[#526782] md:hidden hover:bg-slate-100 dark:hover:bg-slate-800"
+          onClick={() => {
+            if (onOpenMobileMenu) onOpenMobileMenu();
+            setActiveModal('more_sheet');
+          }}
+          className="p-2 -ml-2 rounded-lg text-[#526782] md:hidden hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
           aria-label="Open menu"
+          aria-controls="all-tools-menu"
+          aria-expanded={activeModal === 'more_sheet' || activeModal === 'menu'}
         >
           <Menu className="w-5 h-5" />
         </button>

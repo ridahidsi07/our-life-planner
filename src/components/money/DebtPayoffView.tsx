@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
+import { getCurrencySymbol } from '../../utils/formatters';
 import { RingProgress } from '../ui/RingProgress';
 import { Modal } from '../ui/Modal';
 import {
@@ -17,7 +18,9 @@ import { DebtItem, DebtStrategy } from '../../types/planner';
 import { simulateDebtPayoff } from '../../utils/calculations';
 
 export const DebtPayoffView: React.FC = () => {
-  const { debts, addDebt, updateDebt, deleteDebt, currentDate } = usePlanner();
+  const { settings, debts, addDebt, updateDebt, deleteDebt, currentDate } = usePlanner();
+
+  const currencySymbol = settings.currencySymbol || getCurrencySymbol(settings.currency) || '$';
 
   const [strategy, setStrategy] = useState<DebtStrategy>('snowball');
   const [basePayment, setBasePayment] = useState<number>(100);
@@ -65,7 +68,7 @@ export const DebtPayoffView: React.FC = () => {
 
     if (debtChosenPay < debtMinPay) {
       setValidationError(
-        `Your $${debtChosenPay} monthly budget is below the $${debtMinPay} minimum.`
+        `Your ${currencySymbol}${debtChosenPay} monthly budget is below the ${currencySymbol}${debtMinPay} minimum.`
       );
       return;
     }
@@ -177,10 +180,10 @@ export const DebtPayoffView: React.FC = () => {
                         </span>
                       </div>
                       <div className="text-xs text-[#526782] font-mono mt-0.5">
-                        Current: ${debt.currentBalance.toFixed(2)} · Original: ${debt.originalBalance.toFixed(2)} · Rate: {debt.annualInterestRate}%
+                        Current: {currencySymbol}{debt.currentBalance.toFixed(2)} · Original: {currencySymbol}{debt.originalBalance.toFixed(2)} · Rate: {debt.annualInterestRate}%
                       </div>
                       <div className="text-[11px] text-[#526782] mt-0.5 font-mono">
-                        Min payment: ${debt.minimumMonthlyPayment}/mo · Chosen: ${debt.chosenMonthlyPayment || debt.minimumMonthlyPayment}/mo
+                        Min payment: {currencySymbol}{debt.minimumMonthlyPayment}/mo · Chosen: {currencySymbol}{debt.chosenMonthlyPayment || debt.minimumMonthlyPayment}/mo
                       </div>
                     </div>
 
@@ -228,10 +231,10 @@ export const DebtPayoffView: React.FC = () => {
 
               <div>
                 <div className="text-2xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF]">
-                  ${overallMetrics.curSum.toFixed(2)}
+                  {currencySymbol}{overallMetrics.curSum.toFixed(2)}
                 </div>
                 <div className="text-xs text-[#526782]">
-                  current balance of ${overallMetrics.origSum.toFixed(2)}
+                  current balance of {currencySymbol}{overallMetrics.origSum.toFixed(2)}
                 </div>
               </div>
             </div>
@@ -239,16 +242,16 @@ export const DebtPayoffView: React.FC = () => {
             <div className="space-y-1.5 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
               <div className="flex justify-between">
                 <span className="text-[#526782]">Original balance</span>
-                <span className="font-mono font-semibold">${overallMetrics.origSum.toFixed(2)}</span>
+                <span className="font-mono font-semibold">{currencySymbol}{overallMetrics.origSum.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#526782]">Current balance</span>
-                <span className="font-mono font-semibold">${overallMetrics.curSum.toFixed(2)}</span>
+                <span className="font-mono font-semibold">{currencySymbol}{overallMetrics.curSum.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#526782]">Amount repaid</span>
                 <span className="font-mono font-bold text-emerald-600">
-                  ${overallMetrics.repaid.toFixed(2)} ({overallMetrics.pct}%)
+                  {currencySymbol}{overallMetrics.repaid.toFixed(2)} ({overallMetrics.pct}%)
                 </span>
               </div>
             </div>
@@ -340,28 +343,28 @@ export const DebtPayoffView: React.FC = () => {
             {/* Baseline */}
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
               <span className="text-[11px] font-bold text-[#526782] uppercase">
-                Baseline (${basePayment} / mo)
+                Baseline ({currencySymbol}{basePayment} / mo)
               </span>
               <div className="text-xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] mt-1">
                 {baselineSim.totalMonths} payments
               </div>
               <div className="text-xs text-[#526782] mt-1 space-y-0.5">
                 <div>Payoff date: {baselineSim.payoffDate}</div>
-                <div>Total interest: ${baselineSim.totalInterestPaid.toFixed(2)}</div>
+                <div>Total interest: {currencySymbol}{baselineSim.totalInterestPaid.toFixed(2)}</div>
               </div>
             </div>
 
             {/* With Extra */}
             <div className="p-4 rounded-xl bg-teal-50/60 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800">
               <span className="text-[11px] font-bold text-[#087F83] dark:text-[#38D0C5] uppercase">
-                With extra (${basePayment + extraPayment} / mo)
+                With extra ({currencySymbol}{basePayment + extraPayment} / mo)
               </span>
               <div className="text-xl font-bold font-mono text-[#087F83] dark:text-[#38D0C5] mt-1">
                 {extraSim.totalMonths} payments
               </div>
               <div className="text-xs text-[#526782] dark:text-[#A8B8CE] mt-1 space-y-0.5">
                 <div>Payoff date: {extraSim.payoffDate}</div>
-                <div>Total interest: ${extraSim.totalInterestPaid.toFixed(2)}</div>
+                <div>Total interest: {currencySymbol}{extraSim.totalInterestPaid.toFixed(2)}</div>
               </div>
             </div>
 
@@ -378,7 +381,7 @@ export const DebtPayoffView: React.FC = () => {
                 <div className="text-xs opacity-90">sooner</div>
               </div>
               <div className="text-sm font-bold font-mono text-teal-100">
-                ${interestSaved.toFixed(2)} in interest
+                {currencySymbol}{interestSaved.toFixed(2)} in interest
               </div>
             </div>
           </div>
@@ -400,11 +403,11 @@ export const DebtPayoffView: React.FC = () => {
             <div className="flex items-center gap-4 text-[11px]">
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                <span>${basePayment}/mo ({baselineSim.totalMonths} payments)</span>
+                <span>{currencySymbol}{basePayment}/mo ({baselineSim.totalMonths} payments)</span>
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-teal-500" />
-                <span>${basePayment + extraPayment}/mo ({extraSim.totalMonths} payments)</span>
+                <span>{currencySymbol}{basePayment + extraPayment}/mo ({extraSim.totalMonths} payments)</span>
               </span>
             </div>
           </div>
@@ -418,7 +421,7 @@ export const DebtPayoffView: React.FC = () => {
                   <div
                     className="w-full bg-[#087F83] rounded-t-xs transition-all"
                     style={{ height: `${hPct}%` }}
-                    title={`${pt.dateStr}: $${pt.totalBalance}`}
+                    title={`${pt.dateStr}: ${currencySymbol}${pt.totalBalance}`}
                   />
                   <span className="text-[9px] text-[#526782]">{idx}m</span>
                 </div>
@@ -457,7 +460,7 @@ export const DebtPayoffView: React.FC = () => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
-                Original balance
+                Original balance ({currencySymbol})
               </label>
               <input
                 type="number"
@@ -471,7 +474,7 @@ export const DebtPayoffView: React.FC = () => {
 
             <div>
               <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
-                Current balance *
+                Current balance ({currencySymbol}) *
               </label>
               <input
                 type="number"
@@ -503,7 +506,7 @@ export const DebtPayoffView: React.FC = () => {
 
             <div>
               <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
-                Minimum monthly payment *
+                Minimum monthly payment ({currencySymbol}) *
               </label>
               <input
                 type="number"
@@ -519,7 +522,7 @@ export const DebtPayoffView: React.FC = () => {
 
           <div>
             <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
-              Your monthly payment budget *
+              Your monthly payment budget ({currencySymbol}) *
             </label>
             <input
               type="number"

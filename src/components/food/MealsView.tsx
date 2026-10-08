@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
+import { getWeekDaysForDate, getWeekStartDate } from '../../utils/formatters';
 import { Modal } from '../ui/Modal';
 import {
   Utensils,
@@ -26,6 +27,7 @@ interface WeekDayMealCol {
 
 export const MealsView: React.FC = () => {
   const {
+    settings,
     plannedMeals,
     addPlannedMeal,
     updatePlannedMeal,
@@ -45,39 +47,20 @@ export const MealsView: React.FC = () => {
     plannedMeals.length > 0 ? plannedMeals[0].id : ''
   );
 
-  // Current week Monday string and week days calculation
+  // Current week start string and week days calculation
   const currentWeekMondayStr = useMemo(() => {
-    const parts = currentDate.split('-');
-    const cur = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-    const day = cur.getDay();
-    const diff = cur.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(cur.setDate(diff));
-    const year = monday.getFullYear();
-    const month = String(monday.getMonth() + 1).padStart(2, '0');
-    const d = String(monday.getDate()).padStart(2, '0');
-    return `${year}-${month}-${d}`;
-  }, [currentDate]);
+    return getWeekStartDate(currentDate, settings.weekStartsOn);
+  }, [currentDate, settings.weekStartsOn]);
 
   const weekDays = useMemo<WeekDayMealCol[]>(() => {
-    const parts = currentWeekMondayStr.split('-');
-    const monday = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const list: WeekDayMealCol[] = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const dateNum = String(d.getDate()).padStart(2, '0');
-      list.push({
-        name: dayNames[i],
-        num: d.getDate(),
-        monthName: d.toLocaleDateString('en-US', { month: 'short' }),
-        dateStr: `${year}-${month}-${dateNum}`,
-      });
-    }
-    return list;
-  }, [currentWeekMondayStr]);
+    const list = getWeekDaysForDate(currentDate, settings.weekStartsOn);
+    return list.map((d) => ({
+      name: d.dayName,
+      num: d.dayNum,
+      monthName: d.monthName,
+      dateStr: d.dateStr,
+    }));
+  }, [currentDate, settings.weekStartsOn]);
 
   // Plan Meal Modal state
   const [isPlanMealModalOpen, setIsPlanMealModalOpen] = useState(false);

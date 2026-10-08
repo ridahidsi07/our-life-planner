@@ -93,6 +93,7 @@ export const SearchModal: React.FC = () => {
           <input
             type="text"
             autoFocus
+            aria-label="Search by title, ingredient or bill name"
             placeholder="Search by title, ingredient or bill name…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -100,17 +101,19 @@ export const SearchModal: React.FC = () => {
           />
         </div>
 
-        <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+        <div aria-live="polite" className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 text-xs">
           {query.trim() && searchResults.length === 0 ? (
             <div className="py-8 text-center text-[#526782]">
               No matches found for “{query}”.
             </div>
           ) : (
             searchResults.map((item) => (
-              <div
+              <button
                 key={item.id}
+                type="button"
+                aria-label={`${item.title}, ${item.type} in ${item.view}`}
                 onClick={() => handleSelectResult(item.view)}
-                className="py-3 px-2 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer rounded-lg transition-colors group"
+                className="w-full text-left py-3 px-2 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer rounded-lg transition-colors group"
               >
                 <div className="flex items-center gap-3">
                   {item.type === 'Task' && (
@@ -140,7 +143,7 @@ export const SearchModal: React.FC = () => {
                   </span>
                   <ArrowRight className="w-3.5 h-3.5 text-[#526782] opacity-0 group-hover:opacity-100" />
                 </div>
-              </div>
+              </button>
             ))
           )}
         </div>
