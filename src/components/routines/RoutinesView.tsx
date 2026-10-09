@@ -441,18 +441,22 @@ export const RoutinesView: React.FC = () => {
                   <div className="flex items-center gap-1 self-end sm:self-center shrink-0">
                     {/* Inspect rule */}
                     <button
+                      type="button"
                       onClick={() => setInspectingRoutine(routine)}
-                      className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#087F83] dark:text-[#38D0C5]"
+                      className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#087F83] dark:text-[#38D0C5] cursor-pointer"
                       title="Inspect recurrence rule"
+                      aria-label={`Inspect recurrence rule for "${routine.title}"`}
                     >
                       <Info className="w-4 h-4" />
                     </button>
 
                     {/* Pause / Resume */}
                     <button
+                      type="button"
                       onClick={() => toggleRoutinePause(routine.id)}
-                      className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782]"
+                      className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
                       title={routine.isPaused ? 'Resume routine' : 'Pause routine'}
+                      aria-label={`${routine.isPaused ? 'Resume' : 'Pause'} routine "${routine.title}"`}
                     >
                       {routine.isPaused ? (
                         <Play className="w-4 h-4 text-emerald-600" />
@@ -463,18 +467,22 @@ export const RoutinesView: React.FC = () => {
 
                     {/* Edit */}
                     <button
+                      type="button"
                       onClick={() => openEditModal(routine)}
-                      className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782]"
+                      className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
                       title="Edit routine"
+                      aria-label={`Edit routine "${routine.title}"`}
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
 
                     {/* Delete */}
                     <button
+                      type="button"
                       onClick={() => deleteRoutine(routine.id)}
-                      className="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600"
+                      className="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 cursor-pointer"
                       title="Delete routine"
+                      aria-label={`Delete routine "${routine.title}"`}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -543,9 +551,11 @@ export const RoutinesView: React.FC = () => {
                         >
                           <span>{d}</span>
                           <button
+                            type="button"
                             onClick={() => unskipRoutineOccurrence(r.id, d)}
                             className="text-rose-500 hover:text-rose-700 ml-1 cursor-pointer font-bold"
                             title="Unskip occurrence"
+                            aria-label={`Unskip occurrence on ${d} for "${r.title}"`}
                           >
                             ×
                           </button>

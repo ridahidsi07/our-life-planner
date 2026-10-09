@@ -189,16 +189,20 @@ export const DebtPayoffView: React.FC = () => {
 
                     <div className="flex items-center gap-2">
                       <button
+                        type="button"
                         onClick={() => openEditModal(debt)}
-                        className="p-1.5 rounded-lg hover:bg-slate-200 text-[#526782]"
+                        className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
                         title="Edit debt"
+                        aria-label={`Edit debt "${debt.name}"`}
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
+                        type="button"
                         onClick={() => deleteDebt(debt.id)}
-                        className="p-1.5 rounded-lg hover:bg-rose-100 text-rose-600"
+                        className="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950/40 text-rose-600 cursor-pointer"
                         title="Delete debt"
+                        aria-label={`Delete debt "${debt.name}"`}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

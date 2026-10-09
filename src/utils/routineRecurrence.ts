@@ -342,3 +342,25 @@ export function getDayAfter(dateStr: string): string {
   cur.setUTCDate(cur.getUTCDate() + 1);
   return cur.toISOString().split('T')[0];
 }
+
+/**
+ * Returns upcoming occurrence dates for a routine starting from fromDateStr.
+ */
+export function getUpcomingRoutineOccurrences(
+  routine: RoutineItem,
+  fromDateStr: string,
+  count: number = 5
+): string[] {
+  const result: string[] = [];
+  const [y, m, d] = fromDateStr.split('-').map(Number);
+  const probe = new Date(Date.UTC(y, m - 1, d));
+
+  for (let i = 0; i < 365 && result.length < count; i++) {
+    const curIso = probe.toISOString().split('T')[0];
+    if (isRoutineActiveOnDate(routine, curIso)) {
+      result.push(curIso);
+    }
+    probe.setUTCDate(probe.getUTCDate() + 1);
+  }
+  return result;
+}

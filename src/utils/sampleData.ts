@@ -46,6 +46,35 @@ export const INITIAL_SETTINGS: UserSettings = {
     Personal: 150,
   },
   budgetPeriodType: 'monthly',
+  enabledTools: [
+    'today',
+    'calendar',
+    'tasks',
+    'routines',
+    'inbox',
+    'goals',
+    'habits',
+    'budget',
+    'savings',
+    'debts',
+    'meals',
+    'groceries',
+    'workouts',
+    'weight',
+    'water',
+  ],
+  pinnedTools: ['today', 'tasks', 'routines', 'calendar'],
+  todayVisibleSections: {
+    finance: true,
+    health: true,
+    meals: true,
+    habits: true,
+  },
+  householdMembers: [
+    { id: 'mem-1', name: 'Rida', color: '#087F83' },
+    { id: 'mem-2', name: 'Partner / Family', color: '#7C3AED' },
+  ],
+  locale: 'en-US',
 };
 
 export const SAMPLE_TASKS: TaskItem[] = [

@@ -35,6 +35,11 @@ import { ConflictModal } from './components/modals/ConflictModal';
 import { GuideModal } from './components/modals/GuideModal';
 import { OfflineDownloadModal } from './components/modals/OfflineDownloadModal';
 import { SetupWizardModal } from './components/modals/SetupWizardModal';
+import { AccountModal } from './components/modals/AccountModal';
+import { SupportModal } from './components/modals/SupportModal';
+import { FocusModal } from './components/modals/FocusModal';
+import { WeeklyReviewModal } from './components/modals/WeeklyReviewModal';
+import { PwaInstallModal } from './components/modals/PwaInstallModal';
 
 const PlannerAppContent: React.FC = () => {
   const { activeView, setActiveView } = usePlanner();
@@ -109,6 +114,11 @@ const PlannerAppContent: React.FC = () => {
       <GuideModal />
       <OfflineDownloadModal />
       <SetupWizardModal />
+      <AccountModal />
+      <SupportModal />
+      <FocusModal />
+      <WeeklyReviewModal />
+      <PwaInstallModal />
     </div>
   );
 };

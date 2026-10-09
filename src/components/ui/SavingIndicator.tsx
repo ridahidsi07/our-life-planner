@@ -30,6 +30,7 @@ export const SavingIndicator: React.FC<{ className?: string }> = ({ className = 
     case 'waiting_to_sync':
       return (
         <button
+          type="button"
           onClick={() => {
             // Trigger retry
             setSavingState('saving');
@@ -37,6 +38,7 @@ export const SavingIndicator: React.FC<{ className?: string }> = ({ className = 
           }}
           className={`flex items-center gap-1.5 text-xs text-[#F59E0B] hover:underline cursor-pointer ${className}`}
           title="Changes queued locally. Click to retry synchronization."
+          aria-label="Changes queued locally. Click to retry synchronization."
         >
           <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
           <span>Waiting to synchronize</span>
@@ -45,8 +47,10 @@ export const SavingIndicator: React.FC<{ className?: string }> = ({ className = 
     case 'needs_choice':
       return (
         <button
+          type="button"
           onClick={() => setActiveModal('conflict')}
           className={`flex items-center gap-1.5 text-xs text-[#F59E0B] font-medium hover:underline cursor-pointer ${className}`}
+          aria-label="Sync conflict: needs your choice"
         >
           <AlertTriangle className="w-3.5 h-3.5 text-[#F59E0B]" />
           <span>Needs your choice</span>
@@ -55,12 +59,14 @@ export const SavingIndicator: React.FC<{ className?: string }> = ({ className = 
     case 'could_not_save':
       return (
         <button
+          type="button"
           onClick={() => {
             setSavingState('saving');
             setTimeout(() => setSavingState('saved_online'), 500);
           }}
           className={`flex items-center gap-1.5 text-xs text-[#EF4444] font-medium hover:underline cursor-pointer ${className}`}
           title="Storage write issue. Click to retry."
+          aria-label="Storage write issue. Click to retry."
         >
           <AlertCircle className="w-3.5 h-3.5 text-[#EF4444]" />
           <span>Could not save · Retry</span>

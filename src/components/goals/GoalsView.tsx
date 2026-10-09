@@ -328,16 +328,20 @@ export const GoalsView: React.FC = () => {
 
                 <div className="flex items-center gap-1">
                   <button
+                    type="button"
                     onClick={() => openEditModal(selectedGoal)}
-                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782]"
+                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
                     title="Edit goal"
+                    aria-label={`Edit goal "${selectedGoal.title}"`}
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => deleteGoal(selectedGoal.id)}
-                    className="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600"
+                    className="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 cursor-pointer"
                     title="Delete goal"
+                    aria-label={`Delete goal "${selectedGoal.title}"`}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -349,7 +353,7 @@ export const GoalsView: React.FC = () => {
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   {selectedGoal.motivation && (
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                      <span className="font-semibold text-[#526782] block text-[10px] uppercase">
+                      <span className="font-semibold text-[#526782] dark:text-[#A8B8CE] block text-[10px] uppercase">
                         Motivation
                       </span>
                       <p className="text-[#071A3A] dark:text-[#EDF4FF] mt-0.5">
@@ -359,7 +363,7 @@ export const GoalsView: React.FC = () => {
                   )}
                   {selectedGoal.reward && (
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                      <span className="font-semibold text-[#526782] block text-[10px] uppercase">
+                      <span className="font-semibold text-[#526782] dark:text-[#A8B8CE] block text-[10px] uppercase">
                         Reward
                       </span>
                       <p className="text-[#071A3A] dark:text-[#EDF4FF] mt-0.5">
@@ -386,6 +390,10 @@ export const GoalsView: React.FC = () => {
                       className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                     >
                       <button
+                        type="button"
+                        role="checkbox"
+                        aria-checked={step.isCompleted}
+                        aria-label={`Mark step "${step.title}" as ${step.isCompleted ? 'incomplete' : 'complete'}`}
                         onClick={() => toggleGoalStep(selectedGoal.id, step.id)}
                         className={`w-5 h-5 rounded-md flex items-center justify-center cursor-pointer transition-colors ${
                           step.isCompleted

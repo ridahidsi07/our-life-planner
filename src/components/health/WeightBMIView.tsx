@@ -443,9 +443,11 @@ export const WeightBMIView: React.FC = () => {
                         BMI {calculateBMI(r.weightKg, r.recordedHeightCm || currentHeightCm)}
                       </span>
                       <button
+                        type="button"
                         onClick={() => deleteWeightRecord(r.id)}
                         className="p-1 rounded-md text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                         title="Delete measurement"
+                        aria-label={`Delete measurement for ${r.date} (${displayedVal} ${unitMode})`}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -469,6 +471,7 @@ export const WeightBMIView: React.FC = () => {
               onClick={handlePrefillLatest}
               className="text-[11px] text-[#087F83] dark:text-[#38D0C5] hover:underline flex items-center gap-1 cursor-pointer"
               title="Reset draft to latest measurement"
+              aria-label={`Reset draft to latest measurement (${displayedLatestWeight} ${unitMode})`}
             >
               <RotateCcw className="w-3 h-3" />
               <span>Use latest ({displayedLatestWeight} {unitMode})</span>
@@ -553,6 +556,7 @@ export const WeightBMIView: React.FC = () => {
                       onClick={handleClearDraft}
                       className="text-slate-400 hover:text-rose-600 text-[10px] underline cursor-pointer ml-1"
                       title="Clear draft and require re-entry"
+                      aria-label="Clear draft weight and require re-entry"
                     >
                       Clear
                     </button>

@@ -37,6 +37,7 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({
       <div className="flex items-center gap-3">
         {/* Mobile menu trigger */}
         <button
+          type="button"
           onClick={() => {
             if (onOpenMobileMenu) onOpenMobileMenu();
             setActiveModal('more_sheet');
@@ -68,7 +69,9 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({
       <div className="flex items-center gap-2.5">
         {/* Search button */}
         <button
+          type="button"
           onClick={() => setActiveModal('search')}
+          aria-label="Search planner"
           className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/80 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] hover:text-[#071A3A] dark:hover:text-[#EDF4FF] hover:bg-slate-200/70 transition-colors text-xs font-medium cursor-pointer"
         >
           <Search className="w-3.5 h-3.5" />
@@ -77,17 +80,25 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({
 
         {/* Quick Add button */}
         <button
+          type="button"
           onClick={() => setActiveModal('quick_add')}
+          aria-label="Quick add item"
           className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Quick add</span>
         </button>
 
-        {/* Profile Avatar */}
-        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#087F83] to-[#38D0C5] text-white flex items-center justify-center font-bold text-xs shadow-xs ml-1">
+        {/* Profile Avatar / Account Manager */}
+        <button
+          type="button"
+          onClick={() => setActiveModal('account')}
+          aria-label={`Manage account for ${settings.ownerName}`}
+          title={`Account & Sync: ${settings.ownerName}`}
+          className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#087F83] to-[#38D0C5] text-white flex items-center justify-center font-bold text-xs shadow-xs ml-1 hover:ring-2 hover:ring-[#087F83] focus:ring-2 focus:ring-[#087F83] transition-all cursor-pointer"
+        >
           {settings.ownerName.charAt(0) || 'R'}
-        </div>
+        </button>
       </div>
     </header>
   );

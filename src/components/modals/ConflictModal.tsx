@@ -68,6 +68,7 @@ export const ConflictModal: React.FC = () => {
             </div>
 
             <button
+              type="button"
               onClick={() => {
                 resolveConflict('local');
                 setActiveModal(null);
@@ -87,25 +88,26 @@ export const ConflictModal: React.FC = () => {
 
             <div className="text-xs space-y-1.5 font-mono">
               <div>
-                <span className="text-[#526782] block text-[10px]">Title:</span>
+                <span className="text-[#526782] dark:text-[#A8B8CE] block text-[10px]">Title:</span>
                 <span className="font-semibold">{item.onlineVersion.title}</span>
               </div>
               <div>
-                <span className="text-[#526782] block text-[10px]">Due date:</span>
+                <span className="text-[#526782] dark:text-[#A8B8CE] block text-[10px]">Due date:</span>
                 <span>{item.onlineVersion.dueDate}</span>
               </div>
               <div>
-                <span className="text-[#526782] block text-[10px]">Notes:</span>
+                <span className="text-[#526782] dark:text-[#A8B8CE] block text-[10px]">Notes:</span>
                 <span>{item.onlineVersion.notes}</span>
               </div>
             </div>
 
             <button
+              type="button"
               onClick={() => {
                 resolveConflict('online');
                 setActiveModal(null);
               }}
-              className="w-full py-2 rounded-xl bg-[#071A3A] text-white text-xs font-semibold hover:bg-black cursor-pointer"
+              className="w-full py-2 rounded-xl bg-[#071A3A] dark:bg-slate-700 text-white text-xs font-semibold hover:bg-black dark:hover:bg-slate-600 cursor-pointer"
             >
               Keep online version
             </button>

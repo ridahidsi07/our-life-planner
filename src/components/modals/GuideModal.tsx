@@ -8,6 +8,14 @@ import {
   Database,
   ArrowRight,
   ShieldCheck,
+  Printer,
+  Smartphone,
+  Laptop,
+  ExternalLink,
+  CheckCircle2,
+  RefreshCw,
+  Mail,
+  Download,
 } from 'lucide-react';
 
 export const GuideModal: React.FC = () => {
@@ -19,34 +27,209 @@ export const GuideModal: React.FC = () => {
     { title: string; subtitle: string; content: React.ReactNode }
   > = {
     getting_started: {
-      title: 'Getting started with Our Life Planner',
-      subtitle: 'Set up your daily command center and planning rhythm',
+      title: 'Getting started & product walkthrough',
+      subtitle: 'Master the daily planning loop: Capture → Schedule → Complete → Review',
       content: (
         <div className="space-y-4 text-xs text-[#526782] dark:text-[#A8B8CE]">
           <p>
-            Welcome to <strong>Our Life Planner</strong>. The application is built around three core daily actions:
+            Welcome to <strong>Our Life Planner</strong>. The planner is designed around a single dependable daily loop that eliminates cognitive clutter:
           </p>
-          <ol className="list-decimal pl-5 space-y-1.5 font-medium text-[#071A3A] dark:text-[#EDF4FF]">
-            <li><strong>Plan the day:</strong> Review Today and schedule your time blocks, meals, and tasks.</li>
-            <li><strong>Log what happened:</strong> Complete tasks, log hydration, mark meals consumed, and track workouts.</li>
-            <li><strong>Review what needs attention next:</strong> Check overdue commitments, weekly progress, and budget balances.</li>
-          </ol>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+              <span className="font-bold text-[#071A3A] dark:text-[#EDF4FF] block mb-1">
+                1. Capture
+              </span>
+              Dump thoughts into the Brain Dump inbox or Quick Add modal without friction.
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+              <span className="font-bold text-[#071A3A] dark:text-[#EDF4FF] block mb-1">
+                2. Schedule
+              </span>
+              Assign due dates or drag items into time blocks on the Calendar.
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+              <span className="font-bold text-[#071A3A] dark:text-[#EDF4FF] block mb-1">
+                3. Complete
+              </span>
+              Use the calm <strong>Focus View</strong> (one task at a time) or Today dashboard to stay on track.
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+              <span className="font-bold text-[#071A3A] dark:text-[#EDF4FF] block mb-1">
+                4. Review
+              </span>
+              Use the <strong>Weekly Review</strong> to triage overdue items, celebrate wins, and set intentions.
+            </div>
+          </div>
+
+          <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 flex items-center justify-between gap-3">
+            <div>
+              <div className="font-bold text-[#087F83] dark:text-[#38D0C5]">
+                Printable quick reference
+              </div>
+              <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
+                Generate a clean, printable 1-page quick start cheat sheet or PDF export
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#087F83] text-white font-semibold text-xs hover:bg-[#06676A] shrink-0 cursor-pointer"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>Print / Save PDF</span>
+            </button>
+          </div>
+        </div>
+      ),
+    },
+    editions: {
+      title: 'Online vs Downloaded Offline editions',
+      subtitle: 'What is included in each edition and how data is managed',
+      content: (
+        <div className="space-y-4 text-xs text-[#526782] dark:text-[#A8B8CE]">
           <p>
-            Every tool connects directly to the <strong>Today dashboard</strong> and <strong>Calendar</strong>. Whenever you complete or edit an item in any view, all connected screens update instantly without duplicates.
+            Your purchase includes complete access to both editions with zero recurring subscription fees:
+          </p>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-slate-700 text-[#071A3A] dark:text-[#EDF4FF]">
+                  <th className="py-2 pr-3 font-bold">Feature</th>
+                  <th className="py-2 px-3 font-bold bg-slate-50 dark:bg-slate-800/40 rounded-t-lg">
+                    Downloaded Offline
+                  </th>
+                  <th className="py-2 pl-3 font-bold">Online Synced</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr>
+                  <td className="py-2 pr-3 font-medium">Storage Location</td>
+                  <td className="py-2 px-3 bg-slate-50/60 dark:bg-slate-800/20 font-mono text-[11px]">
+                    Local device storage
+                  </td>
+                  <td className="py-2 pl-3 font-mono text-[11px]">
+                    Encrypted cloud sync
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-2 pr-3 font-medium">Internet Required</td>
+                  <td className="py-2 px-3 bg-slate-50/60 dark:bg-slate-800/20 text-emerald-600 dark:text-emerald-400 font-semibold">
+                    100% Offline (No wifi)
+                  </td>
+                  <td className="py-2 pl-3">Only to sync between devices</td>
+                </tr>
+                <tr>
+                  <td className="py-2 pr-3 font-medium">Account / Login</td>
+                  <td className="py-2 px-3 bg-slate-50/60 dark:bg-slate-800/20">
+                    None required
+                  </td>
+                  <td className="py-2 pl-3">Personal secure sign-in</td>
+                </tr>
+                <tr>
+                  <td className="py-2 pr-3 font-medium">Data Privacy</td>
+                  <td className="py-2 px-3 bg-slate-50/60 dark:bg-slate-800/20 text-emerald-600 dark:text-emerald-400 font-semibold">
+                    Zero data leaves device
+                  </td>
+                  <td className="py-2 pl-3">Encrypted per user account</td>
+                </tr>
+                <tr>
+                  <td className="py-2 pr-3 font-medium">Cross-device transfer</td>
+                  <td className="py-2 px-3 bg-slate-50/60 dark:bg-slate-800/20">
+                    JSON Backup file export/import
+                  </td>
+                  <td className="py-2 pl-3 text-teal-600 dark:text-teal-400 font-semibold">
+                    Automatic real-time sync
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-2 pr-3 font-medium">Subscription fees</td>
+                  <td className="py-2 px-3 bg-slate-50/60 dark:bg-slate-800/20 font-bold text-emerald-600 dark:text-emerald-400">
+                    $0 (Forever free)
+                  </td>
+                  <td className="py-2 pl-3 font-bold text-emerald-600 dark:text-emerald-400">
+                    $0 (Included)
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>
+            You can seamlessly switch between editions or export your data at any time from Settings &gt; Data & Storage.
           </p>
         </div>
       ),
     },
+    compatibility: {
+      title: 'Device & browser compatibility',
+      subtitle: 'First-class experience on phone, tablet, and desktop',
+      content: (
+        <div className="space-y-4 text-xs text-[#526782] dark:text-[#A8B8CE]">
+          <p>
+            Our Life Planner is built as a progressive web application (PWA) tested on modern browsers across all major mobile and desktop platforms:
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                <Smartphone className="w-4 h-4 text-teal-600" />
+                iOS (iPhone / iPad)
+              </div>
+              <p className="text-[11px]">
+                Safari 15+, Chrome, Edge. Full support for &ldquo;Add to Home Screen&rdquo; with offline caching.
+              </p>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                <Smartphone className="w-4 h-4 text-teal-600" />
+                Android Phones & Tablets
+              </div>
+              <p className="text-[11px]">
+                Chrome 90+, Samsung Internet, Firefox. 1-tap app install to home screen.
+              </p>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                <Laptop className="w-4 h-4 text-teal-600" />
+                Desktop (Mac / Windows / Linux)
+              </div>
+              <p className="text-[11px]">
+                Google Chrome, Microsoft Edge, Apple Safari, Mozilla Firefox, Brave.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 flex items-center justify-between gap-3">
+            <div>
+              <div className="font-bold text-[#087F83] dark:text-[#38D0C5]">
+                Install as a phone or desktop app
+              </div>
+              <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
+                View step-by-step instructions for adding the planner to your phone Home Screen
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveModal('pwa_install')}
+              className="px-3 py-1.5 rounded-xl bg-[#087F83] text-white font-semibold text-xs hover:bg-[#06676A] shrink-0 cursor-pointer"
+            >
+              Open install guide
+            </button>
+          </div>
+        </div>
+      ),
+    },
     tools_15: {
-      title: 'Using the 15 Tools',
-      subtitle: 'Everything included in your Version 1 planner',
+      title: 'The 15 integrated planner tools',
+      subtitle: 'Complete list of modules and their role in your life system',
       content: (
         <div className="space-y-3 text-xs text-[#526782] dark:text-[#A8B8CE]">
-          <p>Our Life Planner includes 15 connected tools organized into five groups:</p>
+          <p>You can hide or enable any of these modules in Settings &gt; Module Customization:</p>
           <div className="space-y-2">
             <div><strong>1. Daily planning:</strong> Today dashboard, Calendar, Tasks & insights, Routines & recurrence, Brain-dump inbox.</div>
-            <div><strong>2. Progress:</strong> Goals & milestone checklists, Habits & streaks.</div>
-            <div><strong>3. Money:</strong> Budget & bills ledger, Savings pots, Debt payoff scenarios.</div>
+            <div><strong>2. Progress:</strong> Goals & milestone checklists, Habits & streaks (with forgiving rest days).</div>
+            <div><strong>3. Money:</strong> Budget & bills ledger, Savings pots, Debt payoff forecast (Snowball/Avalanche).</div>
             <div><strong>4. Food:</strong> Weekly meals & food library, Groceries list generator.</div>
             <div><strong>5. Health:</strong> Workout training log, Weight & CDC BMI (up to 8 profiles), Hydration water tracker.</div>
           </div>
@@ -54,8 +237,8 @@ export const GuideModal: React.FC = () => {
       ),
     },
     saving_backups: {
-      title: 'Saving states & backups',
-      subtitle: 'How your planner data persists securely',
+      title: 'Saving states & data recovery',
+      subtitle: 'How your planner data persists securely and how to create backups',
       content: (
         <div className="space-y-3 text-xs text-[#526782] dark:text-[#A8B8CE]">
           <p>
@@ -67,23 +250,77 @@ export const GuideModal: React.FC = () => {
             <li><strong>Waiting to synchronize:</strong> Edits are safely stored locally while offline and will upload when reconnected.</li>
             <li><strong>Needs your choice:</strong> If you edit the same item on two devices while offline, a side-by-side comparison lets you choose which version to preserve.</li>
           </ul>
+          <p className="pt-2">
+            <strong>Data safety recommendation:</strong> Export a JSON backup once a week from Settings &gt; Data & Storage to keep a permanent local snapshot of your life data.
+          </p>
         </div>
       ),
     },
-    editions: {
-      title: 'Moving between editions',
-      subtitle: 'Downloaded offline edition vs Online account edition',
+    updates: {
+      title: 'Release information & updates',
+      subtitle: 'Version 1.2.0 changelog and lifetime update policy',
+      content: (
+        <div className="space-y-3 text-xs text-[#526782] dark:text-[#A8B8CE]">
+          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+            <div className="font-bold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              Version 1.2.0 Stable Release
+            </div>
+            <ul className="list-disc pl-5 space-y-1 text-[11px]">
+              <li><strong>Calm Focus View:</strong> Distraction-free single-task momentum view with 25m focus & 5m break timer.</li>
+              <li><strong>Weekly Review:</strong> 4-step guided triage of wins, overdue tasks, habits, and next week intentions.</li>
+              <li><strong>Moroccan Dirham (MAD / DH):</strong> Full currency formatting and Africa/Casablanca timezone.</li>
+              <li><strong>Schedule Conflict Detection:</strong> Automatic badge alerts for overlapping time blocks.</li>
+              <li><strong>Recurring Schedule Previews:</strong> Preview future occurrences and protect rest-day streaks.</li>
+              <li><strong>Household Member Assignment:</strong> Color-coded profiles assignable to tasks and routines.</li>
+              <li><strong>Calendar .ics Export:</strong> Export all appointments and tasks to Apple, Google, or Outlook calendar.</li>
+              <li><strong>WCAG 2.2 Accessibility:</strong> High contrast, explicit input associations, dialog semantics, and screen reader live regions.</li>
+            </ul>
+          </div>
+          <p>
+            <strong>Lifetime Update Policy:</strong> All Version 1 maintenance patches and feature improvements are delivered automatically and free of charge. Your local data is preserved across all updates.
+          </p>
+        </div>
+      ),
+    },
+    support: {
+      title: 'Customer support & contact',
+      subtitle: 'Official help channels, response times and direct assistance',
       content: (
         <div className="space-y-3 text-xs text-[#526782] dark:text-[#A8B8CE]">
           <p>
-            Your single purchase includes both editions:
+            Need assistance, have questions, or want to suggest an improvement? Our support team is ready to help you:
           </p>
+          <div className="p-3.5 rounded-xl bg-teal-50/60 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 space-y-2">
+            <div className="font-bold text-xs text-[#087F83] dark:text-[#38D0C5] flex items-center gap-1.5">
+              <Mail className="w-4 h-4" />
+              <span>Official Support Email</span>
+            </div>
+            <div className="font-mono text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF] select-all">
+              support@ourlifeplanner.app
+            </div>
+            <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
+              Response time: Monday to Friday within 24 hours
+            </div>
+            <div className="pt-1">
+              <a
+                href="mailto:support@ourlifeplanner.app?subject=Our%20Life%20Planner%20Support%20Request"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline"
+              >
+                <span>Send direct email</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
           <p>
-            <strong>The Downloaded Offline Edition</strong> works 100% offline without accounts, servers or external connections. You can export a backup from Settings at any time to transfer records into the online edition or another device.
+            You can also open our in-app support desk at any time to submit questions or bug reports directly from Settings.
           </p>
-          <p>
-            Importing a backup creates an independent copy in the destination; it never creates a permanent linking dependency.
-          </p>
+          <button
+            type="button"
+            onClick={() => setActiveModal('support')}
+            className="px-3.5 py-1.5 rounded-xl bg-[#087F83] text-white font-semibold text-xs hover:bg-[#06676A] cursor-pointer"
+          >
+            Open in-app support desk
+          </button>
         </div>
       ),
     },
@@ -97,22 +334,27 @@ export const GuideModal: React.FC = () => {
       subtitle="Learn how to make the most of Our Life Planner"
       maxWidth="max-w-3xl"
     >
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 min-h-[340px]">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 min-h-[380px]">
         {/* Navigation topics */}
         <div className="md:col-span-4 border-r border-[#E2E8F0] dark:border-[#1E2D4A] pr-4 space-y-1">
           {[
             { id: 'getting_started', label: 'Getting started' },
+            { id: 'editions', label: 'Online vs Offline editions' },
+            { id: 'compatibility', label: 'Device & compatibility' },
             { id: 'tools_15', label: 'Using the 15 tools' },
             { id: 'saving_backups', label: 'Saving & backups' },
-            { id: 'editions', label: 'Moving between editions' },
+            { id: 'updates', label: 'Updates & changelog' },
+            { id: 'support', label: 'Support & contact' },
           ].map((topic) => (
             <button
               key={topic.id}
+              type="button"
+              aria-selected={activeArticle === topic.id}
               onClick={() => setActiveArticle(topic.id)}
               className={`w-full text-left p-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
                 activeArticle === topic.id
                   ? 'bg-teal-50 dark:bg-teal-950/40 text-[#087F83] dark:text-[#38D0C5]'
-                  : 'text-[#526782] hover:bg-slate-50 dark:hover:bg-slate-800'
+                  : 'text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
             >
               {topic.label}

@@ -209,8 +209,8 @@ export const WorkoutsView: React.FC = () => {
   }, [selectedSession]);
 
   const sessionVolume = useMemo(() => {
-    return selectedSession ? calculateWorkoutVolume(selectedSession) : 0;
-  }, [selectedSession]);
+    return selectedSession ? calculateWorkoutVolume(selectedSession, settings.weightUnit) : 0;
+  }, [selectedSession, settings.weightUnit]);
 
   // Speed calculation handler
   const handleComputeSpeed = () => {
@@ -429,25 +429,30 @@ export const WorkoutsView: React.FC = () => {
 
           <div className="flex items-center gap-1.5">
             <button
+              type="button"
               onClick={() => setWeekOffset((prev) => prev - 1)}
-              className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] cursor-pointer"
+              className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
               title="Previous week"
+              aria-label="Previous week"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
+              type="button"
               onClick={() => {
                 setWeekOffset(0);
                 setSelectedDate(currentDate);
               }}
-              className="px-2 py-1 rounded-lg text-[11px] font-semibold text-[#526782] hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              className="px-2 py-1 rounded-lg text-[11px] font-semibold text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
             >
               This week
             </button>
             <button
+              type="button"
               onClick={() => setWeekOffset((prev) => prev + 1)}
-              className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] cursor-pointer"
+              className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
               title="Next week"
+              aria-label="Next week"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -561,31 +566,37 @@ export const WorkoutsView: React.FC = () => {
 
                   <div className="flex items-center gap-2">
                     <button
+                      type="button"
                       onClick={openEditSessionModal}
                       className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-1.5 cursor-pointer"
                       title="Edit session details"
+                      aria-label={`Edit session details for "${selectedSession.title}"`}
                     >
                       <Edit2 className="w-3.5 h-3.5 text-[#087F83]" />
                       <span>Edit</span>
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => setDeletingSessionId(selectedSession.id)}
                       className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 cursor-pointer"
                       title="Delete workout session"
+                      aria-label={`Delete workout session "${selectedSession.title}"`}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => {
                         updateWorkoutSession(selectedSession.id, {
                           isCompleted: !selectedSession.isCompleted,
                         });
                       }}
+                      aria-label={`Mark session "${selectedSession.title}" as ${selectedSession.isCompleted ? 'active' : 'completed'}`}
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${
                         selectedSession.isCompleted
-                          ? 'bg-slate-100 dark:bg-slate-800 text-[#526782]'
+                          ? 'bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE]'
                           : 'bg-[#087F83] text-white hover:bg-[#06676A]'
                       }`}
                     >
@@ -676,6 +687,7 @@ export const WorkoutsView: React.FC = () => {
                               </span>
 
                               <button
+                                type="button"
                                 onClick={() =>
                                   setEditingExercise({
                                     exerciseId: ex.id,
@@ -684,16 +696,19 @@ export const WorkoutsView: React.FC = () => {
                                     equipment: ex.equipment || 'Dumbbell',
                                   })
                                 }
-                                className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-[#526782] cursor-pointer"
+                                className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
                                 title="Edit exercise"
+                                aria-label={`Edit exercise "${ex.name}"`}
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
 
                               <button
+                                type="button"
                                 onClick={() => deleteExerciseFromSession(selectedSession.id, ex.id)}
                                 className="p-1 rounded hover:bg-rose-100 dark:hover:bg-rose-950 text-rose-500 cursor-pointer"
                                 title="Delete exercise"
+                                aria-label={`Delete exercise "${ex.name}"`}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -788,11 +803,13 @@ export const WorkoutsView: React.FC = () => {
                                     </td>
                                     <td className="py-2 px-2 text-right">
                                       <button
+                                        type="button"
                                         onClick={() =>
                                           deleteSetFromExercise(selectedSession.id, ex.id, set.setNumber)
                                         }
                                         className="text-slate-400 hover:text-rose-500 cursor-pointer p-0.5"
                                         title="Delete set"
+                                        aria-label={`Delete set ${set.setNumber} for "${ex.name}"`}
                                       >
                                         <X className="w-3.5 h-3.5" />
                                       </button>
@@ -852,7 +869,7 @@ export const WorkoutsView: React.FC = () => {
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
                   <div className="text-[11px] text-[#526782]">Volume</div>
                   <div className="text-xl font-bold font-mono text-[#087F83] dark:text-[#38D0C5] mt-1">
-                    {sessionVolume} kg
+                    {sessionVolume.toLocaleString()} {settings.weightUnit}
                   </div>
                 </div>
 
@@ -949,9 +966,9 @@ export const WorkoutsView: React.FC = () => {
             </div>
 
             <div className="bg-white dark:bg-[#152238] rounded-2xl p-4 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
-              <div className="text-xs text-[#526782]">Total volume</div>
+              <div className="text-xs text-[#526782] dark:text-[#A8B8CE]">Total volume</div>
               <div className="text-2xl font-bold font-mono text-[#087F83] dark:text-[#38D0C5] mt-1">
-                {workouts.reduce((sum, w) => sum + calculateWorkoutVolume(w), 0).toLocaleString()} kg
+                {workouts.reduce((sum, w) => sum + calculateWorkoutVolume(w, settings.weightUnit), 0).toLocaleString()} {settings.weightUnit}
               </div>
               <div className="text-[10px] text-emerald-600 font-medium">
                 All-time lifted volume
@@ -959,15 +976,15 @@ export const WorkoutsView: React.FC = () => {
             </div>
 
             <div className="bg-white dark:bg-[#152238] rounded-2xl p-4 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
-              <div className="text-xs text-[#526782]">Completed sessions</div>
+              <div className="text-xs text-[#526782] dark:text-[#A8B8CE]">Completed sessions</div>
               <div className="text-2xl font-bold font-mono text-purple-600 mt-1">
                 {workouts.filter((w) => w.isCompleted && !w.isRestDay).length}
               </div>
-              <div className="text-[10px] text-[#526782]">Logged and finished</div>
+              <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE]">Logged and finished</div>
             </div>
 
             <div className="bg-white dark:bg-[#152238] rounded-2xl p-4 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
-              <div className="text-xs text-[#526782]">Rest days</div>
+              <div className="text-xs text-[#526782] dark:text-[#A8B8CE]">Rest days</div>
               <div className="text-2xl font-bold font-mono text-slate-600 mt-1">
                 {workouts.filter((w) => w.isRestDay).length}
               </div>
@@ -982,23 +999,53 @@ export const WorkoutsView: React.FC = () => {
             <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
               Trained muscle groups distribution
             </h3>
-            <div className="grid grid-cols-3 gap-4 text-xs font-mono">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                <span className="text-[#526782] block text-[11px]">Legs</span>
-                <span className="text-lg font-bold text-[#087F83] mt-1 block">
-                  {workouts.filter((w) => w.muscleGroups?.includes('Legs')).length} sessions
+                <span className="text-[#526782] dark:text-[#A8B8CE] block text-[11px]">Legs</span>
+                <span className="text-lg font-bold text-[#087F83] dark:text-[#38D0C5] mt-1 block">
+                  {workouts.filter((w) => w.muscleGroups?.some((mg) => mg.toLowerCase().includes('leg'))).length} sessions
                 </span>
               </div>
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                <span className="text-[#526782] block text-[11px]">Back</span>
-                <span className="text-lg font-bold text-blue-600 mt-1 block">
-                  {workouts.filter((w) => w.muscleGroups?.includes('Back')).length} sessions
+                <span className="text-[#526782] dark:text-[#A8B8CE] block text-[11px]">Back</span>
+                <span className="text-lg font-bold text-blue-600 dark:text-blue-400 mt-1 block">
+                  {workouts.filter((w) => w.muscleGroups?.some((mg) => mg.toLowerCase().includes('back'))).length} sessions
                 </span>
               </div>
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                <span className="text-[#526782] block text-[11px]">Chest</span>
-                <span className="text-lg font-bold text-amber-600 mt-1 block">
-                  {workouts.filter((w) => w.muscleGroups?.includes('Chest')).length} sessions
+                <span className="text-[#526782] dark:text-[#A8B8CE] block text-[11px]">Chest</span>
+                <span className="text-lg font-bold text-amber-600 dark:text-amber-400 mt-1 block">
+                  {workouts.filter((w) => w.muscleGroups?.some((mg) => mg.toLowerCase().includes('chest'))).length} sessions
+                </span>
+              </div>
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                <span className="text-[#526782] dark:text-[#A8B8CE] block text-[11px]">Shoulders</span>
+                <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400 mt-1 block">
+                  {workouts.filter((w) => w.muscleGroups?.some((mg) => mg.toLowerCase().includes('shoulder'))).length} sessions
+                </span>
+              </div>
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                <span className="text-[#526782] dark:text-[#A8B8CE] block text-[11px]">Arms</span>
+                <span className="text-lg font-bold text-violet-600 dark:text-violet-400 mt-1 block">
+                  {workouts.filter((w) => w.muscleGroups?.some((mg) => mg.toLowerCase().includes('arm'))).length} sessions
+                </span>
+              </div>
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                <span className="text-[#526782] dark:text-[#A8B8CE] block text-[11px]">Core / Abs</span>
+                <span className="text-lg font-bold text-teal-600 dark:text-teal-400 mt-1 block">
+                  {workouts.filter((w) => w.muscleGroups?.some((mg) => mg.toLowerCase().includes('core') || mg.toLowerCase().includes('ab'))).length} sessions
+                </span>
+              </div>
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                <span className="text-[#526782] dark:text-[#A8B8CE] block text-[11px]">Full body</span>
+                <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-1 block">
+                  {workouts.filter((w) => w.muscleGroups?.some((mg) => mg.toLowerCase().includes('full'))).length} sessions
+                </span>
+              </div>
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                <span className="text-[#526782] dark:text-[#A8B8CE] block text-[11px]">Cardio</span>
+                <span className="text-lg font-bold text-rose-600 dark:text-rose-400 mt-1 block">
+                  {workouts.filter((w) => w.muscleGroups?.some((mg) => mg.toLowerCase().includes('cardio')) || (Boolean(w.cardioMinutes) && w.cardioMinutes! > 0)).length} sessions
                 </span>
               </div>
             </div>
@@ -1141,8 +1188,9 @@ export const WorkoutsView: React.FC = () => {
                       onClick={() => {
                         setCreateExercises((prev) => prev.filter((_, idx) => idx !== exIdx));
                       }}
-                      className="text-slate-400 hover:text-rose-500 cursor-pointer"
+                      className="text-slate-400 hover:text-rose-500 cursor-pointer p-0.5"
                       title="Remove exercise"
+                      aria-label={`Remove exercise "${ex.name || `Exercise ${exIdx + 1}`}"`}
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>

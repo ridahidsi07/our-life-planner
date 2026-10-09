@@ -274,9 +274,11 @@ export const SavingsPotsView: React.FC = () => {
                     <span>Add deposit</span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => deleteSavingsPot(selectedPot.id)}
-                    className="p-1.5 rounded-lg hover:bg-rose-100 text-rose-600"
+                    className="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950/40 text-rose-600 cursor-pointer"
                     title="Delete pot"
+                    aria-label={`Delete pot "${selectedPot.name}"`}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

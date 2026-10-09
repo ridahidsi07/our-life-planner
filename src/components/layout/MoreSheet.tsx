@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
 import {
   Clock,
@@ -21,6 +21,8 @@ import {
   Database,
   X,
   Search,
+  User,
+  Mail,
 } from 'lucide-react';
 import { SavingIndicator } from '../ui/SavingIndicator';
 
@@ -30,15 +32,68 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 }) => {
   const { setActiveView, setActiveModal } = usePlanner();
   const [searchTerm, setSearchTerm] = useState('');
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    if (!isOpen) return;
+
+    previousFocusRef.current = document.activeElement as HTMLElement;
+
+    const timer = setTimeout(() => {
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+      } else if (dialogRef.current) {
+        dialogRef.current.focus();
+      }
+    }, 50);
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
         onClose();
+        return;
+      }
+
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusables = Array.from(
+          dialogRef.current.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          )
+        ).filter((el) => el.offsetParent !== null);
+
+        if (focusables.length === 0) {
+          e.preventDefault();
+          return;
+        }
+
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === first || !dialogRef.current.contains(document.activeElement)) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last || !dialogRef.current.contains(document.activeElement)) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('keydown', handleKeyDown);
+      if (previousFocusRef.current && typeof previousFocusRef.current.focus === 'function') {
+        previousFocusRef.current.focus();
+      }
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -103,7 +158,11 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
       className="fixed inset-0 z-50 flex flex-col justify-end bg-black/50 backdrop-blur-xs animate-in fade-in duration-200"
     >
       <div className="fixed inset-0" onClick={onClose} aria-hidden="true" />
-      <div className="relative bg-white dark:bg-[#152238] rounded-t-3xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl z-10 border-t border-[#E2E8F0] dark:border-[#1E2D4A]">
+      <div
+        ref={dialogRef}
+        tabIndex={-1}
+        className="relative bg-white dark:bg-[#152238] rounded-t-3xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl z-10 border-t border-[#E2E8F0] dark:border-[#1E2D4A] outline-none"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-4 pb-2 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
           <div>
@@ -115,9 +174,10 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
             </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
             aria-label="Close menu"
-            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] cursor-pointer"
+            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -126,13 +186,15 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
         {/* Search */}
         <div className="px-5 pt-3 pb-1">
           <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-3 text-[#526782]" />
+            <Search className="w-4 h-4 absolute left-3 top-3 text-[#526782] dark:text-[#A8B8CE]" />
             <input
+              ref={searchInputRef}
               type="text"
+              aria-label="Search tools"
               placeholder="Search tools…"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#087F83]"
+              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#087F83] text-[#071A3A] dark:text-[#EDF4FF]"
             />
           </div>
         </div>
@@ -150,6 +212,7 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                   return (
                     <button
                       key={item.id}
+                      type="button"
                       onClick={() => handleSelect(item.id)}
                       className="flex items-center gap-3 p-2.5 rounded-xl text-left bg-slate-50 dark:bg-slate-800/60 hover:bg-[#E0F2F1] dark:hover:bg-[#163642] transition-colors cursor-pointer group"
                     >
@@ -174,33 +237,58 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           {/* Quick shortcuts */}
           <div className="pt-2 border-t border-[#E2E8F0] dark:border-[#1E2D4A] space-y-1">
             <button
+              type="button"
+              onClick={() => {
+                setActiveModal('account');
+                onClose();
+              }}
+              className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
+            >
+              <User className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+              <span>Account & Device Sync</span>
+            </button>
+            <button
+              type="button"
               onClick={() => {
                 setActiveView('settings');
                 onClose();
               }}
               className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
             >
-              <Settings className="w-4 h-4 text-[#526782]" />
+              <Settings className="w-4 h-4 text-[#526782] dark:text-[#A8B8CE]" />
               <span>Settings & Preferences</span>
             </button>
             <button
+              type="button"
               onClick={() => {
                 setActiveModal('guide');
                 onClose();
               }}
               className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
             >
-              <HelpCircle className="w-4 h-4 text-[#526782]" />
-              <span>User Guide & Support</span>
+              <HelpCircle className="w-4 h-4 text-[#526782] dark:text-[#A8B8CE]" />
+              <span>User Guide</span>
             </button>
             <button
+              type="button"
+              onClick={() => {
+                setActiveModal('support');
+                onClose();
+              }}
+              className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
+            >
+              <Mail className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+              <span>Customer Support Desk</span>
+            </button>
+            <button
+              type="button"
               onClick={() => {
                 setActiveModal('backup_restore');
                 onClose();
               }}
               className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
             >
-              <Database className="w-4 h-4 text-[#526782]" />
+              <Database className="w-4 h-4 text-[#526782] dark:text-[#A8B8CE]" />
               <span>Backup & Restore</span>
             </button>
           </div>

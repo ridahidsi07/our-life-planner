@@ -85,6 +85,17 @@ export interface DebtForecastResult {
   timeline: DebtMonthlyPoint[];
 }
 
+export function addMonthsToDateStr(startDateStr: string, monthsToAdd: number): string {
+  const [y, m, d] = startDateStr.split('-').map(Number);
+  const totalMonths = (m - 1) + monthsToAdd;
+  const targetYear = y + Math.floor(totalMonths / 12);
+  const targetMonth = ((totalMonths % 12) + 12) % 12;
+  const daysInTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+  const targetDay = Math.min(d, daysInTargetMonth);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${targetYear}-${pad(targetMonth + 1)}-${pad(targetDay)}`;
+}
+
 export function simulateDebtPayoff(
   debts: DebtItem[],
   strategy: DebtStrategy,
@@ -244,9 +255,7 @@ export function simulateDebtPayoff(
     lastPaymentAmount = actualPaidThisMonth;
 
     // Calculate current date string (month-end anchor / month step)
-    const currentSimDate = new Date(startDate);
-    currentSimDate.setMonth(startDate.getMonth() + months);
-    const dateFormatted = currentSimDate.toISOString().split('T')[0];
+    const dateFormatted = addMonthsToDateStr(startDateStr, months);
 
     const currentBalances: Record<string, number> = {};
     let curTotal = 0;
@@ -290,13 +299,12 @@ export function simulateDebtPayoff(
     };
   }
 
-  const payoffDate = new Date(startDate);
-  payoffDate.setMonth(startDate.getMonth() + months);
+  const finalPayoffDateStr = addMonthsToDateStr(startDateStr, months);
 
   return {
     isPayable: true,
     totalMonths: months,
-    payoffDate: payoffDate.toISOString().split('T')[0],
+    payoffDate: finalPayoffDateStr,
     totalInterestPaid: Math.round(totalInterest * 100) / 100,
     finalPaymentAmount: Math.round(lastPaymentAmount * 100) / 100,
     timeline,
@@ -317,6 +325,18 @@ export function calculateHabitStreak(
 } {
   const checkSet = new Set(habit.checkedDates);
 
+  const parseLocalDateParts = (dStr: string): Date => {
+    const [y, m, d] = dStr.split('-').map(Number);
+    return new Date(y, m - 1, d, 12, 0, 0); // Local noon prevents DST boundary shifts
+  };
+
+  const formatLocalDateParts = (d: Date): string => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
   if (habit.frequencyType === 'daily') {
     // Daily habit streak
     let best = 0;
@@ -327,7 +347,7 @@ export function calculateHabitStreak(
     if (sortedDates.length > 0) {
       let prevDate: Date | null = null;
       for (const dStr of sortedDates) {
-        const curDate = new Date(dStr);
+        const curDate = parseLocalDateParts(dStr);
         if (prevDate) {
           const diffDays = Math.round(
             (curDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24)
@@ -350,16 +370,14 @@ export function calculateHabitStreak(
     // If today is checked, count backwards from today.
     // If today is NOT checked, count backwards from yesterday.
     let current = 0;
-    const today = new Date(todayStr);
-
-    let checkDay = new Date(today);
+    const checkDay = parseLocalDateParts(todayStr);
     if (!checkSet.has(todayStr)) {
       // Not completed today yet; streak is based on yesterday
       checkDay.setDate(checkDay.getDate() - 1);
     }
 
     while (true) {
-      const dStr = checkDay.toISOString().split('T')[0];
+      const dStr = formatLocalDateParts(checkDay);
       if (checkSet.has(dStr)) {
         current++;
         checkDay.setDate(checkDay.getDate() - 1);
@@ -384,21 +402,21 @@ export function calculateHabitStreak(
     // Group check-in dates by week key (Monday-based)
     const weekMap: Record<string, Set<string>> = {};
     for (const dStr of habit.checkedDates) {
-      const d = new Date(dStr);
+      const d = parseLocalDateParts(dStr);
       const day = d.getDay();
       const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
-      const mon = new Date(d.setDate(diff));
-      const key = mon.toISOString().split('T')[0];
+      d.setDate(diff);
+      const key = formatLocalDateParts(d);
       if (!weekMap[key]) weekMap[key] = new Set();
       weekMap[key].add(dStr);
     }
 
     // Check current week
-    const now = new Date(todayStr);
+    const now = parseLocalDateParts(todayStr);
     const day = now.getDay();
     const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-    const currentMon = new Date(now.setDate(diff));
-    const currentWeekKey = currentMon.toISOString().split('T')[0];
+    now.setDate(diff);
+    const currentWeekKey = formatLocalDateParts(now);
 
     const currentWeekCount = weekMap[currentWeekKey]?.size || 0;
     const isMetThisWeek = currentWeekCount >= target;
@@ -407,7 +425,7 @@ export function calculateHabitStreak(
     let streak = 0;
     let bestStreak = 0;
 
-    let probeWeek = new Date(currentMon);
+    const probeWeek = parseLocalDateParts(currentWeekKey);
     if (isMetThisWeek) {
       streak = 1;
       probeWeek.setDate(probeWeek.getDate() - 7);
@@ -417,7 +435,7 @@ export function calculateHabitStreak(
     }
 
     while (true) {
-      const key = probeWeek.toISOString().split('T')[0];
+      const key = formatLocalDateParts(probeWeek);
       const count = weekMap[key]?.size || 0;
       if (count >= target) {
         streak++;
@@ -453,13 +471,30 @@ export function calculateHabitStreak(
 /**
  * Section 6: Workout Volume
  * Strength volume = sum of (external weight * reps) across completed sets.
+ * Supports unit-aware calculation ('kg' or 'lb').
  */
-export function calculateWorkoutVolume(session: WorkoutSession): number {
+export function calculateWorkoutVolume(session: WorkoutSession, unit: 'kg' | 'lb' = 'kg'): number {
   let volume = 0;
   for (const ex of session.exercises) {
     for (const set of ex.sets) {
       if (set.isCompleted) {
-        const weight = set.weightKg || (set.weightOriginal && set.weightUnit === 'kg' ? set.weightOriginal : 0);
+        let weight = 0;
+        if (unit === 'lb') {
+          if (set.weightUnit === 'lb' && set.weightOriginal != null) {
+            weight = set.weightOriginal;
+          } else if (set.weightKg != null) {
+            weight = set.weightKg * 2.20462262;
+          }
+        } else {
+          // kg
+          if (set.weightUnit === 'kg' && set.weightOriginal != null) {
+            weight = set.weightOriginal;
+          } else if (set.weightKg != null) {
+            weight = set.weightKg;
+          } else if (set.weightUnit === 'lb' && set.weightOriginal != null) {
+            weight = set.weightOriginal / 2.20462262;
+          }
+        }
         volume += weight * set.reps;
       }
     }

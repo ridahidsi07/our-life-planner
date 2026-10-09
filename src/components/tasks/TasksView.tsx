@@ -1013,8 +1013,10 @@ export const TasksView: React.FC = () => {
                         </div>
                       </div>
                       <button
+                        type="button"
                         onClick={() => toggleTaskCompletion(t.id)}
-                        className="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-[10px] font-semibold hover:bg-rose-700"
+                        className="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-[10px] font-semibold hover:bg-rose-700 cursor-pointer"
+                        aria-label={`Complete overdue task "${t.title}"`}
                       >
                         Complete
                       </button>

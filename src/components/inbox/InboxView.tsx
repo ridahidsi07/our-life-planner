@@ -157,9 +157,11 @@ export const InboxView: React.FC = () => {
                         <span>Convert to task</span>
                       </button>
                       <button
+                        type="button"
                         onClick={() => deleteInboxItem(item.id)}
-                        className="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-500 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-500 transition-colors cursor-pointer"
                         title="Delete thought"
+                        aria-label={`Delete thought "${item.text}"`}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -185,8 +187,10 @@ export const InboxView: React.FC = () => {
               </div>
               {convertingItem && (
                 <button
+                  type="button"
                   onClick={() => setConvertingItem(null)}
-                  className="p-1.5 rounded-lg hover:bg-slate-100 text-[#526782]"
+                  className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
+                  aria-label="Cancel task conversion"
                 >
                   <X className="w-4 h-4" />
                 </button>

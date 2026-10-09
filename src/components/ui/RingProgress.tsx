@@ -32,6 +32,7 @@ export const RingProgress: React.FC<RingProgressProps> = ({
       <svg
         width={size}
         height={size}
+        aria-hidden="true"
         className="transform -rotate-90"
         viewBox={`0 0 ${size} ${size}`}
       >

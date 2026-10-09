@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
 import { RingProgress } from '../ui/RingProgress';
 import { Modal } from '../ui/Modal';
+import { getCurrentTimeStr } from '../../utils/formatters';
 import {
   Droplet,
   Plus,
@@ -17,6 +18,7 @@ import {
 export const HydrationView: React.FC = () => {
   const {
     currentDate,
+    setCurrentDate,
     hydrationEntries,
     hydrationTargets,
     addWaterLog,
@@ -51,7 +53,7 @@ export const HydrationView: React.FC = () => {
   // Custom add drink modal
   const [isAddDrinkModalOpen, setIsAddDrinkModalOpen] = useState(false);
   const [customAmount, setCustomAmount] = useState<number>(250);
-  const [customTime, setCustomTime] = useState<string>('12:00');
+  const [customTime, setCustomTime] = useState<string>(() => getCurrentTimeStr());
 
   // Today entries
   const todayEntries = useMemo(() => {
@@ -77,16 +79,15 @@ export const HydrationView: React.FC = () => {
   const progressPct =
     currentTargetMl > 0 ? Math.min(100, Math.round((totalIntakeToday / currentTargetMl) * 100)) : 0;
   const latestTime =
-    todayEntries.length > 0 ? todayEntries[todayEntries.length - 1].time : '11:45';
+    todayEntries.length > 0 ? todayEntries[todayEntries.length - 1].time : null;
 
-  // 7-day history entries
+  // 7-day history entries (timezone-safe local date calculation)
   const past7Days = useMemo(() => {
-    const cur = new Date(currentDate);
+    const [year, month, day] = currentDate.split('-').map(Number);
     const days = [];
     for (let i = 6; i >= 0; i--) {
-      const d = new Date(cur);
-      d.setDate(cur.getDate() - i);
-      const iso = d.toISOString().split('T')[0];
+      const d = new Date(year, month - 1, day - i);
+      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       const sum = hydrationEntries
         .filter((e) => e.date === iso)
         .reduce((s, e) => s + e.amountMl, 0);
@@ -136,7 +137,10 @@ export const HydrationView: React.FC = () => {
         </div>
 
         <button
-          onClick={() => setIsAddDrinkModalOpen(true)}
+          onClick={() => {
+            setCustomTime(getCurrentTimeStr());
+            setIsAddDrinkModalOpen(true);
+          }}
           className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
         >
           <Plus className="w-4 h-4" />
@@ -147,22 +151,25 @@ export const HydrationView: React.FC = () => {
       {/* Week Strip Intake Row (Board 17) */}
       <div className="bg-white dark:bg-[#152238] rounded-2xl p-4 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs overflow-x-auto">
         <div className="min-w-[600px] flex items-center justify-between gap-2 text-center text-xs">
-          <span className="font-bold text-[#526782] text-xs px-2">This week:</span>
+          <span className="font-bold text-[#526782] dark:text-[#A8B8CE] text-xs px-2">This week:</span>
           {past7Days.map((d) => (
-            <div
+            <button
               key={d.iso}
-              className={`flex-1 p-2.5 rounded-xl border transition-all ${
+              type="button"
+              onClick={() => setCurrentDate(d.iso)}
+              aria-label={`Select date ${d.dayName} ${d.dayNum}`}
+              className={`flex-1 p-2.5 rounded-xl border transition-all cursor-pointer ${
                 d.isToday
-                  ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20'
-                  : 'border-slate-100 dark:border-slate-800'
+                  ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20 ring-1 ring-[#087F83]'
+                  : 'border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
               }`}
             >
-              <div className="text-[10px] text-[#526782] uppercase">{d.dayName}</div>
+              <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] uppercase">{d.dayName}</div>
               <div className="font-bold text-[#071A3A] dark:text-[#EDF4FF]">{d.dayNum}</div>
               <div className="font-mono text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] mt-1">
                 {d.intakeL} L
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>
@@ -175,8 +182,8 @@ export const HydrationView: React.FC = () => {
             <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
               Today's progress
             </h3>
-            <span className="text-xs text-[#526782]">
-              Last drink {latestTime}
+            <span className="text-xs text-[#526782] dark:text-[#A8B8CE]">
+              {latestTime ? `Last drink ${latestTime}` : 'No drinks logged yet'}
             </span>
           </div>
 
@@ -213,19 +220,22 @@ export const HydrationView: React.FC = () => {
           {/* Quick Buttons Row */}
           <div className="flex flex-wrap gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
             <button
-              onClick={() => addWaterLog(250, '12:00')}
+              type="button"
+              onClick={() => addWaterLog(250)}
               className="flex-1 py-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 text-[#087F83] dark:text-[#38D0C5] text-xs font-bold cursor-pointer transition-colors"
             >
               +250 ml
             </button>
             <button
-              onClick={() => addWaterLog(500, '12:00')}
+              type="button"
+              onClick={() => addWaterLog(500)}
               className="flex-1 py-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 text-[#087F83] dark:text-[#38D0C5] text-xs font-bold cursor-pointer transition-colors"
             >
               +500 ml
             </button>
             <button
-              onClick={() => addWaterLog(750, '12:00')}
+              type="button"
+              onClick={() => addWaterLog(750)}
               className="flex-1 py-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 text-[#087F83] dark:text-[#38D0C5] text-xs font-bold cursor-pointer transition-colors"
             >
               +750 ml
@@ -297,8 +307,12 @@ export const HydrationView: React.FC = () => {
               Today's drinks
             </h3>
             <button
-              onClick={() => setIsAddDrinkModalOpen(true)}
-              className="text-xs font-semibold text-[#087F83] hover:underline"
+              type="button"
+              onClick={() => {
+                setCustomTime(getCurrentTimeStr());
+                setIsAddDrinkModalOpen(true);
+              }}
+              className="text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline cursor-pointer"
             >
               + Add drink
             </button>
@@ -315,26 +329,36 @@ export const HydrationView: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {entriesWithRunning.map((entry) => (
-                  <tr key={entry.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                    <td className="py-2.5 px-3">{entry.time}</td>
-                    <td className="py-2.5 px-3 font-bold text-[#087F83]">
-                      {entry.amountMl} ml
-                    </td>
-                    <td className="py-2.5 px-3 text-[#526782]">
-                      {entry.runningTotal} ml
-                    </td>
-                    <td className="py-2.5 px-3 text-right">
-                      <button
-                        onClick={() => deleteWaterLog(entry.id)}
-                        className="p-1 rounded-md text-slate-400 hover:text-rose-600"
-                        title="Delete log"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                {entriesWithRunning.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center text-[#526782] dark:text-[#A8B8CE]">
+                      No drinks logged yet for this day.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  entriesWithRunning.map((entry) => (
+                    <tr key={entry.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                      <td className="py-2.5 px-3">{entry.time}</td>
+                      <td className="py-2.5 px-3 font-bold text-[#087F83] dark:text-[#38D0C5]">
+                        {entry.amountMl} ml
+                      </td>
+                      <td className="py-2.5 px-3 text-[#526782] dark:text-[#A8B8CE]">
+                        {entry.runningTotal} ml
+                      </td>
+                      <td className="py-2.5 px-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => deleteWaterLog(entry.id)}
+                          className="p-1 rounded-md text-slate-400 hover:text-rose-600 cursor-pointer"
+                          title="Delete log"
+                          aria-label={`Delete water log for ${entry.time} (${entry.amountMl} ml)`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

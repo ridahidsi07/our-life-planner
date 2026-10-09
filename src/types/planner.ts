@@ -13,6 +13,12 @@ export type TaskStatus = 'not_started' | 'in_progress' | 'on_hold' | 'completed'
 export type RoutineInterval = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
 export type DebtStrategy = 'snowball' | 'avalanche' | 'custom';
 
+export interface HouseholdMember {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export interface UserSettings {
   ownerName: string;
   email: string;
@@ -36,6 +42,16 @@ export interface UserSettings {
   budgetEndDate?: string;
   lastBackupDate?: string;
   lastSyncDate?: string;
+  enabledTools?: string[];
+  pinnedTools?: string[];
+  todayVisibleSections?: {
+    finance?: boolean;
+    health?: boolean;
+    meals?: boolean;
+    habits?: boolean;
+  };
+  householdMembers?: HouseholdMember[];
+  locale?: string;
 }
 
 export interface TaskItem {
@@ -44,10 +60,13 @@ export interface TaskItem {
   description?: string;
   category: string;
   assignedTo: string;
+  assignedMemberId?: string;
   dueDate?: string; // YYYY-MM-DD
   dueTime?: string; // HH:mm
   scheduledStart?: string; // HH:mm
   scheduledEnd?: string; // HH:mm
+  isAllDay?: boolean;
+  isArchived?: boolean;
   priority: Priority;
   status: TaskStatus;
   createdAt: string;
@@ -60,6 +79,7 @@ export interface RoutineItem {
   title: string;
   category: string;
   assignedTo: string;
+  assignedMemberId?: string;
   priority: Priority;
   interval: RoutineInterval;
   customEveryCount?: number; // e.g. every 2 weeks
@@ -73,6 +93,7 @@ export interface RoutineItem {
   pausedDate?: string;
   completedDates: string[]; // ['2026-10-05', ...]
   skippedDates: string[];
+  forgivenDates?: string[];
   exceptions?: Record<string, Partial<RoutineItem>>;
   isSample?: boolean;
 }
@@ -212,6 +233,7 @@ export interface GroceryItem {
   isPurchased: boolean;
   sourceType: 'generated' | 'manual';
   sourceMealCount?: number;
+  sourceMealTitles?: string[];
   isSample?: boolean;
 }
 

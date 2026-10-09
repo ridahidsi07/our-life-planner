@@ -389,9 +389,11 @@ export const BudgetBillsView: React.FC = () => {
           </div>
 
           <button
+            type="button"
             onClick={openBudgetPlanModal}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
             title="Edit opening balance, planned income, savings and category limits"
+            aria-label="Edit budget plan: configure opening balance, planned income, savings and category limits"
           >
             <Sliders className="w-3.5 h-3.5 text-[#087F83] dark:text-[#38D0C5]" />
             <span>Edit budget plan</span>
@@ -480,19 +482,21 @@ export const BudgetBillsView: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center text-xs">
-              <div
+              <button
+                type="button"
                 onClick={openBudgetPlanModal}
-                className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-center"
                 title="Click to edit opening balance"
+                aria-label={`Opening balance: ${currencySymbol}${cashFlow.openingBalance.toFixed(0)}. Click to edit budget plan.`}
               >
-                <span className="text-[#526782] block text-[10px] flex items-center justify-center gap-1">
+                <span className="text-[#526782] dark:text-[#A8B8CE] block text-[10px] flex items-center justify-center gap-1">
                   <span>Opening balance</span>
                   <Edit2 className="w-2.5 h-2.5 opacity-60" />
                 </span>
-                <span className="text-base font-bold font-mono mt-0.5 block">
+                <span className="text-base font-bold font-mono mt-0.5 block text-[#071A3A] dark:text-[#EDF4FF]">
                   {currencySymbol}{cashFlow.openingBalance.toFixed(0)}
                 </span>
-              </div>
+              </button>
 
               <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300">
                 <span className="opacity-80 block text-[10px]">+ Actual income</span>
@@ -757,17 +761,21 @@ export const BudgetBillsView: React.FC = () => {
                     </span>
 
                     <button
+                      type="button"
                       onClick={() => openEditTransaction(tx)}
                       className="p-1 rounded-md text-slate-400 hover:text-[#087F83] cursor-pointer"
                       title="Edit transaction"
+                      aria-label={`Edit transaction: ${tx.category} ${currencySymbol}${tx.amount.toFixed(2)}`}
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => deleteTransaction(tx.id)}
                       className="p-1 rounded-md text-slate-400 hover:text-rose-600 cursor-pointer"
                       title="Delete transaction"
+                      aria-label={`Delete transaction: ${tx.category} ${currencySymbol}${tx.amount.toFixed(2)}`}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -998,6 +1006,7 @@ export const BudgetBillsView: React.FC = () => {
                       onClick={() => handleDeleteCategoryLimit(cat)}
                       className="p-1 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 cursor-pointer"
                       title="Remove category allocation"
+                      aria-label={`Remove category allocation for ${cat}`}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

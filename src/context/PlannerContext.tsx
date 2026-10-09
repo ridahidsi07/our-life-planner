@@ -25,6 +25,7 @@ import {
   WorkoutSession,
   WorkoutExercise,
   WorkoutExerciseSet,
+  HouseholdMember,
 } from '../types/planner';
 import { getDayBefore } from '../utils/routineRecurrence';
 import {
@@ -49,7 +50,7 @@ import {
   SAMPLE_WORKOUTS,
 } from '../utils/sampleData';
 import { calculateCashFlow, CashFlowCalculation } from '../utils/calculations';
-import { getCurrencySymbol } from '../utils/formatters';
+import { getCurrencySymbol, getCurrentTimeStr } from '../utils/formatters';
 
 const STORAGE_KEY_DATA = 'our_life_planner_data_v1';
 const STORAGE_KEY_SETTINGS = 'our_life_planner_settings_v1';
@@ -103,6 +104,9 @@ interface PlannerContextType {
   updateTask: (id: string, updates: Partial<TaskItem>) => void;
   deleteTask: (id: string) => void;
   toggleTaskCompletion: (id: string) => void;
+  archiveTask: (id: string) => void;
+  unarchiveTask: (id: string) => void;
+  rescheduleTask: (id: string, newDate: string) => void;
 
   // Routine Actions
   addRoutine: (routine: Omit<RoutineItem, 'id' | 'completedDates' | 'skippedDates'>) => void;
@@ -117,6 +121,8 @@ interface PlannerContextType {
   toggleRoutineCompletion: (id: string, date: string) => void;
   skipRoutineOccurrence: (id: string, date: string) => void;
   unskipRoutineOccurrence: (id: string, date: string) => void;
+  forgiveRoutineOccurrence: (id: string, date: string) => void;
+  unforgiveRoutineOccurrence: (id: string, date: string) => void;
   toggleRoutinePause: (id: string) => void;
 
   // Goal Actions
@@ -168,6 +174,7 @@ interface PlannerContextType {
   toggleMealConsumed: (mealId: string) => void;
   regenerateGroceries: (weekStartDateStr: string) => void;
   addGroceryItem: (item: Omit<GroceryItem, 'id' | 'sourceType'>) => void;
+  updateGroceryItem: (id: string, updates: Partial<GroceryItem>) => void;
   deleteGroceryItem: (id: string) => void;
   toggleGroceryPurchased: (id: string) => void;
   resetGroceryCheckmarks: () => void;
@@ -190,7 +197,7 @@ interface PlannerContextType {
   deleteWeightRecord: (id: string) => void;
 
   // Hydration Actions
-  addWaterLog: (amountMl: number, timeStr: string) => void;
+  addWaterLog: (amountMl: number, timeStr?: string) => void;
   undoLastWaterLog: () => void;
   deleteWaterLog: (id: string) => void;
   updateWaterTarget: (targetMl: number) => void;
@@ -198,6 +205,15 @@ interface PlannerContextType {
   // Calendar Event Actions
   addCalendarEvent: (event: Omit<CalendarEvent, 'id'>) => void;
   deleteCalendarEvent: (id: string) => void;
+
+  // Household & Tool Customization
+  addHouseholdMember: (name: string, color: string) => void;
+  removeHouseholdMember: (id: string) => void;
+  toggleToolEnabled: (toolId: string) => void;
+  toggleToolPinned: (toolId: string) => void;
+
+  // Calendar Export
+  exportCalendarIcs: () => void;
 
   // Global Operations
   removeSampleData: () => void;
@@ -334,6 +350,37 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const interval = setInterval(checkMidnight, 30000);
     return () => clearInterval(interval);
   }, [settings.timeZone]);
+
+  // Listen for online and offline network status changes
+  useEffect(() => {
+    const handleOnline = () => {
+      if (settingsRef.current.edition === 'online') {
+        setSavingState('saving');
+        setTimeout(() => {
+          setSavingState('saved_online');
+        }, 500);
+      }
+    };
+
+    const handleOffline = () => {
+      if (settingsRef.current.edition === 'online') {
+        setSavingState('waiting_to_sync');
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Initial check: if browser is currently offline when opening online edition
+    if (typeof navigator !== 'undefined' && !navigator.onLine && settingsRef.current.edition === 'online') {
+      setSavingState('waiting_to_sync');
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Core Data Collections
   const [tasks, setTasks] = useState<TaskItem[]>(SAMPLE_TASKS);
@@ -475,6 +522,8 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setTimeout(() => {
         if (stg.edition === 'downloaded') {
           setSavingState('saved_local');
+        } else if (typeof navigator !== 'undefined' && !navigator.onLine) {
+          setSavingState('waiting_to_sync');
         } else {
           setSavingState('saved_online');
         }
@@ -635,6 +684,24 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     );
   };
 
+  const archiveTask = (id: string) => {
+    setTasks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, isArchived: true } : t))
+    );
+  };
+
+  const unarchiveTask = (id: string) => {
+    setTasks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, isArchived: false } : t))
+    );
+  };
+
+  const rescheduleTask = (id: string, newDate: string) => {
+    setTasks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, dueDate: newDate } : t))
+    );
+  };
+
   // Routine Actions
   const addRoutine = (
     routine: Omit<RoutineItem, 'id' | 'completedDates' | 'skippedDates'>
@@ -756,6 +823,34 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return {
           ...r,
           skippedDates: r.skippedDates.filter((d) => d !== date),
+        };
+      })
+    );
+  };
+
+  const forgiveRoutineOccurrence = (id: string, date: string) => {
+    setRoutines((prev) =>
+      prev.map((r) => {
+        if (r.id !== id) return r;
+        const currentForgiven = r.forgivenDates || [];
+        return {
+          ...r,
+          forgivenDates: currentForgiven.includes(date)
+            ? currentForgiven
+            : [...currentForgiven, date],
+          skippedDates: r.skippedDates.filter((d) => d !== date),
+        };
+      })
+    );
+  };
+
+  const unforgiveRoutineOccurrence = (id: string, date: string) => {
+    setRoutines((prev) =>
+      prev.map((r) => {
+        if (r.id !== id) return r;
+        return {
+          ...r,
+          forgivenDates: (r.forgivenDates || []).filter((d) => d !== date),
         };
       })
     );
@@ -1226,15 +1321,16 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const regenerateGroceries = (weekStartDateStr: string) => {
-    // 1. Gather all planned meals for this week
-    const start = new Date(weekStartDateStr);
-    const end = new Date(start);
-    end.setDate(end.getDate() + 7);
+    // 1. Gather all planned meals for this week (timezone safe)
+    const [y, m, d] = weekStartDateStr.split('-').map(Number);
+    const weekDates = new Set<string>();
+    for (let i = 0; i < 7; i++) {
+      const dt = new Date(y, m - 1, d + i);
+      const iso = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+      weekDates.add(iso);
+    }
 
-    const weekMeals = plannedMeals.filter((m) => {
-      const d = new Date(m.date);
-      return d >= start && d < end;
-    });
+    const weekMeals = plannedMeals.filter((meal) => weekDates.has(meal.date));
 
     // 2. Aggregate ingredients with NIST conversion & scaling
     interface AggregatedIng {
@@ -1243,6 +1339,7 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
       primaryUnit: string;
       category: 'Produce' | 'Pantry' | 'Chilled' | 'Household' | 'Bakery' | 'Other';
       mealCount: number;
+      sourceMealTitles: string[];
     }
 
     const aggregated: Record<string, AggregatedIng> = {};
@@ -1278,6 +1375,8 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
           baseUnit = 'ml';
         }
 
+        const mealTitle = meal.recipeTitle || 'Planned meal';
+
         if (!aggregated[key]) {
           aggregated[key] = {
             name: ing.name,
@@ -1285,10 +1384,14 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
             primaryUnit: baseUnit,
             category: cat,
             mealCount: 1,
+            sourceMealTitles: [mealTitle],
           };
         } else {
           aggregated[key].totalNormalized += normalizedAmt;
           aggregated[key].mealCount += 1;
+          if (!aggregated[key].sourceMealTitles.includes(mealTitle)) {
+            aggregated[key].sourceMealTitles.push(mealTitle);
+          }
         }
       }
     }
@@ -1327,6 +1430,7 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isPurchased: existing ? existing.isPurchased : false,
         sourceType: 'generated',
         sourceMealCount: agg.mealCount,
+        sourceMealTitles: agg.sourceMealTitles,
       };
     });
 
@@ -1340,6 +1444,12 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
       sourceType: 'manual',
     };
     setGroceries((prev) => [...prev, newItem]);
+  };
+
+  const updateGroceryItem = (id: string, updates: Partial<GroceryItem>) => {
+    setGroceries((prev) =>
+      prev.map((g) => (g.id === id ? { ...g, ...updates } : g))
+    );
   };
 
   const deleteGroceryItem = (id: string) => {
@@ -1564,11 +1674,12 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   // Hydration Actions
-  const addWaterLog = (amountMl: number, timeStr: string) => {
+  const addWaterLog = (amountMl: number, timeStr?: string) => {
+    const finalTime = timeStr || getCurrentTimeStr();
     const newEntry: HydrationLogEntry = {
       id: `hl-${Date.now()}`,
       date: currentDate,
-      time: timeStr,
+      time: finalTime,
       amountMl,
     };
     setHydrationEntries((prev) => [newEntry, ...prev]);
@@ -1604,6 +1715,95 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const deleteCalendarEvent = (id: string) => {
     setCalendarEvents((prev) => prev.filter((e) => e.id !== id));
+  };
+
+  // Household & Tool Customization Actions
+  const addHouseholdMember = (name: string, color: string) => {
+    const newMember: HouseholdMember = {
+      id: `mem-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      name: name.trim(),
+      color: color || '#087F83',
+    };
+    const current = settings.householdMembers || [];
+    updateSettings({ householdMembers: [...current, newMember] });
+  };
+
+  const removeHouseholdMember = (id: string) => {
+    const current = settings.householdMembers || [];
+    updateSettings({ householdMembers: current.filter((m) => m.id !== id) });
+  };
+
+  const toggleToolEnabled = (toolId: string) => {
+    const current = settings.enabledTools || [
+      'today', 'tasks', 'calendar', 'routines', 'goals', 'habits',
+      'inbox', 'money', 'food', 'body', 'settings'
+    ];
+    const next = current.includes(toolId)
+      ? current.filter((t) => t !== toolId)
+      : [...current, toolId];
+    updateSettings({ enabledTools: next });
+  };
+
+  const toggleToolPinned = (toolId: string) => {
+    const current = settings.pinnedTools || [];
+    const next = current.includes(toolId)
+      ? current.filter((t) => t !== toolId)
+      : [...current, toolId];
+    updateSettings({ pinnedTools: next });
+  };
+
+  // Calendar Export
+  const exportCalendarIcs = () => {
+    const formatIcsDate = (dateStr: string, timeStr?: string) => {
+      const cleanDate = dateStr.replace(/-/g, '');
+      if (!timeStr) {
+        return `VALUE=DATE:${cleanDate}`;
+      }
+      const [hh, mm] = timeStr.split(':');
+      return `${cleanDate}T${hh || '00'}${mm || '00'}00`;
+    };
+
+    const icsLines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Our Life Planner//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+    ];
+
+    tasks.forEach((t) => {
+      if (!t.dueDate || t.isArchived) return;
+      icsLines.push('BEGIN:VEVENT');
+      icsLines.push(`UID:task-${t.id}@ourlifeplanner.app`);
+      icsLines.push(`DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`);
+      icsLines.push(`SUMMARY:${t.title.replace(/[\n\r]/g, ' ')}`);
+      if (t.description) icsLines.push(`DESCRIPTION:${t.description.replace(/[\n\r]/g, ' ')}`);
+      icsLines.push(`DTSTART;${formatIcsDate(t.dueDate, t.scheduledStart || t.dueTime)}`);
+      if (t.status === 'completed') icsLines.push('STATUS:COMPLETED');
+      icsLines.push('END:VEVENT');
+    });
+
+    calendarEvents.forEach((ev) => {
+      icsLines.push('BEGIN:VEVENT');
+      icsLines.push(`UID:event-${ev.id}@ourlifeplanner.app`);
+      icsLines.push(`DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`);
+      icsLines.push(`SUMMARY:${ev.title.replace(/[\n\r]/g, ' ')}`);
+      if (ev.notes) icsLines.push(`DESCRIPTION:${ev.notes.replace(/[\n\r]/g, ' ')}`);
+      icsLines.push(`DTSTART;${formatIcsDate(ev.date, ev.startTime)}`);
+      icsLines.push('END:VEVENT');
+    });
+
+    icsLines.push('END:VCALENDAR');
+
+    const blob = new Blob([icsLines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `our-life-planner-${currentDate}.ics`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   // Global operations
@@ -1814,6 +2014,9 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updateTask,
         deleteTask,
         toggleTaskCompletion,
+        archiveTask,
+        unarchiveTask,
+        rescheduleTask,
         addRoutine,
         updateRoutine,
         updateRoutineWithScope,
@@ -1821,6 +2024,8 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         toggleRoutineCompletion,
         skipRoutineOccurrence,
         unskipRoutineOccurrence,
+        forgiveRoutineOccurrence,
+        unforgiveRoutineOccurrence,
         toggleRoutinePause,
         addGoal,
         updateGoal,
@@ -1858,6 +2063,7 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         toggleMealConsumed,
         regenerateGroceries,
         addGroceryItem,
+        updateGroceryItem,
         deleteGroceryItem,
         toggleGroceryPurchased,
         resetGroceryCheckmarks,
@@ -1880,6 +2086,11 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updateWaterTarget,
         addCalendarEvent,
         deleteCalendarEvent,
+        addHouseholdMember,
+        removeHouseholdMember,
+        toggleToolEnabled,
+        toggleToolPinned,
+        exportCalendarIcs,
         removeSampleData,
         resetAllData,
         loadSampleData,

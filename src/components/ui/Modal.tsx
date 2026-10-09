@@ -7,6 +7,7 @@ interface ModalProps {
   title?: string;
   subtitle?: string;
   maxWidth?: string;
+  ariaLabel?: string;
   children: React.ReactNode;
 }
 
@@ -16,6 +17,7 @@ export const Modal: React.FC<ModalProps> = ({
   title,
   subtitle,
   maxWidth = 'max-w-lg',
+  ariaLabel,
   children,
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -111,7 +113,7 @@ export const Modal: React.FC<ModalProps> = ({
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
         aria-describedby={subtitle ? subtitleId : undefined}
-        aria-label={!title ? 'Dialog' : undefined}
+        aria-label={!title ? (ariaLabel || 'Dialog') : undefined}
         tabIndex={-1}
         className={`relative w-full ${maxWidth} bg-white dark:bg-[#152238] rounded-2xl shadow-xl border border-[#E2E8F0] dark:border-[#1E2D4A] overflow-hidden max-h-[92vh] flex flex-col z-10 outline-none`}
       >

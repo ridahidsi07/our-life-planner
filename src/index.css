@@ -65,3 +65,64 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(71, 85, 105, 0.55);
 }
+
+/* WCAG 2.2 AA Contrast Enforcement across themes (F13) */
+/* Normal text requires minimum 4.5:1; large/bold text requires 3.0:1 */
+
+/* Dark mode supporting and muted text elevation over dark surfaces (#152238 and #0B1220) */
+html.dark .text-\[\#526782\],
+html[data-theme='dark'] .text-\[\#526782\],
+.dark .text-\[\#526782\] {
+  color: #A8B8CE;
+}
+
+html.dark .text-slate-400,
+html[data-theme='dark'] .text-slate-400,
+.dark .text-slate-400 {
+  color: #94A3B8;
+}
+
+html.dark .text-slate-500,
+html[data-theme='dark'] .text-slate-500,
+.dark .text-slate-500 {
+  color: #CBD5E1;
+}
+
+/* Light mode contrast enhancement for muted text over light surfaces */
+html.light .text-slate-400,
+html[data-theme='light'] .text-slate-400,
+:root:not(.dark) .text-slate-400 {
+  color: #475569;
+}
+
+/* Inputs and placeholders */
+input::placeholder,
+textarea::placeholder {
+  color: #64748B;
+  opacity: 1;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder,
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #94A3B8;
+  opacity: 1;
+}
+
+/* Disabled controls contrast guarantee (WCAG accessible distinction) */
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Chart axis and label contrast */
+.recharts-text,
+.recharts-cartesian-axis-tick-value,
+.chart-label {
+  fill: currentColor;
+}
+

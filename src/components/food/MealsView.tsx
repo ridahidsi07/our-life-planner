@@ -47,20 +47,40 @@ export const MealsView: React.FC = () => {
     plannedMeals.length > 0 ? plannedMeals[0].id : ''
   );
 
+  // Week navigation offset state
+  const [weekOffset, setWeekOffset] = useState<number>(0);
+
+  const displayedReferenceDate = useMemo(() => {
+    if (weekOffset === 0) return currentDate;
+    const [y, m, d] = currentDate.split('-').map(Number);
+    const dt = new Date(y, m - 1, d + weekOffset * 7);
+    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+  }, [currentDate, weekOffset]);
+
   // Current week start string and week days calculation
   const currentWeekMondayStr = useMemo(() => {
-    return getWeekStartDate(currentDate, settings.weekStartsOn);
-  }, [currentDate, settings.weekStartsOn]);
+    return getWeekStartDate(displayedReferenceDate, settings.weekStartsOn);
+  }, [displayedReferenceDate, settings.weekStartsOn]);
 
   const weekDays = useMemo<WeekDayMealCol[]>(() => {
-    const list = getWeekDaysForDate(currentDate, settings.weekStartsOn);
+    const list = getWeekDaysForDate(displayedReferenceDate, settings.weekStartsOn);
     return list.map((d) => ({
       name: d.dayName,
       num: d.dayNum,
       monthName: d.monthName,
       dateStr: d.dateStr,
     }));
-  }, [currentDate, settings.weekStartsOn]);
+  }, [displayedReferenceDate, settings.weekStartsOn]);
+
+  const weekDatesSet = useMemo(() => new Set(weekDays.map((w) => w.dateStr)), [weekDays]);
+  const mealsThisWeek = useMemo(
+    () => plannedMeals.filter((m) => weekDatesSet.has(m.date)),
+    [plannedMeals, weekDatesSet]
+  );
+  const mealsWithoutIngredients = useMemo(
+    () => mealsThisWeek.filter((m) => !m.ingredientsSnapshot || m.ingredientsSnapshot.length === 0),
+    [mealsThisWeek]
+  );
 
   // Plan Meal Modal state
   const [isPlanMealModalOpen, setIsPlanMealModalOpen] = useState(false);
@@ -227,6 +247,38 @@ export const MealsView: React.FC = () => {
             {/* Week Meal Matrix (8 cols) */}
             <div className="lg:col-span-8 bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs overflow-x-auto">
               <div className="min-w-[650px]">
+                {/* Week Navigation Strip */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setWeekOffset((prev) => prev - 1)}
+                      aria-label="Previous week"
+                      className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer transition-colors"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWeekOffset(0)}
+                      className="px-3 py-1 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer transition-colors"
+                    >
+                      {weekOffset === 0 ? 'This week' : 'Jump to this week'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWeekOffset((prev) => prev + 1)}
+                      aria-label="Next week"
+                      className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer transition-colors"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                    {weekDays[0] && weekDays[6] && `${weekDays[0].name}, ${weekDays[0].num} ${weekDays[0].monthName} – ${weekDays[6].name}, ${weekDays[6].num} ${weekDays[6].monthName}`}
+                  </span>
+                </div>
+
                 {/* Day Header Row */}
                 <div className="grid grid-cols-8 pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A] text-xs font-bold text-center text-[#526782]">
                   <div className="col-span-1 text-left">Meal</div>
@@ -253,6 +305,7 @@ export const MealsView: React.FC = () => {
                         (m) => m.date === w.dateStr && m.mealType === mType
                       );
                       const isSelected = selectedMeal?.id === meal?.id;
+                      const hasNoIngredients = !meal?.ingredientsSnapshot || meal.ingredientsSnapshot.length === 0;
 
                       return (
                         <div key={w.dateStr} className="col-span-1 px-1">
@@ -268,9 +321,14 @@ export const MealsView: React.FC = () => {
                               <div className="font-semibold text-[11px] text-[#071A3A] dark:text-[#EDF4FF] truncate">
                                 {meal.recipeTitle}
                               </div>
-                              <div className="text-[10px] text-[#526782] mt-0.5">
+                              <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] mt-0.5">
                                 {meal.plannedTime || ''} · {meal.plannedServings}s
                               </div>
+                              {hasNoIngredients && (
+                                <span className="inline-flex items-center text-[9px] font-semibold text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-900/60 px-1.5 py-0.5 rounded mt-1">
+                                  ⚠️ No ingredients
+                                </span>
+                              )}
                             </div>
                           ) : (
                             <button
@@ -303,9 +361,11 @@ export const MealsView: React.FC = () => {
                     </div>
 
                     <button
+                      type="button"
                       onClick={() => deletePlannedMeal(selectedMeal.id)}
-                      className="p-1.5 rounded-lg hover:bg-rose-100 text-rose-600"
+                      className="p-1.5 rounded-lg hover:bg-rose-100 text-rose-600 cursor-pointer"
                       title="Remove planned meal"
+                      aria-label={`Remove planned meal "${selectedMeal.recipeTitle}"`}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -326,26 +386,38 @@ export const MealsView: React.FC = () => {
                       Ingredients needed ({selectedMeal.plannedServings} servings)
                     </h4>
 
-                    <div className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-                      {selectedMeal.ingredientsSnapshot.map((ing, idx) => {
-                        const ratio =
-                          selectedMeal.baseServings > 0
-                            ? selectedMeal.plannedServings / selectedMeal.baseServings
-                            : 1;
-                        const scaledAmount = Math.round(ing.amount * ratio * 10) / 10;
+                    {(!selectedMeal.ingredientsSnapshot || selectedMeal.ingredientsSnapshot.length === 0) ? (
+                      <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+                        <div className="font-semibold flex items-center gap-1.5">
+                          <span>⚠️</span>
+                          <span>No ingredient data recorded</span>
+                        </div>
+                        <p className="text-[11px] opacity-90">
+                          This meal has no ingredients snapshot. It will contribute nothing to your generated groceries list until ingredients are defined.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+                        {selectedMeal.ingredientsSnapshot.map((ing, idx) => {
+                          const ratio =
+                            selectedMeal.baseServings > 0
+                              ? selectedMeal.plannedServings / selectedMeal.baseServings
+                              : 1;
+                          const scaledAmount = Math.round(ing.amount * ratio * 10) / 10;
 
-                        return (
-                          <div key={idx} className="py-2 flex justify-between items-center">
-                            <span className="text-[#071A3A] dark:text-[#EDF4FF]">
-                              {ing.name}
-                            </span>
-                            <span className="font-mono font-semibold text-[#526782]">
-                              {scaledAmount} {ing.unit}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
+                          return (
+                            <div key={idx} className="py-2 flex justify-between items-center">
+                              <span className="text-[#071A3A] dark:text-[#EDF4FF]">
+                                {ing.name}
+                              </span>
+                              <span className="font-mono font-semibold text-[#526782]">
+                                {scaledAmount} {ing.unit}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {/* Action Buttons */}
@@ -370,6 +442,21 @@ export const MealsView: React.FC = () => {
               )}
             </div>
           </div>
+
+          {/* Missing Ingredients Warning Banner */}
+          {mealsWithoutIngredients.length > 0 && (
+            <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-2xl p-4 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-3 shadow-2xs">
+              <span className="text-base shrink-0">⚠️</span>
+              <div className="space-y-0.5">
+                <span className="font-bold block">
+                  {mealsWithoutIngredients.length} meal{mealsWithoutIngredients.length > 1 ? 's' : ''} planned for this week {mealsWithoutIngredients.length > 1 ? 'have' : 'has'} no ingredient data:
+                </span>
+                <p className="text-[11px]">
+                  <strong>{mealsWithoutIngredients.map((m) => m.recipeTitle).join(', ')}</strong> will contribute nothing to groceries when generated.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Generate Grocery List Action Banner (Board 13) */}
           <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -417,6 +504,7 @@ export const MealsView: React.FC = () => {
 
                 <div className="flex items-center gap-1">
                   <button
+                    type="button"
                     onClick={() => {
                       setEditingRecipe(recipe);
                       setRecTitle(recipe.title);
@@ -428,13 +516,16 @@ export const MealsView: React.FC = () => {
                       setRecIngredients([...recipe.ingredients]);
                       setIsRecipeModalOpen(true);
                     }}
-                    className="p-1 rounded-md text-[#526782] hover:bg-slate-100"
+                    className="p-1 rounded-md text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                    aria-label={`Edit recipe "${recipe.title}"`}
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => deleteRecipe(recipe.id)}
-                    className="p-1 rounded-md text-rose-500 hover:bg-rose-50"
+                    className="p-1 rounded-md text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+                    aria-label={`Delete recipe "${recipe.title}"`}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>

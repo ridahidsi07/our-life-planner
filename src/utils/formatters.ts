@@ -11,17 +11,12 @@ export function formatCurrency(
   symbol: string = '$',
   decimals?: number
 ): string {
-  if (decimals !== undefined) {
-    return `${symbol}${amount.toLocaleString('en-US', {
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals,
-    })}`;
-  }
-  const rounded = Math.round(amount * 100) / 100;
-  return `${symbol}${rounded.toLocaleString('en-US', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  })}`;
+  const isSuffixSymbol = ['DH', 'MAD', 'AED', 'SAR', 'CHF'].includes(symbol);
+  const formattedNumber = amount.toLocaleString('en-US', {
+    minimumFractionDigits: decimals !== undefined ? decimals : 0,
+    maximumFractionDigits: decimals !== undefined ? decimals : 2,
+  });
+  return isSuffixSymbol ? `${formattedNumber} ${symbol}` : `${symbol}${formattedNumber}`;
 }
 
 export function getCurrencySymbol(code: string): string {
@@ -39,6 +34,10 @@ export function getCurrencySymbol(code: string): string {
       return '¥';
     case 'MAD':
       return 'DH';
+    case 'AED':
+      return 'AED';
+    case 'SAR':
+      return 'SAR';
     case 'CHF':
       return 'CHF';
     case 'INR':
@@ -47,6 +46,36 @@ export function getCurrencySymbol(code: string): string {
       return '$';
   }
 }
+
+export const AVAILABLE_CURRENCIES = [
+  { code: 'USD', label: 'USD ($) — US Dollar', symbol: '$' },
+  { code: 'EUR', label: 'EUR (€) — Euro', symbol: '€' },
+  { code: 'GBP', label: 'GBP (£) — British Pound', symbol: '£' },
+  { code: 'MAD', label: 'MAD (DH) — Moroccan Dirham', symbol: 'DH' },
+  { code: 'CAD', label: 'CAD ($) — Canadian Dollar', symbol: '$' },
+  { code: 'AUD', label: 'AUD ($) — Australian Dollar', symbol: '$' },
+  { code: 'CHF', label: 'CHF (CHF) — Swiss Franc', symbol: 'CHF' },
+  { code: 'AED', label: 'AED (AED) — UAE Dirham', symbol: 'AED' },
+  { code: 'SAR', label: 'SAR (SAR) — Saudi Riyal', symbol: 'SAR' },
+  { code: 'JPY', label: 'JPY (¥) — Japanese Yen', symbol: '¥' },
+  { code: 'INR', label: 'INR (₹) — Indian Rupee', symbol: '₹' },
+  { code: 'NZD', label: 'NZD ($) — New Zealand Dollar', symbol: '$' },
+];
+
+export const AVAILABLE_TIMEZONES = [
+  { value: 'Africa/Casablanca', label: 'Africa/Casablanca (Morocco - WET/WEST)' },
+  { value: 'Europe/London', label: 'Europe/London (London - GMT/BST)' },
+  { value: 'Europe/Paris', label: 'Europe/Paris (Paris, Berlin, Rome - CET)' },
+  { value: 'America/New_York', label: 'America/New_York (Eastern Time - US)' },
+  { value: 'America/Chicago', label: 'America/Chicago (Central Time - US)' },
+  { value: 'America/Denver', label: 'America/Denver (Mountain Time - US)' },
+  { value: 'America/Los_Angeles', label: 'America/Los_Angeles (Pacific Time - US)' },
+  { value: 'Asia/Dubai', label: 'Asia/Dubai (Dubai, UAE - GST)' },
+  { value: 'Asia/Tokyo', label: 'Asia/Tokyo (Tokyo - JST)' },
+  { value: 'Asia/Singapore', label: 'Asia/Singapore (Singapore - SGT)' },
+  { value: 'Australia/Sydney', label: 'Australia/Sydney (Sydney - AEST)' },
+  { value: 'UTC', label: 'UTC (Coordinated Universal Time)' },
+];
 
 export function getWeekStartDate(
   dateStr: string,
@@ -112,3 +141,11 @@ export function getWeekDaysForDate(
 
   return list;
 }
+
+export function getCurrentTimeStr(): string {
+  const d = new Date();
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+

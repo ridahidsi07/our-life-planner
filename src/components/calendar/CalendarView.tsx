@@ -8,6 +8,10 @@ import {
   Calendar as CalendarIcon,
   Clock,
   AlertCircle,
+  AlertTriangle,
+  Download,
+  Eye,
+  Repeat,
   X,
 } from 'lucide-react';
 import { RingProgress } from '../ui/RingProgress';
@@ -16,6 +20,7 @@ import {
   isRoutineActiveOnDate,
   getRoutineOccurrence,
   formatRecurrenceRule,
+  getUpcomingRoutineOccurrences,
 } from '../../utils/routineRecurrence';
 import { getWeekDaysForDate } from '../../utils/formatters';
 
@@ -41,11 +46,13 @@ export const CalendarView: React.FC = () => {
     addCalendarEvent,
     addTask,
     addBill,
+    exportCalendarIcs,
   } = usePlanner();
 
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('week');
   const [selectedDate, setSelectedDate] = useState<string>(currentDate);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [previewRoutineId, setPreviewRoutineId] = useState<string | null>(null);
 
   // Keep selectedDate synchronized when currentDate changes from outside
   React.useEffect(() => {
@@ -134,14 +141,93 @@ export const CalendarView: React.FC = () => {
   // Week days based on settings.weekStartsOn
   const weekDays = useMemo(() => {
     const list = getWeekDaysForDate(selectedDate, settings.weekStartsOn);
-    return list.map((d) => ({
-      dateStr: d.dateStr,
-      dayNum: d.dayNum,
-      dayName: d.dayName,
-      isToday: d.dateStr === todayDate,
-      isSelected: d.dateStr === selectedDate,
-    }));
+    return list.map((d) => {
+      let fullDate = d.dateStr;
+      try {
+        const [y, m, day] = d.dateStr.split('-');
+        const dt = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(day, 10));
+        fullDate = dt.toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        });
+      } catch {
+        fullDate = d.dateStr;
+      }
+      return {
+        dateStr: d.dateStr,
+        dayNum: d.dayNum,
+        dayName: d.dayName,
+        fullDate,
+        isToday: d.dateStr === todayDate,
+        isSelected: d.dateStr === selectedDate,
+      };
+    });
   }, [selectedDate, todayDate, settings.weekStartsOn]);
+
+  const visibleMonthYearLabel = useMemo(() => {
+    try {
+      const [y, m, d] = selectedDate.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      if (viewMode === 'month') {
+        return dt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      } else if (viewMode === 'week') {
+        const first = weekDays[0];
+        const last = weekDays[weekDays.length - 1];
+        return `${first.dayName.slice(0, 3)} ${first.dayNum} – ${last.dayName.slice(0, 3)} ${last.dayNum}, ${dt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`;
+      } else {
+        return dt.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+      }
+    } catch {
+      return selectedDate;
+    }
+  }, [selectedDate, viewMode, weekDays]);
+
+  const conflictsSet = useMemo(() => {
+    const conflictMap = new Set<string>();
+
+    weekDays.forEach((w) => {
+      const timedList: Array<{ id: string; start: number; end: number }> = [];
+
+      calendarEvents
+        .filter((e) => e.date === w.dateStr && !e.isAllDay && e.startTime)
+        .forEach((e) => {
+          const [sh, sm] = (e.startTime || '00:00').split(':').map(Number);
+          const [eh, em] = (e.endTime || '00:00').split(':').map(Number);
+          timedList.push({
+            id: e.id,
+            start: sh * 60 + sm,
+            end: eh ? eh * 60 + em : sh * 60 + sm + 60,
+          });
+        });
+
+      tasks
+        .filter((t) => t.dueDate === w.dateStr && !t.isArchived && t.scheduledStart)
+        .forEach((t) => {
+          const [sh, sm] = t.scheduledStart!.split(':').map(Number);
+          const [eh, em] = (t.scheduledEnd || '').split(':').map(Number);
+          timedList.push({
+            id: t.id,
+            start: sh * 60 + sm,
+            end: eh ? eh * 60 + em : sh * 60 + sm + 30,
+          });
+        });
+
+      for (let i = 0; i < timedList.length; i++) {
+        for (let j = i + 1; j < timedList.length; j++) {
+          const a = timedList[i];
+          const b = timedList[j];
+          if (a.start < b.end && b.start < a.end) {
+            conflictMap.add(a.id);
+            conflictMap.add(b.id);
+          }
+        }
+      }
+    });
+
+    return conflictMap;
+  }, [weekDays, calendarEvents, tasks]);
 
   // Items for selected day
   const selectedDayItems = useMemo(() => {
@@ -154,6 +240,7 @@ export const CalendarView: React.FC = () => {
       badgeColor: string;
       onToggle?: () => void;
       subtitle?: string;
+      routineId?: string;
     }> = [];
 
     // Tasks
@@ -189,6 +276,7 @@ export const CalendarView: React.FC = () => {
             badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300',
             onToggle: () => toggleRoutineCompletion(r.id, selectedDate),
             subtitle: formatRecurrenceRule(r),
+            routineId: r.id,
           });
         });
     }
@@ -364,9 +452,14 @@ export const CalendarView: React.FC = () => {
       {/* Top Header & View Controls */}
       <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
         <div>
-          <h2 className="text-xl font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-            Calendar & Time Blocking
-          </h2>
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-xl font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+              {visibleMonthYearLabel}
+            </h2>
+            <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-md bg-teal-100 dark:bg-teal-900/40 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+              {viewMode} view
+            </span>
+          </div>
           <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
             Connect your daily tasks, routines, meals, workouts, and events
           </p>
@@ -393,6 +486,9 @@ export const CalendarView: React.FC = () => {
           {/* Navigation Controls */}
           <div className="flex items-center gap-1">
             <button
+              type="button"
+              aria-label={`Previous ${viewMode}`}
+              title={`Previous ${viewMode}`}
               onClick={() => {
                 const d = new Date(selectedDate);
                 if (viewMode === 'month') d.setMonth(d.getMonth() - 1);
@@ -400,11 +496,13 @@ export const CalendarView: React.FC = () => {
                 else d.setDate(d.getDate() - 1);
                 setSelectedDate(d.toISOString().split('T')[0]);
               }}
-              className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782]"
+              className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
+              type="button"
+              title="Jump to Today"
               onClick={() => {
                 setSelectedDate(todayDate);
                 setCurrentDate(todayDate);
@@ -414,6 +512,9 @@ export const CalendarView: React.FC = () => {
               Today
             </button>
             <button
+              type="button"
+              aria-label={`Next ${viewMode}`}
+              title={`Next ${viewMode}`}
               onClick={() => {
                 const d = new Date(selectedDate);
                 if (viewMode === 'month') d.setMonth(d.getMonth() + 1);
@@ -421,14 +522,26 @@ export const CalendarView: React.FC = () => {
                 else d.setDate(d.getDate() + 1);
                 setSelectedDate(d.toISOString().split('T')[0]);
               }}
-              className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782]"
+              className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
+          {/* Export Calendar .ics Button */}
+          <button
+            type="button"
+            onClick={exportCalendarIcs}
+            title="Export calendar to iCalendar (.ics)"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] transition-colors cursor-pointer"
+          >
+            <Download className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+            <span className="hidden sm:inline">Export .ics</span>
+          </button>
+
           {/* Add Entry Button */}
           <button
+            type="button"
             onClick={() => {
               setEntryDate(selectedDate);
               setIsAddModalOpen(true);
@@ -456,11 +569,15 @@ export const CalendarView: React.FC = () => {
           return (
             <button
               key={f.key}
+              type="button"
+              role="switch"
+              aria-checked={active}
+              aria-label={`Filter ${f.label}`}
               onClick={() => toggleFilter(f.key as keyof typeof filters)}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium border transition-colors cursor-pointer ${
                 active
                   ? 'bg-white dark:bg-[#152238] border-[#087F83] text-[#087F83] dark:text-[#38D0C5]'
-                  : 'bg-slate-100 dark:bg-slate-800 border-transparent text-[#526782] opacity-60'
+                  : 'bg-slate-100 dark:bg-slate-800 border-transparent text-[#526782] dark:text-[#A8B8CE] opacity-60'
               }`}
             >
               <span className={`w-2 h-2 rounded-full ${f.color}`} />
@@ -517,6 +634,21 @@ export const CalendarView: React.FC = () => {
                   } catch {
                     formattedCellLabel = cell.dateStr;
                   }
+
+                  const cellEventsCount = [
+                    tasks.some((t) => t.dueDate === cell.dateStr),
+                    bills.some((b) => b.dueDate === cell.dateStr),
+                    workouts.some((w) => w.date === cell.dateStr && !w.isRestDay),
+                    calendarEvents.some((e) => e.date === cell.dateStr),
+                    filters.routines && routines.some((r) => isRoutineActiveOnDate(r, cell.dateStr)),
+                  ].filter(Boolean).length;
+
+                  if (cellEventsCount > 0) {
+                    formattedCellLabel += `, ${cellEventsCount} scheduled item${cellEventsCount === 1 ? '' : 's'}`;
+                  } else {
+                    formattedCellLabel += ', no scheduled items';
+                  }
+
                   if (cell.isToday) formattedCellLabel += ', Today';
                   if (cell.isSelected) formattedCellLabel += ', Selected';
 
@@ -582,14 +714,14 @@ export const CalendarView: React.FC = () => {
                   <button
                     key={w.dateStr}
                     type="button"
-                    aria-label={`${w.dayName}, ${w.dayNum}${w.isSelected ? ', Selected' : ''}`}
+                    aria-label={`${w.fullDate}${w.isToday ? ', Today' : ''}${w.isSelected ? ', Selected' : ''}`}
                     aria-pressed={w.isSelected}
                     aria-current={w.dateStr === currentDate ? 'date' : undefined}
                     onClick={() => setSelectedDate(w.dateStr)}
                     className={`py-2 px-0.5 rounded-xl transition-colors cursor-pointer min-w-0 ${
                       w.isSelected
                         ? 'bg-[#087F83] text-white font-bold shadow-xs'
-                        : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782]'
+                        : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE]'
                     }`}
                   >
                     <div className="text-[9px] sm:text-[11px] uppercase tracking-tighter truncate w-full">{w.dayName}</div>
@@ -613,28 +745,53 @@ export const CalendarView: React.FC = () => {
                       <div
                         className={`flex-1 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 text-xs font-semibold flex items-center justify-between ${
                           item.isCompleted
-                            ? 'bg-slate-50 dark:bg-slate-800/40 text-[#526782] line-through'
+                            ? 'bg-slate-50 dark:bg-slate-800/40 text-[#526782] dark:text-[#94A3B8] line-through'
                             : 'bg-white dark:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF]'
                         }`}
                       >
                         <div className="flex items-center gap-2">
                           {item.onToggle && (
                             <button
+                              type="button"
+                              role="checkbox"
+                              aria-checked={item.isCompleted}
+                              aria-label={`Mark "${item.title}" as ${item.isCompleted ? 'incomplete' : 'complete'}`}
                               onClick={item.onToggle}
                               className={`w-4 h-4 rounded-md shrink-0 flex items-center justify-center cursor-pointer transition-colors ${
                                 item.isCompleted
                                   ? 'bg-[#087F83] text-white'
-                                  : 'border border-slate-300 dark:border-slate-600'
+                                  : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
                               }`}
                             >
                               {item.isCompleted && <Check className="w-3 h-3 stroke-[3]" />}
                             </button>
                           )}
                           <span>{item.title}</span>
+                          {conflictsSet.has(item.id) && (
+                            <span
+                              className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-300 dark:border-amber-800"
+                              title="Schedule overlap with another event or task"
+                            >
+                              <AlertTriangle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                              Overlap
+                            </span>
+                          )}
                         </div>
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-normal uppercase tracking-wider ${item.badgeColor}`}>
-                          {item.type}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {item.routineId && (
+                            <button
+                              type="button"
+                              onClick={() => setPreviewRoutineId(item.routineId!)}
+                              title="Preview recurring schedule"
+                              className="p-1 rounded text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 cursor-pointer"
+                            >
+                              <Repeat className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-normal uppercase tracking-wider ${item.badgeColor}`}>
+                            {item.type}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))
@@ -660,11 +817,15 @@ export const CalendarView: React.FC = () => {
                     <div className="flex items-center gap-3">
                       {item.onToggle ? (
                         <button
+                          type="button"
+                          role="checkbox"
+                          aria-checked={item.isCompleted}
+                          aria-label={`Mark "${item.title}" as ${item.isCompleted ? 'incomplete' : 'complete'}`}
                           onClick={item.onToggle}
                           className={`w-5 h-5 rounded-md flex items-center justify-center cursor-pointer transition-colors ${
                             item.isCompleted
                               ? 'bg-[#087F83] text-white'
-                              : 'border border-slate-300 dark:border-slate-600'
+                              : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
                           }`}
                         >
                           {item.isCompleted && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -673,22 +834,45 @@ export const CalendarView: React.FC = () => {
                         <div className="w-2.5 h-2.5 rounded-full bg-[#087F83]" />
                       )}
                       <div>
-                        <div className={`text-xs font-semibold ${item.isCompleted ? 'line-through text-[#526782]' : 'text-[#071A3A] dark:text-[#EDF4FF]'}`}>
-                          {item.title}
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-xs font-semibold ${item.isCompleted ? 'line-through text-[#526782] dark:text-[#94A3B8]' : 'text-[#071A3A] dark:text-[#EDF4FF]'}`}>
+                            {item.title}
+                          </span>
+                          {conflictsSet.has(item.id) && (
+                            <span
+                              className="inline-flex items-center gap-0.5 text-[9px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 px-1 py-0.5 rounded border border-amber-300 dark:border-amber-800 shrink-0"
+                              title="Schedule overlap with another event or task"
+                            >
+                              <AlertTriangle className="w-2.5 h-2.5 text-amber-600" />
+                              Overlap
+                            </span>
+                          )}
                         </div>
-                        <div className="flex items-center gap-1.5 text-[10px] text-[#526782] font-mono">
+                        <div className="flex items-center gap-1.5 text-[10px] text-[#526782] dark:text-[#A8B8CE] font-mono">
                           <span>{item.time}</span>
                           {item.subtitle && (
-                            <span className="text-slate-400 dark:text-slate-500 font-sans truncate">
+                            <span className="text-slate-500 dark:text-slate-400 font-sans truncate">
                               · {item.subtitle}
                             </span>
                           )}
                         </div>
                       </div>
                     </div>
-                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${item.badgeColor}`}>
-                      {item.type}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {item.routineId && (
+                        <button
+                          type="button"
+                          onClick={() => setPreviewRoutineId(item.routineId!)}
+                          title="Preview recurring schedule"
+                          className="p-1 rounded text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 cursor-pointer"
+                        >
+                          <Repeat className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${item.badgeColor}`}>
+                        {item.type}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -720,52 +904,78 @@ export const CalendarView: React.FC = () => {
             </RingProgress>
           </div>
 
-          <div className="text-xs text-[#526782] font-semibold">
+          <div className="text-xs text-[#526782] dark:text-[#A8B8CE] font-semibold">
             {selectedDayCompleted} of {selectedDayTotal} complete
           </div>
 
           {/* List of items */}
           <div className="space-y-2 max-h-[460px] overflow-y-auto">
             {selectedDayItems.length === 0 ? (
-              <div className="p-6 text-center text-xs text-[#526782]">
+              <div className="p-6 text-center text-xs text-[#526782] dark:text-[#A8B8CE]">
                 No items scheduled for this day.
               </div>
             ) : (
               selectedDayItems.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 transition-colors"
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   <div className="flex items-center gap-2.5 truncate">
                     {item.onToggle && (
                       <button
+                        type="button"
+                        role="checkbox"
+                        aria-checked={item.isCompleted}
+                        aria-label={`Mark "${item.title}" as ${item.isCompleted ? 'incomplete' : 'complete'}`}
                         onClick={item.onToggle}
                         className={`w-4 h-4 rounded-md shrink-0 flex items-center justify-center cursor-pointer ${
                           item.isCompleted
                             ? 'bg-[#087F83] text-white'
-                            : 'border border-slate-300 dark:border-slate-600'
+                            : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
                         }`}
                       >
                         {item.isCompleted && <Check className="w-3 h-3 stroke-[3]" />}
                       </button>
                     )}
                     <div className="truncate">
-                      <div className={`text-xs font-semibold truncate ${item.isCompleted ? 'line-through text-[#526782]' : 'text-[#071A3A] dark:text-[#EDF4FF]'}`}>
-                        {item.title}
+                      <div className="flex items-center gap-1.5 truncate">
+                        <span className={`text-xs font-semibold truncate ${item.isCompleted ? 'line-through text-[#526782] dark:text-[#94A3B8]' : 'text-[#071A3A] dark:text-[#EDF4FF]'}`}>
+                          {item.title}
+                        </span>
+                        {conflictsSet.has(item.id) && (
+                          <span
+                            className="inline-flex items-center gap-0.5 text-[9px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 px-1 py-0.5 rounded border border-amber-300 dark:border-amber-800 shrink-0"
+                            title="Schedule overlap with another event or task"
+                          >
+                            <AlertTriangle className="w-2.5 h-2.5 text-amber-600" />
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1.5 text-[10px] text-[#526782] font-mono">
+                      <div className="flex items-center gap-1.5 text-[10px] text-[#526782] dark:text-[#A8B8CE] font-mono">
                         <span>{item.time}</span>
                         {item.subtitle && (
-                          <span className="text-slate-400 dark:text-slate-500 font-sans truncate">
+                          <span className="text-slate-500 dark:text-slate-400 font-sans truncate">
                             · {item.subtitle}
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
-                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium shrink-0 ${item.badgeColor}`}>
-                    {item.type}
-                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {item.routineId && (
+                      <button
+                        type="button"
+                        onClick={() => setPreviewRoutineId(item.routineId!)}
+                        title="Preview recurring schedule"
+                        className="p-1 rounded text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 cursor-pointer"
+                      >
+                        <Repeat className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium shrink-0 ${item.badgeColor}`}>
+                      {item.type}
+                    </span>
+                  </div>
                 </div>
               ))
             )}
@@ -910,6 +1120,105 @@ export const CalendarView: React.FC = () => {
           </div>
         </form>
       </Modal>
+
+      {/* Recurring Rule Preview Modal */}
+      {previewRoutineId && (() => {
+        const routine = routines.find((r) => r.id === previewRoutineId);
+        if (!routine) return null;
+        const upcomingOccurrences = getUpcomingRoutineOccurrences(routine, selectedDate, 8);
+        return (
+          <Modal
+            isOpen={true}
+            onClose={() => setPreviewRoutineId(null)}
+            title="Recurring schedule preview"
+            subtitle={routine.title}
+          >
+            <div className="space-y-4">
+              <div className="p-3.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 flex items-start gap-3">
+                <Repeat className="w-5 h-5 text-purple-600 dark:text-purple-400 mt-0.5 shrink-0" />
+                <div>
+                  <div className="text-xs font-bold text-purple-900 dark:text-purple-200">
+                    Recurrence pattern
+                  </div>
+                  <div className="text-xs text-purple-700 dark:text-purple-300 mt-0.5">
+                    {formatRecurrenceRule(routine)}
+                  </div>
+                  {routine.startTime && (
+                    <div className="text-[11px] font-mono text-purple-600 dark:text-purple-400 mt-1">
+                      Scheduled time: {routine.startTime}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-[#526782] dark:text-[#A8B8CE] mb-2">
+                  Next 8 occurrences
+                </h4>
+                <div className="space-y-1.5 max-h-60 overflow-y-auto">
+                  {upcomingOccurrences.map((occDate) => {
+                    const isForgiven = (routine.forgivenDates || []).includes(occDate);
+                    const isDone = routine.completedDates.includes(occDate);
+                    const isSkipped = routine.skippedDates.includes(occDate);
+                    let formattedDate = occDate;
+                    try {
+                      const [y, m, d] = occDate.split('-').map(Number);
+                      formattedDate = new Date(y, m - 1, d).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      });
+                    } catch {
+                      formattedDate = occDate;
+                    }
+
+                    return (
+                      <div
+                        key={occDate}
+                        className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs"
+                      >
+                        <span className="font-medium text-[#071A3A] dark:text-[#EDF4FF]">
+                          {formattedDate}
+                        </span>
+                        <div>
+                          {isForgiven ? (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300">
+                              Rest day (protected)
+                            </span>
+                          ) : isDone ? (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300">
+                              Completed
+                            </span>
+                          ) : isSkipped ? (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+                              Skipped
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">
+                              Scheduled
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setPreviewRoutineId(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] hover:bg-slate-200 cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </Modal>
+        );
+      })()}
     </div>
   );
 };
