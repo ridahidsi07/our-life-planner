@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
 import { Modal } from '../ui/Modal';
 import { Logo } from '../ui/Logo';
@@ -21,19 +21,12 @@ import {
   AVAILABLE_TIMEZONES,
   getCurrencySymbol,
 } from '../../utils/formatters';
-
-const DEFAULT_TOOLS = [
-  { id: 'today', name: 'Today & Next Up', desc: 'Unified daily schedule & capture', category: 'core' },
-  { id: 'tasks', name: 'Tasks & Projects', desc: 'Prioritized actions & all-day backlog', category: 'core' },
-  { id: 'calendar', name: 'Calendar Schedule', desc: 'Visual month & week time-blocks', category: 'core' },
-  { id: 'routines', name: 'Recurring Routines', desc: 'Daily, weekly & forgiving rituals', category: 'core' },
-  { id: 'habits', name: 'Habit Consistency', desc: 'Daily rhythm & streak tracker', category: 'growth' },
-  { id: 'goals', name: 'Milestone Goals', desc: 'Long-term goals with step breakdowns', category: 'growth' },
-  { id: 'inbox', name: 'Brain Dump Inbox', desc: 'Quick capture before triaging', category: 'growth' },
-  { id: 'money', name: 'Money & Budgets', desc: 'Cash flow, bills, savings pots & debts', category: 'life' },
-  { id: 'food', name: 'Meals & Groceries', desc: 'Weekly menu planning & smart list', category: 'life' },
-  { id: 'body', name: 'Health & Hydration', desc: 'Workouts, weight metrics & water log', category: 'life' },
-];
+import {
+  MODULE_REGISTRY,
+  migrateEnabledTools,
+  isModuleOrToolEnabled,
+  toggleModuleEnabledInList,
+} from '../../utils/moduleRegistry';
 
 export const SetupWizardModal: React.FC = () => {
   const {
@@ -58,10 +51,16 @@ export const SetupWizardModal: React.FC = () => {
   const [currency, setCurrency] = useState(settings.currency || 'MAD');
 
   // Step 2: Tools & Starting Data
-  const [enabledTools, setEnabledTools] = useState<string[]>(
-    settings.enabledTools || DEFAULT_TOOLS.map((t) => t.id)
+  const [enabledTools, setEnabledTools] = useState<string[]>(() =>
+    migrateEnabledTools(settings.enabledTools)
   );
   const [startChoice, setStartChoice] = useState<'sample' | 'empty'>('sample');
+
+  useEffect(() => {
+    if (activeModal === 'setup') {
+      setEnabledTools(migrateEnabledTools(settings.enabledTools));
+    }
+  }, [activeModal, settings.enabledTools]);
 
   // Step 3: First Task & Routine
   const [firstTaskTitle, setFirstTaskTitle] = useState('Plan tomorrow’s top priorities');
@@ -70,9 +69,7 @@ export const SetupWizardModal: React.FC = () => {
   const [firstRoutineCategory, setFirstRoutineCategory] = useState('Health');
 
   const toggleTool = (toolId: string) => {
-    setEnabledTools((prev) =>
-      prev.includes(toolId) ? prev.filter((id) => id !== toolId) : [...prev, toolId]
-    );
+    setEnabledTools((prev) => toggleModuleEnabledInList(prev, toolId));
   };
 
   const handleStep1Submit = (e: React.FormEvent) => {
@@ -190,12 +187,12 @@ export const SetupWizardModal: React.FC = () => {
                     : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
                 }`}
               >
-                <Cloud className="w-5 h-5 text-[#087F83] mb-2" />
+                <Globe className="w-5 h-5 text-[#087F83] mb-2" />
                 <div className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-                  Online Planner
+                  Web Browser Mode
                 </div>
                 <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] mt-0.5">
-                  Synchronize seamlessly across all your devices.
+                  Runs directly in your browser with private local device storage.
                 </div>
               </button>
 
@@ -322,24 +319,25 @@ export const SetupWizardModal: React.FC = () => {
         {/* STEP 2: Tool Selection & Start Choice */}
         {step === 2 && (
           <form onSubmit={handleStep2Submit} className="space-y-5">
-            <div>
+            <div role="group" aria-labelledby="setup-modules-label">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                <span id="setup-modules-label" className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
                   Select Modules to Enable
-                </label>
+                </span>
                 <span className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
                   (You can customize this anytime in Settings)
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-1">
-                {DEFAULT_TOOLS.map((t) => {
-                  const isChecked = enabledTools.includes(t.id);
+                {MODULE_REGISTRY.map((t) => {
+                  const isChecked = isModuleOrToolEnabled(t.id, enabledTools);
                   return (
                     <button
                       key={t.id}
                       type="button"
                       role="checkbox"
+                      data-testid={`setup-module-checkbox-${t.id}`}
                       aria-checked={isChecked}
                       onClick={() => toggleTool(t.id)}
                       className={`p-2.5 rounded-xl border text-left flex items-start gap-2.5 transition-colors cursor-pointer ${
@@ -371,10 +369,10 @@ export const SetupWizardModal: React.FC = () => {
 
             {/* Starting Dataset */}
             <div>
-              <label className="block text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF] mb-2">
+              <span id="setup-starting-content-label" className="block text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF] mb-2">
                 Choose Starting Content
-              </label>
-              <div role="radiogroup" aria-label="Starting dataset choice" className="grid grid-cols-2 gap-3">
+              </span>
+              <div role="radiogroup" aria-labelledby="setup-starting-content-label" className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
                   role="radio"

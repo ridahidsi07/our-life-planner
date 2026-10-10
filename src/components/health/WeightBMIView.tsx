@@ -487,10 +487,14 @@ export const WeightBMIView: React.FC = () => {
 
           <form onSubmit={handleSaveMeasurement} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="weight-log-profile"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Profile
               </label>
               <select
+                id="weight-log-profile"
                 value={selectedProfileId}
                 onChange={(e) => setSelectedProfileId(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium cursor-pointer"
@@ -505,7 +509,10 @@ export const WeightBMIView: React.FC = () => {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
+                <label
+                  htmlFor="weight-log-amount"
+                  className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF]"
+                >
                   Weight ({unitMode}) *
                 </label>
                 {/* Unit Switcher directly beside label */}
@@ -539,6 +546,7 @@ export const WeightBMIView: React.FC = () => {
               </div>
               <div className="relative">
                 <input
+                  id="weight-log-amount"
                   type="number"
                   step="0.1"
                   min="1"
@@ -578,10 +586,14 @@ export const WeightBMIView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="weight-log-height"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Height (cm) (Optional)
               </label>
               <input
+                id="weight-log-height"
                 type="number"
                 min="50"
                 value={inputHeight}
@@ -595,10 +607,14 @@ export const WeightBMIView: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="weight-log-date"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Date
                 </label>
                 <input
+                  id="weight-log-date"
                   type="date"
                   required
                   value={inputDate}
@@ -608,10 +624,14 @@ export const WeightBMIView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="weight-log-time"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Time
                 </label>
                 <input
+                  id="weight-log-time"
                   type="time"
                   value={inputTime}
                   onChange={(e) => setInputTime(e.target.value)}
@@ -639,10 +659,14 @@ export const WeightBMIView: React.FC = () => {
       >
         <form onSubmit={handleCreateProfile} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="weight-profile-name"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Profile name *
             </label>
             <input
+              id="weight-profile-name"
               type="text"
               required
               value={newProfileName}
@@ -653,10 +677,14 @@ export const WeightBMIView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="weight-profile-height"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Height (cm)
             </label>
             <input
+              id="weight-profile-height"
               type="number"
               min="50"
               value={newProfileHeight}
@@ -665,14 +693,20 @@ export const WeightBMIView: React.FC = () => {
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+          <div role="radiogroup" aria-labelledby="weight-profile-color-label">
+            <span
+              id="weight-profile-color-label"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Avatar color
-            </label>
+            </span>
             <div className="flex gap-2">
               {['#087F83', '#FF7B78', '#8B7CF6', '#10B981', '#F59E0B'].map((c) => (
                 <button
                   type="button"
+                  role="radio"
+                  aria-checked={newProfileColor === c}
+                  aria-label={`Avatar color ${c}`}
                   key={c}
                   onClick={() => setNewProfileColor(c)}
                   className={`w-7 h-7 rounded-full border-2 cursor-pointer ${

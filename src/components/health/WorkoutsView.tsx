@@ -907,10 +907,14 @@ export const WorkoutsView: React.FC = () => {
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[11px] text-[#526782] mb-1">
+                  <label
+                    htmlFor="cardio-calc-duration"
+                    className="block text-[11px] text-[#526782] mb-1"
+                  >
                     Duration (min)
                   </label>
                   <input
+                    id="cardio-calc-duration"
                     type="number"
                     value={cardioDuration}
                     onChange={(e) => setCardioDuration(parseFloat(e.target.value) || 0)}
@@ -919,10 +923,14 @@ export const WorkoutsView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] text-[#526782] mb-1">
+                  <label
+                    htmlFor="cardio-calc-distance"
+                    className="block text-[11px] text-[#526782] mb-1"
+                  >
                     Distance (km)
                   </label>
                   <input
+                    id="cardio-calc-distance"
                     type="number"
                     step="0.1"
                     value={cardioDistance}
@@ -932,10 +940,16 @@ export const WorkoutsView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] text-[#526782] mb-1">
+                  <span
+                    id="cardio-calc-speed-label"
+                    className="block text-[11px] text-[#526782] mb-1"
+                  >
                     Speed (km/h)
-                  </label>
-                  <div className="px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-mono font-bold text-[#087F83]">
+                  </span>
+                  <div
+                    aria-labelledby="cardio-calc-speed-label"
+                    className="px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-mono font-bold text-[#087F83]"
+                  >
                     {calculatedSpeed ? `${calculatedSpeed} km/h` : '–'}
                   </div>
                 </div>
@@ -1062,10 +1076,14 @@ export const WorkoutsView: React.FC = () => {
       >
         <form onSubmit={handleCreateSession} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="workout-create-title"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Session title *
             </label>
             <input
+              id="workout-create-title"
               type="text"
               required
               value={createTitle}
@@ -1077,10 +1095,14 @@ export const WorkoutsView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="workout-create-date"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Date
               </label>
               <input
+                id="workout-create-date"
                 type="date"
                 required
                 value={createDate}
@@ -1090,10 +1112,14 @@ export const WorkoutsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="workout-create-time"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Start time
               </label>
               <input
+                id="workout-create-time"
                 type="time"
                 value={createTime}
                 onChange={(e) => setCreateTime(e.target.value)}
@@ -1104,10 +1130,14 @@ export const WorkoutsView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="workout-create-duration"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Duration (minutes)
               </label>
               <input
+                id="workout-create-duration"
                 type="number"
                 min="5"
                 value={createDuration}
@@ -1117,10 +1147,14 @@ export const WorkoutsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="workout-create-muscles"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Target muscle groups
               </label>
               <input
+                id="workout-create-muscles"
                 type="text"
                 value={createMuscles}
                 onChange={(e) => setCreateMuscles(e.target.value)}
@@ -1198,8 +1232,14 @@ export const WorkoutsView: React.FC = () => {
 
                   <div className="grid grid-cols-3 gap-2 text-[11px]">
                     <div>
-                      <span className="text-[#526782] block text-[10px]">Sets</span>
+                      <label
+                        htmlFor={`workout-create-ex-${exIdx}-sets`}
+                        className="text-[#526782] block text-[10px]"
+                      >
+                        Sets
+                      </label>
                       <input
+                        id={`workout-create-ex-${exIdx}-sets`}
                         type="number"
                         min="1"
                         max="10"
@@ -1225,8 +1265,14 @@ export const WorkoutsView: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <span className="text-[#526782] block text-[10px]">Weight (kg)</span>
+                      <label
+                        htmlFor={`workout-create-ex-${exIdx}-weight`}
+                        className="text-[#526782] block text-[10px]"
+                      >
+                        Weight (kg)
+                      </label>
                       <input
+                        id={`workout-create-ex-${exIdx}-weight`}
                         type="number"
                         min="0"
                         value={ex.sets[0]?.weightKg ?? 20}
@@ -1247,8 +1293,14 @@ export const WorkoutsView: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <span className="text-[#526782] block text-[10px]">Reps</span>
+                      <label
+                        htmlFor={`workout-create-ex-${exIdx}-reps`}
+                        className="text-[#526782] block text-[10px]"
+                      >
+                        Reps
+                      </label>
                       <input
+                        id={`workout-create-ex-${exIdx}-reps`}
                         type="number"
                         min="1"
                         value={ex.sets[0]?.reps ?? 10}
@@ -1302,10 +1354,14 @@ export const WorkoutsView: React.FC = () => {
         >
           <form onSubmit={handleSaveEditSession} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="workout-edit-title"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Session title *
               </label>
               <input
+                id="workout-edit-title"
                 type="text"
                 required
                 value={editTitle}
@@ -1316,10 +1372,14 @@ export const WorkoutsView: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="workout-edit-date"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Date
                 </label>
                 <input
+                  id="workout-edit-date"
                   type="date"
                   required
                   value={editDate}
@@ -1329,10 +1389,14 @@ export const WorkoutsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="workout-edit-time"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Start time
                 </label>
                 <input
+                  id="workout-edit-time"
                   type="time"
                   value={editTime}
                   onChange={(e) => setEditTime(e.target.value)}
@@ -1343,10 +1407,14 @@ export const WorkoutsView: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="workout-edit-duration"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Duration (minutes)
                 </label>
                 <input
+                  id="workout-edit-duration"
                   type="number"
                   min="0"
                   value={editDuration}
@@ -1356,10 +1424,14 @@ export const WorkoutsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="workout-edit-muscles"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Target muscle groups
                 </label>
                 <input
+                  id="workout-edit-muscles"
                   type="text"
                   value={editMuscles}
                   onChange={(e) => setEditMuscles(e.target.value)}
@@ -1398,10 +1470,14 @@ export const WorkoutsView: React.FC = () => {
         >
           <form onSubmit={handleAddExerciseToSession} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="workout-add-ex-name"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Exercise name *
               </label>
               <input
+                id="workout-add-ex-name"
                 type="text"
                 required
                 value={newExName}
@@ -1433,10 +1509,14 @@ export const WorkoutsView: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="workout-add-ex-muscle"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Muscle group
                 </label>
                 <select
+                  id="workout-add-ex-muscle"
                   value={newExMuscle}
                   onChange={(e) => setNewExMuscle(e.target.value as WorkoutExercise['muscleGroup'])}
                   className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
@@ -1452,10 +1532,14 @@ export const WorkoutsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="workout-add-ex-equipment"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Equipment
                 </label>
                 <select
+                  id="workout-add-ex-equipment"
                   value={newExEquipment}
                   onChange={(e) =>
                     setNewExEquipment(e.target.value as NonNullable<WorkoutExercise['equipment']>)
@@ -1473,8 +1557,14 @@ export const WorkoutsView: React.FC = () => {
 
             <div className="grid grid-cols-4 gap-2">
               <div>
-                <label className="block text-[11px] text-[#526782] mb-1">Sets</label>
+                <label
+                  htmlFor="workout-add-ex-sets"
+                  className="block text-[11px] text-[#526782] mb-1"
+                >
+                  Sets
+                </label>
                 <input
+                  id="workout-add-ex-sets"
                   type="number"
                   min="1"
                   max="12"
@@ -1485,8 +1575,14 @@ export const WorkoutsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-[11px] text-[#526782] mb-1">Weight (kg)</label>
+                <label
+                  htmlFor="workout-add-ex-weight"
+                  className="block text-[11px] text-[#526782] mb-1"
+                >
+                  Weight (kg)
+                </label>
                 <input
+                  id="workout-add-ex-weight"
                   type="number"
                   min="0"
                   step="0.5"
@@ -1497,8 +1593,14 @@ export const WorkoutsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-[11px] text-[#526782] mb-1">Reps</label>
+                <label
+                  htmlFor="workout-add-ex-reps"
+                  className="block text-[11px] text-[#526782] mb-1"
+                >
+                  Reps
+                </label>
                 <input
+                  id="workout-add-ex-reps"
                   type="number"
                   min="1"
                   value={newExDefaultReps}
@@ -1508,8 +1610,14 @@ export const WorkoutsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-[11px] text-[#526782] mb-1">Rest (s)</label>
+                <label
+                  htmlFor="workout-add-ex-rest"
+                  className="block text-[11px] text-[#526782] mb-1"
+                >
+                  Rest (s)
+                </label>
                 <input
+                  id="workout-add-ex-rest"
                   type="number"
                   min="0"
                   step="5"
@@ -1549,10 +1657,14 @@ export const WorkoutsView: React.FC = () => {
         >
           <form onSubmit={handleSaveEditExercise} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="workout-edit-ex-name"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Exercise name *
               </label>
               <input
+                id="workout-edit-ex-name"
                 type="text"
                 required
                 value={editingExercise.name}
@@ -1565,10 +1677,14 @@ export const WorkoutsView: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="workout-edit-ex-muscle"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Muscle group
                 </label>
                 <select
+                  id="workout-edit-ex-muscle"
                   value={editingExercise.muscleGroup}
                   onChange={(e) =>
                     setEditingExercise((prev) =>
@@ -1590,10 +1706,14 @@ export const WorkoutsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="workout-edit-ex-equipment"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Equipment
                 </label>
                 <select
+                  id="workout-edit-ex-equipment"
                   value={editingExercise.equipment}
                   onChange={(e) =>
                     setEditingExercise((prev) =>

@@ -733,10 +733,14 @@ export const RoutinesView: React.FC = () => {
       >
         <form onSubmit={handleSaveRoutine} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="routine-modal-title"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Routine name *
             </label>
             <input
+              id="routine-modal-title"
               type="text"
               required
               value={modalTitle}
@@ -748,10 +752,14 @@ export const RoutinesView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="routine-modal-category"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Category
               </label>
               <select
+                id="routine-modal-category"
                 value={modalCategory}
                 onChange={(e) => setModalCategory(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
@@ -765,10 +773,14 @@ export const RoutinesView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="routine-modal-priority"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Priority
               </label>
               <select
+                id="routine-modal-priority"
                 value={modalPriority}
                 onChange={(e) => setModalPriority(e.target.value as Priority)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
@@ -782,11 +794,14 @@ export const RoutinesView: React.FC = () => {
           </div>
 
           {/* Repeat Rule Selection (All 5 options: Daily, Weekly, Monthly, Yearly, Custom) */}
-          <div>
+          <div role="group" aria-labelledby="routine-repeat-interval-label">
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
+              <span
+                id="routine-repeat-interval-label"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF]"
+              >
                 Repeat interval *
-              </label>
+              </span>
               <span className="text-[10px] font-semibold text-[#087F83] dark:text-[#38D0C5]">
                 {previewRuleDescription}
               </span>
@@ -818,10 +833,14 @@ export const RoutinesView: React.FC = () => {
               </span>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[10px] font-semibold text-[#526782] mb-1">
+                  <label
+                    htmlFor="routine-custom-count"
+                    className="block text-[10px] font-semibold text-[#526782] mb-1"
+                  >
                     Repeat every
                   </label>
                   <input
+                    id="routine-custom-count"
                     type="number"
                     min="1"
                     max="100"
@@ -831,10 +850,14 @@ export const RoutinesView: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold text-[#526782] mb-1">
+                  <label
+                    htmlFor="routine-custom-unit"
+                    className="block text-[10px] font-semibold text-[#526782] mb-1"
+                  >
                     Unit
                   </label>
                   <select
+                    id="routine-custom-unit"
                     value={modalCustomUnit}
                     onChange={(e) => setModalCustomUnit(e.target.value as any)}
                     className="w-full px-3 py-1.5 rounded-lg border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-semibold"
@@ -851,10 +874,13 @@ export const RoutinesView: React.FC = () => {
 
           {/* Weekday selection for Weekly or Custom Weeks */}
           {(modalInterval === 'weekly' || (modalInterval === 'custom' && modalCustomUnit === 'weeks')) && (
-            <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <div role="group" aria-labelledby="routine-weekdays-label">
+              <span
+                id="routine-weekdays-label"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Repeat on weekdays
-              </label>
+              </span>
               <div className="flex gap-1.5">
                 {(settings.weekStartsOn === 'Sunday'
                   ? [
@@ -896,10 +922,14 @@ export const RoutinesView: React.FC = () => {
           {/* Start and Start Time */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="routine-start-date"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Start date *
               </label>
               <input
+                id="routine-start-date"
                 type="date"
                 required
                 value={modalStartDate}
@@ -909,10 +939,14 @@ export const RoutinesView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="routine-start-time"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Start time
               </label>
               <input
+                id="routine-start-time"
                 type="time"
                 value={modalStartTime}
                 onChange={(e) => setModalStartTime(e.target.value)}
@@ -935,6 +969,7 @@ export const RoutinesView: React.FC = () => {
             {modalHasEndDate && (
               <input
                 type="date"
+                aria-label="Routine end date"
                 min={modalStartDate}
                 value={modalEndDate}
                 onChange={(e) => setModalEndDate(e.target.value)}
@@ -995,10 +1030,14 @@ export const RoutinesView: React.FC = () => {
 
               {modalUpdateScope === 'this' && (
                 <div className="pt-1">
-                  <label className="block text-[10px] font-semibold text-[#526782] mb-1">
+                  <label
+                    htmlFor="routine-occurrence-date"
+                    className="block text-[10px] font-semibold text-[#526782] mb-1"
+                  >
                     Occurrence date to modify:
                   </label>
                   <input
+                    id="routine-occurrence-date"
                     type="date"
                     value={modalOccurrenceDate}
                     onChange={(e) => setModalOccurrenceDate(e.target.value)}

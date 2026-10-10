@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { PlannerProvider, usePlanner } from './context/PlannerContext';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { MobileNav } from './components/layout/MobileNav';
@@ -42,7 +43,7 @@ import { WeeklyReviewModal } from './components/modals/WeeklyReviewModal';
 import { PwaInstallModal } from './components/modals/PwaInstallModal';
 
 const PlannerAppContent: React.FC = () => {
-  const { activeView, setActiveView } = usePlanner();
+  const { activeView, setActiveView, setActiveModal } = usePlanner();
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   const renderActiveView = () => {
@@ -95,7 +96,9 @@ const PlannerAppContent: React.FC = () => {
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         <Header onOpenMobileMenu={() => setIsMobileDrawerOpen(true)} />
         <main className="flex-1 overflow-y-auto pb-20 md:pb-8">
-          {renderActiveView()}
+          <ErrorBoundary onReset={() => setActiveView('today')}>
+            {renderActiveView()}
+          </ErrorBoundary>
         </main>
       </div>
 
@@ -107,26 +110,30 @@ const PlannerAppContent: React.FC = () => {
       />
 
       {/* Global Modals */}
-      <QuickAddModal />
-      <SearchModal />
-      <BackupRestoreModal />
-      <ConflictModal />
-      <GuideModal />
-      <OfflineDownloadModal />
-      <SetupWizardModal />
-      <AccountModal />
-      <SupportModal />
-      <FocusModal />
-      <WeeklyReviewModal />
-      <PwaInstallModal />
+      <ErrorBoundary compact onReset={() => setActiveModal(null)}>
+        <QuickAddModal />
+        <SearchModal />
+        <BackupRestoreModal />
+        <ConflictModal />
+        <GuideModal />
+        <OfflineDownloadModal />
+        <SetupWizardModal />
+        <AccountModal />
+        <SupportModal />
+        <FocusModal />
+        <WeeklyReviewModal />
+        <PwaInstallModal />
+      </ErrorBoundary>
     </div>
   );
 };
 
 export default function App() {
   return (
-    <PlannerProvider>
-      <PlannerAppContent />
-    </PlannerProvider>
+    <ErrorBoundary>
+      <PlannerProvider>
+        <PlannerAppContent />
+      </PlannerProvider>
+    </ErrorBoundary>
   );
 }

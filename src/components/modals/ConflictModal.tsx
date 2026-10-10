@@ -1,7 +1,7 @@
 import React from 'react';
 import { usePlanner } from '../../context/PlannerContext';
 import { Modal } from '../ui/Modal';
-import { AlertTriangle, Check, Cloud, HardDrive } from 'lucide-react';
+import { AlertTriangle, Check, HardDrive, FileText } from 'lucide-react';
 
 export const ConflictModal: React.FC = () => {
   const { activeModal, setActiveModal, conflictItem, resolveConflict } = usePlanner();
@@ -36,7 +36,7 @@ export const ConflictModal: React.FC = () => {
         <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>
-            Edits were made both locally while offline and on another connected device. Please choose which version to preserve.
+            Multiple versions of this record were found during data import or restore. Choose which version to preserve.
           </span>
         </div>
 
@@ -49,7 +49,7 @@ export const ConflictModal: React.FC = () => {
           <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 space-y-3">
             <div className="flex items-center gap-2 font-bold text-xs text-[#087F83] dark:text-[#38D0C5]">
               <HardDrive className="w-4 h-4" />
-              <span>Local version (on this device)</span>
+              <span>Current version (in this browser)</span>
             </div>
 
             <div className="text-xs space-y-1.5 font-mono">
@@ -75,15 +75,15 @@ export const ConflictModal: React.FC = () => {
               }}
               className="w-full py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer"
             >
-              Keep local version
+              Keep current version
             </button>
           </div>
 
-          {/* Online version */}
+          {/* Imported version */}
           <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 space-y-3">
             <div className="flex items-center gap-2 font-bold text-xs text-blue-600 dark:text-blue-400">
-              <Cloud className="w-4 h-4" />
-              <span>Online version (in the cloud)</span>
+              <FileText className="w-4 h-4" />
+              <span>Imported version (from backup)</span>
             </div>
 
             <div className="text-xs space-y-1.5 font-mono">
@@ -109,7 +109,7 @@ export const ConflictModal: React.FC = () => {
               }}
               className="w-full py-2 rounded-xl bg-[#071A3A] dark:bg-slate-700 text-white text-xs font-semibold hover:bg-black dark:hover:bg-slate-600 cursor-pointer"
             >
-              Keep online version
+              Keep imported version
             </button>
           </div>
         </div>

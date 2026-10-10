@@ -157,10 +157,14 @@ export const QuickAddModal: React.FC = () => {
           {activeTab === 'task' && (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="quick-add-task-title"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Task title *
                 </label>
                 <input
+                  id="quick-add-task-title"
                   type="text"
                   required
                   autoFocus
@@ -172,10 +176,14 @@ export const QuickAddModal: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="quick-add-task-category"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Category
                 </label>
                 <select
+                  id="quick-add-task-category"
                   value={taskCategory}
                   onChange={(e) => setTaskCategory(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium"
@@ -193,10 +201,14 @@ export const QuickAddModal: React.FC = () => {
           {activeTab === 'expense' && (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="quick-add-expense-amount"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Amount ({settings.currencySymbol || '$'}) *
                 </label>
                 <input
+                  id="quick-add-expense-amount"
                   type="number"
                   step="0.01"
                   min="0.01"
@@ -209,10 +221,14 @@ export const QuickAddModal: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="quick-add-expense-category"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Category
                 </label>
                 <select
+                  id="quick-add-expense-category"
                   value={expenseCategory}
                   onChange={(e) => setExpenseCategory(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium"
@@ -228,10 +244,14 @@ export const QuickAddModal: React.FC = () => {
 
           {activeTab === 'workout' && (
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="quick-add-workout-title"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Workout session title
               </label>
               <input
+                id="quick-add-workout-title"
                 type="text"
                 required
                 autoFocus
@@ -246,7 +266,10 @@ export const QuickAddModal: React.FC = () => {
           {activeTab === 'weight' && (
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
+                <label
+                  htmlFor="quick-add-weight-value"
+                  className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF]"
+                >
                   Weight ({modalWeightUnit}) *
                 </label>
                 <div className="flex items-center gap-1 text-[11px]">
@@ -278,6 +301,7 @@ export const QuickAddModal: React.FC = () => {
                 </div>
               </div>
               <input
+                id="quick-add-weight-value"
                 type="number"
                 step="0.1"
                 min="1"
@@ -298,10 +322,14 @@ export const QuickAddModal: React.FC = () => {
 
           {activeTab === 'thought' && (
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="quick-add-thought-text"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Jot down idea *
               </label>
               <textarea
+                id="quick-add-thought-text"
                 rows={2}
                 required
                 autoFocus

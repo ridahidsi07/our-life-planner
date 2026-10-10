@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
+import { useDialogAccessibility } from '../ui/Modal';
 import {
   Clock,
   Calendar,
@@ -23,82 +24,30 @@ import {
   Search,
   User,
   Mail,
+  Pin,
 } from 'lucide-react';
 import { SavingIndicator } from '../ui/SavingIndicator';
+import {
+  ToolViewId,
+  isModuleOrToolEnabled,
+  isToolVisibleInFavorites,
+} from '../../utils/moduleRegistry';
 
 export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   isOpen,
   onClose,
 }) => {
-  const { setActiveView, setActiveModal } = usePlanner();
+  const { setActiveView, setActiveModal, settings } = usePlanner();
   const [searchTerm, setSearchTerm] = useState('');
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    previousFocusRef.current = document.activeElement as HTMLElement;
-
-    const timer = setTimeout(() => {
-      if (searchInputRef.current) {
-        searchInputRef.current.focus();
-      } else if (dialogRef.current) {
-        dialogRef.current.focus();
-      }
-    }, 50);
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-
-      if (e.key === 'Tab' && dialogRef.current) {
-        const focusables = Array.from(
-          dialogRef.current.querySelectorAll<HTMLElement>(
-            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-          )
-        ).filter((el) => el.offsetParent !== null);
-
-        if (focusables.length === 0) {
-          e.preventDefault();
-          return;
-        }
-
-        const first = focusables[0];
-        const last = focusables[focusables.length - 1];
-
-        if (e.shiftKey) {
-          if (document.activeElement === first || !dialogRef.current.contains(document.activeElement)) {
-            e.preventDefault();
-            last.focus();
-          }
-        } else {
-          if (document.activeElement === last || !dialogRef.current.contains(document.activeElement)) {
-            e.preventDefault();
-            first.focus();
-          }
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('keydown', handleKeyDown);
-      if (previousFocusRef.current && typeof previousFocusRef.current.focus === 'function') {
-        previousFocusRef.current.focus();
-      }
-    };
-  }, [isOpen, onClose]);
+  const { dialogRef } = useDialogAccessibility(isOpen, onClose, searchInputRef);
 
   if (!isOpen) return null;
 
-  const toolCategories = [
+  const toolCategories: {
+    name: string;
+    items: { id: ToolViewId; label: string; desc: string; icon: React.ElementType }[];
+  }[] = [
     {
       name: 'Plan & organize',
       items: [
@@ -141,13 +90,31 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
     onClose();
   };
 
-  const filteredCategories = toolCategories.map((cat) => ({
-    ...cat,
-    items: cat.items.filter((item) =>
-      item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.desc.toLowerCase().includes(searchTerm.toLowerCase())
-    ),
-  })).filter((cat) => cat.items.length > 0);
+  // Apply module visibility rule across all categories
+  const enabledCategories = toolCategories
+    .map((cat) => ({
+      ...cat,
+      items: cat.items.filter((item) =>
+        isModuleOrToolEnabled(item.id, settings.enabledTools)
+      ),
+    }))
+    .filter((cat) => cat.items.length > 0);
+
+  const allEnabledItems = enabledCategories.flatMap((cat) => cat.items);
+  const pinnedItems = allEnabledItems.filter((item) =>
+    isToolVisibleInFavorites(item.id, settings.pinnedTools, settings.enabledTools)
+  );
+
+  const filteredCategories = enabledCategories
+    .map((cat) => ({
+      ...cat,
+      items: cat.items.filter(
+        (item) =>
+          item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.desc.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    }))
+    .filter((cat) => cat.items.length > 0);
 
   return (
     <div
@@ -170,7 +137,7 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
               All Tools & Views
             </h3>
             <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
-              15 connected tools in one place
+              {allEnabledItems.length} enabled tool{allEnabledItems.length === 1 ? '' : 's'} in one place
             </p>
           </div>
           <button
@@ -201,6 +168,41 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 
         {/* Content list */}
         <div className="flex-1 overflow-y-auto px-5 py-3 space-y-5">
+          {!searchTerm.trim() && pinnedItems.length > 0 && (
+            <div data-testid="moresheet-favorites-section">
+              <h4 className="flex items-center gap-1.5 text-[11px] font-semibold text-[#526782] dark:text-[#A8B8CE] uppercase tracking-wider mb-2">
+                <Pin className="w-3 h-3 text-[#087F83] dark:text-[#38D0C5]" />
+                <span>Favorites</span>
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {pinnedItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={`moresheet-pinned-${item.id}`}
+                      type="button"
+                      data-testid={`moresheet-favorite-${item.id}`}
+                      onClick={() => handleSelect(item.id)}
+                      className="flex items-center gap-3 p-2.5 rounded-xl text-left bg-teal-50/50 dark:bg-teal-950/30 border border-teal-100 dark:border-teal-900/50 hover:bg-[#E0F2F1] dark:hover:bg-[#163642] transition-colors cursor-pointer group"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center text-[#087F83] dark:text-[#38D0C5] shrink-0 shadow-2xs">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] group-hover:text-[#087F83] dark:group-hover:text-[#38D0C5]">
+                          {item.label}
+                        </div>
+                        <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE]">
+                          {item.desc}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {filteredCategories.map((cat, idx) => (
             <div key={idx}>
               <h4 className="text-[11px] font-semibold text-[#526782] dark:text-[#A8B8CE] uppercase tracking-wider mb-2">
@@ -213,6 +215,7 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                     <button
                       key={item.id}
                       type="button"
+                      data-testid={`moresheet-tool-${item.id}`}
                       onClick={() => handleSelect(item.id)}
                       className="flex items-center gap-3 p-2.5 rounded-xl text-left bg-slate-50 dark:bg-slate-800/60 hover:bg-[#E0F2F1] dark:hover:bg-[#163642] transition-colors cursor-pointer group"
                     >
@@ -245,7 +248,7 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
               className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
             >
               <User className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
-              <span>Account & Device Sync</span>
+              <span>Profile & Local Storage</span>
             </button>
             <button
               type="button"

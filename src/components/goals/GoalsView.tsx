@@ -452,10 +452,14 @@ export const GoalsView: React.FC = () => {
       >
         <form onSubmit={handleSaveGoal} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="goal-modal-title"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Goal title *
             </label>
             <input
+              id="goal-modal-title"
               type="text"
               required
               value={modalTitle}
@@ -467,10 +471,14 @@ export const GoalsView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="goal-modal-category"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Category
               </label>
               <select
+                id="goal-modal-category"
                 value={modalCategory}
                 onChange={(e) => setModalCategory(e.target.value as any)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
@@ -484,10 +492,14 @@ export const GoalsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="goal-modal-status"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Status
               </label>
               <select
+                id="goal-modal-status"
                 value={modalStatus}
                 onChange={(e) => setModalStatus(e.target.value as TaskStatus)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
@@ -501,10 +513,14 @@ export const GoalsView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="goal-modal-motivation"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Motivation (optional)
             </label>
             <input
+              id="goal-modal-motivation"
               type="text"
               value={modalMotivation}
               onChange={(e) => setModalMotivation(e.target.value)}
@@ -514,10 +530,14 @@ export const GoalsView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="goal-modal-reward"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Reward (optional)
             </label>
             <input
+              id="goal-modal-reward"
               type="text"
               value={modalReward}
               onChange={(e) => setModalReward(e.target.value)}
@@ -527,10 +547,14 @@ export const GoalsView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="goal-modal-deadline"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Deadline
             </label>
             <input
+              id="goal-modal-deadline"
               type="date"
               value={modalDeadline}
               onChange={(e) => setModalDeadline(e.target.value)}

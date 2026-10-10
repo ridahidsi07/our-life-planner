@@ -391,10 +391,14 @@ export const GroceriesView: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                  <label
+                    htmlFor="grocery-edit-amount"
+                    className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                  >
                     Amount *
                   </label>
                   <input
+                    id="grocery-edit-amount"
                     type="number"
                     step="0.1"
                     min="0.1"
@@ -406,10 +410,14 @@ export const GroceriesView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                  <label
+                    htmlFor="grocery-edit-unit"
+                    className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                  >
                     Unit
                   </label>
                   <input
+                    id="grocery-edit-unit"
                     type="text"
                     value={editUnit}
                     onChange={(e) => setEditUnit(e.target.value)}
@@ -419,10 +427,14 @@ export const GroceriesView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="grocery-edit-category"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Aisle / Category
                 </label>
                 <select
+                  id="grocery-edit-category"
                   value={editCategory}
                   onChange={(e) => setEditCategory(e.target.value as any)}
                   className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
@@ -467,7 +479,7 @@ export const GroceriesView: React.FC = () => {
       >
         <div className="space-y-4 text-xs">
           <p className="text-[#526782] dark:text-[#A8B8CE]">
-            Regenerating checks all planned meals for this week, scales ingredients by your planned servings, and merges convertible quantities (e.g. g & kg).
+            Regenerating checks all planned meals for this week, scales ingredients by your planned servings, and merges compatible quantities (e.g. g &amp; kg, ml &amp; L) while keeping incompatible units (e.g. g &amp; cups) separate.
           </p>
 
           {/* Contributing Meals List */}
@@ -532,10 +544,14 @@ export const GroceriesView: React.FC = () => {
       >
         <form onSubmit={handleAddManualItem} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="grocery-add-name"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Item name *
             </label>
             <input
+              id="grocery-add-name"
               type="text"
               required
               value={itemName}
@@ -547,10 +563,14 @@ export const GroceriesView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="grocery-add-amount"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Amount *
               </label>
               <input
+                id="grocery-add-amount"
                 type="number"
                 step="0.1"
                 min="0.1"
@@ -562,10 +582,14 @@ export const GroceriesView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="grocery-add-unit"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Unit
               </label>
               <input
+                id="grocery-add-unit"
                 type="text"
                 value={itemUnit}
                 onChange={(e) => setItemUnit(e.target.value)}
@@ -576,10 +600,14 @@ export const GroceriesView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="grocery-add-category"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Category
             </label>
             <select
+              id="grocery-add-category"
               value={itemCategory}
               onChange={(e) => setItemCategory(e.target.value as any)}
               className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"

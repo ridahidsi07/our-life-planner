@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useMemo, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import {
   BillItem,
   BrainDumpItem,
@@ -26,6 +26,9 @@ import {
   WorkoutExercise,
   WorkoutExerciseSet,
   HouseholdMember,
+  BillOccurrence,
+  BudgetPeriodType,
+  WeeklyReviewEntry,
 } from '../types/planner';
 import { getDayBefore } from '../utils/routineRecurrence';
 import {
@@ -49,11 +52,48 @@ import {
   SAMPLE_WEIGHT_RECORDS,
   SAMPLE_WORKOUTS,
 } from '../utils/sampleData';
-import { calculateCashFlow, CashFlowCalculation } from '../utils/calculations';
+import {
+  calculateCashFlow,
+  CashFlowCalculation,
+  BudgetPeriodRange,
+  getBudgetPeriodRange,
+  navigateBudgetPeriod,
+  calculatePeriodCashFlow,
+} from '../utils/calculations';
 import { getCurrencySymbol, getCurrentTimeStr } from '../utils/formatters';
+import { serializePlannerCalendarToIcs } from '../utils/icsSerializer';
+import { aggregateGroceriesFromMeals } from '../utils/groceryAggregator';
 
-const STORAGE_KEY_DATA = 'our_life_planner_data_v1';
-const STORAGE_KEY_SETTINGS = 'our_life_planner_settings_v1';
+import {
+  STORAGE_KEY_DATA,
+  STORAGE_KEY_SETTINGS,
+  STORAGE_KEY_REVISION,
+  getStoredRevision,
+  withStorageLock,
+  reconcilePlannerData,
+  TabSyncManager,
+  fastDeepEqual,
+} from '../utils/storageCoordinator';
+import {
+  validateBackupData,
+  atomicRestoreBackup,
+  rollbackPreRestoreSnapshot,
+  getPreRestoreSnapshot,
+  PreRestoreSnapshotInfo,
+  BackupValidationResult,
+} from '../utils/backupValidator';
+import {
+  buildStandaloneFallbackHtml,
+  BOOTSTRAP_PLACEHOLDER_TOKEN,
+} from '../utils/standaloneHtml';
+import {
+  migrateEnabledTools,
+  migratePinnedTools,
+  toggleModuleEnabledInList,
+  toggleModulePinnedInList,
+  isModuleOrToolEnabled,
+  getFallbackEnabledToolView,
+} from '../utils/moduleRegistry';
 
 interface PlannerContextType {
   // Settings & Navigation
@@ -95,12 +135,27 @@ interface PlannerContextType {
   hydrationEntries: HydrationLogEntry[];
   hydrationTargets: DailyHydrationTarget[];
   calendarEvents: CalendarEvent[];
+  weeklyReviews: WeeklyReviewEntry[];
 
   // Computed Summaries
-  cashFlow: CashFlowCalculation;
+  cashFlow: CashFlowCalculation & {
+    periodRange: BudgetPeriodRange;
+    periodIncome: number;
+    periodExpenses: number;
+    periodSavingsTransfers: number;
+    periodCategorySpent: Record<string, number>;
+    periodOccurrences: BillOccurrence[];
+    overdueOccurrences: BillOccurrence[];
+    allActualIncome: number;
+    allActualExpenses: number;
+    allSavingsTransfers: number;
+  };
+  budgetPeriodRange: BudgetPeriodRange;
+  navigateBudgetPeriod: (direction: 'prev' | 'next') => void;
+  resetBudgetPeriodToCurrent: () => void;
 
   // Task Actions
-  addTask: (task: Omit<TaskItem, 'id' | 'createdAt'>) => void;
+  addTask: (task: Omit<TaskItem, 'id' | 'createdAt'>) => string;
   updateTask: (id: string, updates: Partial<TaskItem>) => void;
   deleteTask: (id: string) => void;
   toggleTaskCompletion: (id: string) => void;
@@ -150,8 +205,8 @@ interface PlannerContextType {
   addBill: (bill: Omit<BillItem, 'id' | 'isPaid'>) => void;
   updateBill: (id: string, updates: Partial<BillItem>) => void;
   deleteBill: (id: string) => void;
-  markBillPaid: (billId: string, actualAmount: number, paymentDate: string) => void;
-  unpayBill: (billId: string) => void;
+  markBillPaid: (billId: string, actualAmount: number, paymentDate: string, occurrenceDueDate?: string) => void;
+  unpayBill: (billId: string, occurrenceDueDate?: string) => void;
 
   // Savings Actions
   addSavingsPot: (pot: Omit<SavingsPot, 'id' | 'deposits'>) => void;
@@ -206,6 +261,10 @@ interface PlannerContextType {
   addCalendarEvent: (event: Omit<CalendarEvent, 'id'>) => void;
   deleteCalendarEvent: (id: string) => void;
 
+  // Weekly Review Actions
+  saveWeeklyReview: (entry: Omit<WeeklyReviewEntry, 'id' | 'updatedAt'> & { id?: string }) => WeeklyReviewEntry;
+  deleteWeeklyReview: (idOrWeekStartDate: string) => void;
+
   // Household & Tool Customization
   addHouseholdMember: (name: string, color: string) => void;
   removeHouseholdMember: (id: string) => void;
@@ -220,7 +279,10 @@ interface PlannerContextType {
   resetAllData: () => void;
   loadSampleData: () => void;
   exportBackup: () => PlannerBackupData;
+  validateBackup: (input: unknown) => BackupValidationResult;
   restoreBackup: (backup: PlannerBackupData) => boolean;
+  preRestoreSnapshot: PreRestoreSnapshotInfo | null;
+  rollbackLastRestore: () => boolean;
   generateStandaloneHtml: () => string;
 }
 
@@ -291,15 +353,24 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const stored = localStorage.getItem(STORAGE_KEY_SETTINGS);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed.currency) {
-          parsed.currencySymbol = getCurrencySymbol(parsed.currency);
+        if (parsed && typeof parsed === 'object') {
+          const merged: UserSettings = { ...INITIAL_SETTINGS, ...parsed };
+          if (merged.currency) {
+            merged.currencySymbol = getCurrencySymbol(merged.currency);
+          }
+          merged.enabledTools = migrateEnabledTools(merged.enabledTools);
+          merged.pinnedTools = migratePinnedTools(merged.pinnedTools);
+          return merged;
         }
-        return parsed;
       }
     } catch (e) {
       console.error(e);
     }
-    return INITIAL_SETTINGS;
+    return {
+      ...INITIAL_SETTINGS,
+      enabledTools: migrateEnabledTools(INITIAL_SETTINGS.enabledTools),
+      pinnedTools: migratePinnedTools(INITIAL_SETTINGS.pinnedTools),
+    };
   });
 
   // Dynamic real today and selected current date
@@ -307,10 +378,11 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [currentDate, setCurrentDate] = useState<string>(() => getRealTodayDate(settings.timeZone));
   const [activeView, setActiveView] = useState<string>('today');
   const [activeModal, setActiveModal] = useState<string | null>(null);
-  const [savingState, setSavingState] = useState<SavingState>(
-    settings.edition === 'downloaded' ? 'saved_local' : 'saved_online'
-  );
+  const [savingState, setSavingState] = useState<SavingState>('saved_local');
   const [conflictItem, setConflictItem] = useState<ConflictItem | null>(null);
+  const [preRestoreSnapshot, setPreRestoreSnapshot] = useState<PreRestoreSnapshotInfo | null>(() =>
+    getPreRestoreSnapshot()
+  );
 
   const settingsRef = useRef<UserSettings>(settings);
   useEffect(() => {
@@ -351,37 +423,6 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => clearInterval(interval);
   }, [settings.timeZone]);
 
-  // Listen for online and offline network status changes
-  useEffect(() => {
-    const handleOnline = () => {
-      if (settingsRef.current.edition === 'online') {
-        setSavingState('saving');
-        setTimeout(() => {
-          setSavingState('saved_online');
-        }, 500);
-      }
-    };
-
-    const handleOffline = () => {
-      if (settingsRef.current.edition === 'online') {
-        setSavingState('waiting_to_sync');
-      }
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    // Initial check: if browser is currently offline when opening online edition
-    if (typeof navigator !== 'undefined' && !navigator.onLine && settingsRef.current.edition === 'online') {
-      setSavingState('waiting_to_sync');
-    }
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
   // Core Data Collections
   const [tasks, setTasks] = useState<TaskItem[]>(SAMPLE_TASKS);
   const [routines, setRoutines] = useState<RoutineItem[]>(SAMPLE_ROUTINES);
@@ -402,29 +443,227 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [hydrationEntries, setHydrationEntries] = useState<HydrationLogEntry[]>(SAMPLE_HYDRATION_LOG);
   const [hydrationTargets, setHydrationTargets] = useState<DailyHydrationTarget[]>(SAMPLE_HYDRATION_TARGETS);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(SAMPLE_CALENDAR_EVENTS);
+  const [weeklyReviews, setWeeklyReviews] = useState<WeeklyReviewEntry[]>([]);
+
+  // Tab synchronization, revision tracking, and transaction refs
+  const syncManagerRef = useRef<TabSyncManager | null>(null);
+  const currentRevisionRef = useRef<number>(1);
+  const baseSnapshotRef = useRef<PlannerBackupData | null>(null);
+  const isApplyingExternalSyncRef = useRef<boolean>(false);
+
+  // Synchronized refs for all collections to prevent stale closures during async coordinated saves
+  const tasksRef = useRef(tasks);
+  const routinesRef = useRef(routines);
+  const goalsRef = useRef(goals);
+  const habitsRef = useRef(habits);
+  const inboxRef = useRef(inbox);
+  const transactionsRef = useRef(transactions);
+  const billsRef = useRef(bills);
+  const savingsPotsRef = useRef(savingsPots);
+  const debtsRef = useRef(debts);
+  const recipesRef = useRef(recipes);
+  const plannedMealsRef = useRef(plannedMeals);
+  const groceriesRef = useRef(groceries);
+  const workoutsRef = useRef(workouts);
+  const weightProfilesRef = useRef(weightProfiles);
+  const weightRecordsRef = useRef(weightRecords);
+  const hydrationEntriesRef = useRef(hydrationEntries);
+  const hydrationTargetsRef = useRef(hydrationTargets);
+  const calendarEventsRef = useRef(calendarEvents);
+  const weeklyReviewsRef = useRef(weeklyReviews);
+
+  useEffect(() => { tasksRef.current = tasks; }, [tasks]);
+  useEffect(() => { routinesRef.current = routines; }, [routines]);
+  useEffect(() => { goalsRef.current = goals; }, [goals]);
+  useEffect(() => { habitsRef.current = habits; }, [habits]);
+  useEffect(() => { inboxRef.current = inbox; }, [inbox]);
+  useEffect(() => { transactionsRef.current = transactions; }, [transactions]);
+  useEffect(() => { billsRef.current = bills; }, [bills]);
+  useEffect(() => { savingsPotsRef.current = savingsPots; }, [savingsPots]);
+  useEffect(() => { debtsRef.current = debts; }, [debts]);
+  useEffect(() => { recipesRef.current = recipes; }, [recipes]);
+  useEffect(() => { plannedMealsRef.current = plannedMeals; }, [plannedMeals]);
+  useEffect(() => { groceriesRef.current = groceries; }, [groceries]);
+  useEffect(() => { workoutsRef.current = workouts; }, [workouts]);
+  useEffect(() => { weightProfilesRef.current = weightProfiles; }, [weightProfiles]);
+  useEffect(() => { weightRecordsRef.current = weightRecords; }, [weightRecords]);
+  useEffect(() => { hydrationEntriesRef.current = hydrationEntries; }, [hydrationEntries]);
+  useEffect(() => { hydrationTargetsRef.current = hydrationTargets; }, [hydrationTargets]);
+  useEffect(() => { calendarEventsRef.current = calendarEvents; }, [calendarEvents]);
+  useEffect(() => { weeklyReviewsRef.current = weeklyReviews; }, [weeklyReviews]);
+
+  // Builds a complete snapshot of in-memory planner state
+  const createDataSnapshot = useCallback(
+    (customSettings?: UserSettings): PlannerBackupData => {
+      const stg = customSettings || settingsRef.current;
+      return {
+        version: '1.0.0',
+        exportedAt: new Date().toISOString(),
+        revision: currentRevisionRef.current,
+        settings: stg,
+        tasks: tasksRef.current,
+        routines: routinesRef.current,
+        goals: goalsRef.current,
+        habits: habitsRef.current,
+        inbox: inboxRef.current,
+        transactions: transactionsRef.current,
+        bills: billsRef.current,
+        savingsPots: savingsPotsRef.current,
+        debts: debtsRef.current,
+        recipes: recipesRef.current,
+        plannedMeals: plannedMealsRef.current,
+        groceries: groceriesRef.current,
+        workouts: workoutsRef.current,
+        weightProfiles: weightProfilesRef.current,
+        weightRecords: weightRecordsRef.current,
+        hydrationEntries: hydrationEntriesRef.current,
+        hydrationTargets: hydrationTargetsRef.current,
+        calendarEvents: calendarEventsRef.current,
+        weeklyReviews: weeklyReviewsRef.current,
+      };
+    },
+    []
+  );
+
+  // Applies an incoming backup or reconciled dataset to React state
+  const applyStateFromBackup = useCallback((data: PlannerBackupData) => {
+    if (data.tasks) { setTasks(data.tasks); tasksRef.current = data.tasks; }
+    if (data.routines) { setRoutines(data.routines); routinesRef.current = data.routines; }
+    if (data.goals) { setGoals(data.goals); goalsRef.current = data.goals; }
+    if (data.habits) { setHabits(data.habits); habitsRef.current = data.habits; }
+    if (data.inbox) { setInbox(data.inbox); inboxRef.current = data.inbox; }
+    if (data.transactions) { setTransactions(data.transactions); transactionsRef.current = data.transactions; }
+    if (data.bills) { setBills(data.bills); billsRef.current = data.bills; }
+    if (data.savingsPots) { setSavingsPots(data.savingsPots); savingsPotsRef.current = data.savingsPots; }
+    if (data.debts) { setDebts(data.debts); debtsRef.current = data.debts; }
+    if (data.recipes) { setRecipes(data.recipes); recipesRef.current = data.recipes; }
+    if (data.plannedMeals) { setPlannedMeals(data.plannedMeals); plannedMealsRef.current = data.plannedMeals; }
+    if (data.groceries) { setGroceries(data.groceries); groceriesRef.current = data.groceries; }
+    if (data.workouts) { setWorkouts(data.workouts); workoutsRef.current = data.workouts; }
+    if (data.weightProfiles) { setWeightProfiles(data.weightProfiles); weightProfilesRef.current = data.weightProfiles; }
+    if (data.weightRecords) { setWeightRecords(data.weightRecords); weightRecordsRef.current = data.weightRecords; }
+    if (data.hydrationEntries) { setHydrationEntries(data.hydrationEntries); hydrationEntriesRef.current = data.hydrationEntries; }
+    if (data.hydrationTargets) { setHydrationTargets(data.hydrationTargets); hydrationTargetsRef.current = data.hydrationTargets; }
+    if (data.calendarEvents) { setCalendarEvents(data.calendarEvents); calendarEventsRef.current = data.calendarEvents; }
+    if (Array.isArray(data.weeklyReviews)) { setWeeklyReviews(data.weeklyReviews); weeklyReviewsRef.current = data.weeklyReviews; }
+    if (data.settings) {
+      setSettings((prev) => {
+        const next: UserSettings = { ...prev, ...data.settings };
+        if (next.currency) {
+          next.currencySymbol = getCurrencySymbol(next.currency);
+        }
+        next.enabledTools = migrateEnabledTools(next.enabledTools);
+        next.pinnedTools = migratePinnedTools(next.pinnedTools);
+        settingsRef.current = next;
+        return next;
+      });
+    }
+  }, []);
+
+  // Coordinated transactional save to localStorage
+  const triggerSave = useCallback(
+    async (customSettings?: UserSettings) => {
+      if (isApplyingExternalSyncRef.current) {
+        // Change was applied from an external tab sync; do not write echo back to storage
+        isApplyingExternalSyncRef.current = false;
+        return;
+      }
+
+      setSavingState('saving');
+
+      try {
+        await withStorageLock(async () => {
+          const currentLocalSnapshot = createDataSnapshot(customSettings);
+          const storedRevision = getStoredRevision();
+          const rawStored = localStorage.getItem(STORAGE_KEY_DATA);
+
+          let dataToSave: PlannerBackupData = currentLocalSnapshot;
+          let conflicts: ConflictItem[] = [];
+
+          // Optimistic concurrency check: another tab wrote a newer revision
+          if (rawStored && storedRevision > currentRevisionRef.current && baseSnapshotRef.current) {
+            try {
+              const parsedStored = JSON.parse(rawStored) as PlannerBackupData;
+              if (parsedStored && parsedStored.version === '1.0.0') {
+                const result = reconcilePlannerData(
+                  baseSnapshotRef.current,
+                  currentLocalSnapshot,
+                  parsedStored
+                );
+                dataToSave = result.mergedData;
+                conflicts = result.conflicts;
+
+                // If stored data contained remote updates, update our React state as well
+                if (result.hasRemoteChanges) {
+                  isApplyingExternalSyncRef.current = true;
+                  applyStateFromBackup(dataToSave);
+                }
+              }
+            } catch (parseErr) {
+              console.warn('Could not parse stored data for reconciliation:', parseErr);
+            }
+          }
+
+          // Monotonically advance revision
+          const nextRevision = Math.max(storedRevision, currentRevisionRef.current) + 1;
+          dataToSave.revision = nextRevision;
+          dataToSave.exportedAt = new Date().toISOString();
+
+          // Transactional atomic write to localStorage
+          localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(dataToSave));
+          localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(dataToSave.settings));
+          localStorage.setItem(STORAGE_KEY_REVISION, String(nextRevision));
+
+          // Update tracking references
+          currentRevisionRef.current = nextRevision;
+          baseSnapshotRef.current = dataToSave;
+
+          // Broadcast to all other open tabs
+          syncManagerRef.current?.broadcast(nextRevision, dataToSave);
+
+          if (conflicts.length > 0) {
+            setConflictItem(conflicts[0]);
+            setSavingState('needs_choice');
+          } else {
+            setSavingState('saved_local');
+          }
+        });
+      } catch (err) {
+        console.error('Coordinated save failed:', err);
+        setSavingState('could_not_save');
+      }
+    },
+    [createDataSnapshot, applyStateFromBackup]
+  );
 
   // Load from local storage or standalone bootstrap on mount
   useEffect(() => {
     try {
+      setPreRestoreSnapshot(getPreRestoreSnapshot());
+
       // 1. Check for standalone embedded bootstrap data
       const bootstrapEl = document.getElementById('embedded-planner-bootstrap-data');
       if (bootstrapEl && bootstrapEl.textContent) {
         const raw = bootstrapEl.textContent.trim();
-        if (raw && !raw.includes('<!--BOOTSTRAP_DATA_PLACEHOLDER-->')) {
+        if (raw && !raw.includes(BOOTSTRAP_PLACEHOLDER_TOKEN)) {
           try {
-            const parsedBootstrap = JSON.parse(raw) as PlannerBackupData;
-            if (parsedBootstrap.version === '1.0.0') {
+            const parsedBootstrap = JSON.parse(raw);
+            const validation = validateBackupData(parsedBootstrap);
+            if (validation.isValid && validation.data) {
               const existingStored = localStorage.getItem(STORAGE_KEY_DATA);
               if (!existingStored) {
                 // First time opening the offline standalone bundle file
-                restoreBackup(parsedBootstrap);
                 const stg = {
-                  ...parsedBootstrap.settings,
+                  ...validation.data.settings,
                   edition: 'downloaded' as EditionType,
                 };
-                setSettings(stg);
+                const hydratedBootstrap: PlannerBackupData = {
+                  ...validation.data,
+                  settings: stg,
+                };
+                applyStateFromBackup(hydratedBootstrap);
                 localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(stg));
-                localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(parsedBootstrap));
+                localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(hydratedBootstrap));
                 return;
               }
             }
@@ -439,100 +678,79 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const storedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
 
       if (!storedSettings && !storedData) {
-        // First visit on online app: open setup wizard
+        // First visit: open setup wizard
         setActiveModal('setup');
       }
 
       if (storedData) {
-        const parsed = JSON.parse(storedData) as PlannerBackupData;
-        if (parsed.version === '1.0.0') {
-          if (parsed.tasks) setTasks(parsed.tasks);
-          if (parsed.routines) setRoutines(parsed.routines);
-          if (parsed.goals) setGoals(parsed.goals);
-          if (parsed.habits) setHabits(parsed.habits);
-          if (parsed.inbox) setInbox(parsed.inbox);
-          if (parsed.transactions) setTransactions(parsed.transactions);
-          if (parsed.bills) setBills(parsed.bills);
-          if (parsed.savingsPots) setSavingsPots(parsed.savingsPots);
-          if (parsed.debts) setDebts(parsed.debts);
-          if (parsed.recipes) setRecipes(parsed.recipes);
-          if (parsed.plannedMeals) setPlannedMeals(parsed.plannedMeals);
-          if (parsed.groceries) setGroceries(parsed.groceries);
-          if (parsed.workouts) setWorkouts(parsed.workouts);
-          if (parsed.weightProfiles) setWeightProfiles(parsed.weightProfiles);
-          if (parsed.weightRecords) setWeightRecords(parsed.weightRecords);
-          if (parsed.hydrationEntries) setHydrationEntries(parsed.hydrationEntries);
-          if (parsed.hydrationTargets) setHydrationTargets(parsed.hydrationTargets);
-          if (parsed.calendarEvents) setCalendarEvents(parsed.calendarEvents);
-          if (parsed.settings) {
-            let loadedSettings = { ...parsed.settings };
-            try {
-              const rawStg = localStorage.getItem(STORAGE_KEY_SETTINGS);
-              if (rawStg) {
-                const parsedStg = JSON.parse(rawStg);
-                loadedSettings = { ...loadedSettings, ...parsedStg };
-              }
-            } catch (e) {
-              console.warn('Could not parse settings from storage:', e);
-            }
-            if (loadedSettings.currency) {
-              loadedSettings.currencySymbol = getCurrencySymbol(loadedSettings.currency);
-            }
-            setSettings(loadedSettings);
-            settingsRef.current = loadedSettings;
-          }
+        const parsed = JSON.parse(storedData);
+        const validation = validateBackupData(parsed);
+        if (validation.isValid && validation.data) {
+          const rev = validation.data.revision || getStoredRevision();
+          currentRevisionRef.current = rev;
+          baseSnapshotRef.current = validation.data;
+          applyStateFromBackup(validation.data);
+        } else {
+          console.warn('Stored planner data failed schema validation; falling back safely:', validation.errors);
+          baseSnapshotRef.current = createDataSnapshot();
         }
+      } else {
+        baseSnapshotRef.current = createDataSnapshot();
       }
     } catch (err) {
       console.warn('Could not read saved data from localStorage:', err);
     }
-  }, []);
+  }, [applyStateFromBackup, createDataSnapshot]);
 
-  // Sync to localStorage and manage saving states
-  const triggerSave = (newSettings?: UserSettings) => {
-    setSavingState('saving');
-    try {
-      const stg = newSettings || settingsRef.current;
-      const backup: PlannerBackupData = {
-        version: '1.0.0',
-        exportedAt: new Date().toISOString(),
-        settings: stg,
-        tasks,
-        routines,
-        goals,
-        habits,
-        inbox,
-        transactions,
-        bills,
-        savingsPots,
-        debts,
-        recipes,
-        plannedMeals,
-        groceries,
-        workouts,
-        weightProfiles,
-        weightRecords,
-        hydrationEntries,
-        hydrationTargets,
-        calendarEvents,
-      };
-      localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(backup));
-      localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(stg));
+  // Real-time cross-tab synchronization listener
+  useEffect(() => {
+    const manager = new TabSyncManager();
+    syncManagerRef.current = manager;
 
-      setTimeout(() => {
-        if (stg.edition === 'downloaded') {
-          setSavingState('saved_local');
-        } else if (typeof navigator !== 'undefined' && !navigator.onLine) {
-          setSavingState('waiting_to_sync');
+    manager.onSync((msg) => {
+      if (!msg || !msg.data || msg.revision <= currentRevisionRef.current) {
+        return;
+      }
+
+      // Check if this tab has uncommitted changes differing from base
+      const localSnapshot = createDataSnapshot();
+      const hasLocalDiff = baseSnapshotRef.current
+        ? !fastDeepEqual(localSnapshot, baseSnapshotRef.current)
+        : false;
+
+      if (!hasLocalDiff) {
+        // No pending changes in this tab: smoothly adopt incoming data
+        isApplyingExternalSyncRef.current = true;
+        applyStateFromBackup(msg.data);
+        currentRevisionRef.current = msg.revision;
+        baseSnapshotRef.current = msg.data;
+        setSavingState('saved_local');
+      } else {
+        // Pending local edits exist: reconcile incoming state with local edits
+        const result = reconcilePlannerData(
+          baseSnapshotRef.current || localSnapshot,
+          localSnapshot,
+          msg.data
+        );
+        isApplyingExternalSyncRef.current = true;
+        applyStateFromBackup(result.mergedData);
+        currentRevisionRef.current = msg.revision;
+        baseSnapshotRef.current = msg.data;
+
+        if (result.conflicts.length > 0) {
+          setConflictItem(result.conflicts[0]);
+          setSavingState('needs_choice');
         } else {
-          setSavingState('saved_online');
+          // Trigger save of merged state so our edits are committed
+          triggerSave();
         }
-      }, 250);
-    } catch (e) {
-      console.error(e);
-      setSavingState('could_not_save');
-    }
-  };
+      }
+    });
+
+    return () => {
+      manager.destroy();
+    };
+  }, [createDataSnapshot, applyStateFromBackup, triggerSave]);
 
   // Watch for data mutations and auto-save
   const [isInitialized, setIsInitialized] = useState(false);
@@ -561,14 +779,26 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     hydrationEntries,
     hydrationTargets,
     calendarEvents,
+    weeklyReviews,
+    triggerSave,
   ]);
 
   // Update settings
   const updateSettings = (newSettings: Partial<UserSettings>) => {
     setSettings((prev) => {
-      const next = { ...prev, ...newSettings };
+      const next: UserSettings = { ...prev, ...newSettings };
       if (newSettings.currency) {
         next.currencySymbol = getCurrencySymbol(newSettings.currency);
+      }
+      if (newSettings.enabledTools !== undefined) {
+        next.enabledTools = migrateEnabledTools(newSettings.enabledTools);
+      } else if (next.enabledTools) {
+        next.enabledTools = migrateEnabledTools(next.enabledTools);
+      }
+      if (newSettings.pinnedTools !== undefined) {
+        next.pinnedTools = migratePinnedTools(newSettings.pinnedTools);
+      } else if (next.pinnedTools) {
+        next.pinnedTools = migratePinnedTools(next.pinnedTools);
       }
       if (newSettings.theme) {
         applyThemeToDocument(newSettings.theme);
@@ -598,66 +828,65 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
     }
     setConflictItem(null);
-    setSavingState(settings.edition === 'downloaded' ? 'saved_local' : 'saved_online');
+    setSavingState('saved_local');
   };
 
-  // Cash flow calculation (Section 6 fixture compliant)
-  const cashFlow = useMemo(() => {
-    const openingBalance = settings.budgetOpeningBalance ?? 100.0;
-    const actualIncome = transactions
-      .filter((t) => t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    // Regular expenses (excluding transfers)
-    const actualExpenses = transactions
-      .filter((t) => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    // Spending-funded transfers to savings
-    const spendingToSavingsTransfers = transactions
-      .filter((t) => t.type === 'transfer' && t.linkedPotId)
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    // Unpaid planned bills for the period
-    const unpaidBills = bills
-      .filter((b) => !b.isPaid)
-      .reduce((sum, b) => sum + b.plannedAmount, 0);
-
-    // Planned savings totals
-    const totalPlannedSavings = settings.budgetPlannedSavings ?? 250.0;
-    const plannedSavingsStillDue = Math.max(0, totalPlannedSavings - spendingToSavingsTransfers);
-    const plannedIncome = settings.budgetPlannedIncome ?? 1200.0;
-
-    // Category limits total (e.g. Food 250 + Transport 100 + Home 200 + Personal 150 = 700)
-    const categoryLimitsMap = settings.budgetCategoryLimits ?? {
-      Food: 250,
-      Transport: 100,
-      Home: 200,
-      Personal: 150,
-    };
-    const categoryLimitsTotal = Object.values(categoryLimitsMap).reduce((sum, lim) => sum + lim, 0);
-
-    return calculateCashFlow({
-      openingBalance,
-      actualIncome,
-      actualExpenses,
-      spendingToSavingsTransfers,
-      unpaidBills,
-      plannedSavingsStillDue,
-      plannedIncome,
-      categoryLimitsTotal,
-      totalPlannedSavings,
+  // Budget period range computation
+  const defaultPeriodRange = useMemo(() => {
+    return getBudgetPeriodRange({
+      referenceDate: currentDate,
+      periodType: settings.budgetPeriodType,
+      weekStartsOn: settings.weekStartsOn,
+      customStartDate: settings.budgetStartDate,
+      customEndDate: settings.budgetEndDate,
     });
-  }, [transactions, bills, settings]);
+  }, [currentDate, settings.budgetPeriodType, settings.weekStartsOn, settings.budgetStartDate, settings.budgetEndDate]);
+
+  const [navigatedPeriodRange, setNavigatedPeriodRange] = useState<BudgetPeriodRange | null>(null);
+
+  useEffect(() => {
+    setNavigatedPeriodRange(null);
+  }, [settings.budgetPeriodType, currentDate]);
+
+  const activeBudgetPeriodRange = navigatedPeriodRange || defaultPeriodRange;
+
+  const navigateBudgetPeriodRange = useCallback(
+    (direction: 'prev' | 'next') => {
+      setNavigatedPeriodRange((prev) =>
+        navigateBudgetPeriod(prev || defaultPeriodRange, direction, settings.weekStartsOn)
+      );
+    },
+    [defaultPeriodRange, settings.weekStartsOn]
+  );
+
+  const resetBudgetPeriodToCurrent = useCallback(() => {
+    setNavigatedPeriodRange(null);
+  }, []);
+
+  // Cash flow calculation (Period-aware & Section 6 fixture compliant)
+  const cashFlow = useMemo(() => {
+    return calculatePeriodCashFlow({
+      settings,
+      transactions,
+      bills,
+      periodRange: activeBudgetPeriodRange,
+      referenceDate: currentDate,
+    });
+  }, [settings, transactions, bills, activeBudgetPeriodRange, currentDate]);
 
   // Task Actions
-  const addTask = (task: Omit<TaskItem, 'id' | 'createdAt'>) => {
+  const addTask = (task: Omit<TaskItem, 'id' | 'createdAt'>): string => {
     const newTask: TaskItem = {
       ...task,
       id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       createdAt: new Date().toISOString(),
     };
-    setTasks((prev) => [newTask, ...prev]);
+    setTasks((prev) => {
+      const next = [newTask, ...prev];
+      tasksRef.current = next;
+      return next;
+    });
+    return newTask.id;
   };
 
   const updateTask = (id: string, updates: Partial<TaskItem>) => {
@@ -1047,17 +1276,29 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const tx = transactions.find((t) => t.id === id);
     if (tx?.linkedBillId) {
       setBills((prev) =>
-        prev.map((b) =>
-          b.id === tx.linkedBillId
-            ? {
-                ...b,
-                isPaid: false,
-                actualPaidAmount: undefined,
-                paidDate: undefined,
-                linkedExpenseId: undefined,
+        prev.map((b) => {
+          if (b.id !== tx.linkedBillId) return b;
+          const nextOccurrences = b.paidOccurrences ? { ...b.paidOccurrences } : undefined;
+          if (nextOccurrences) {
+            for (const [occKey, rec] of Object.entries(nextOccurrences)) {
+              if (rec.linkedExpenseId === id) {
+                delete nextOccurrences[occKey];
               }
-            : b
-        )
+            }
+          }
+          return {
+            ...b,
+            ...(b.linkedExpenseId === id
+              ? {
+                  isPaid: false,
+                  actualPaidAmount: undefined,
+                  paidDate: undefined,
+                  linkedExpenseId: undefined,
+                }
+              : {}),
+            ...(nextOccurrences ? { paidOccurrences: nextOccurrences } : {}),
+          };
+        })
       );
     }
     // Check if this transaction is linked to a savings pot
@@ -1113,36 +1354,58 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const deleteBill = (id: string) => {
     const bill = bills.find((b) => b.id === id);
-    if (bill?.linkedExpenseId) {
-      setTransactions((prev) => prev.filter((tx) => tx.id !== bill.linkedExpenseId));
+    const linkedTxIds = new Set<string>();
+    if (bill?.linkedExpenseId) linkedTxIds.add(bill.linkedExpenseId);
+    if (bill?.paidOccurrences) {
+      Object.values(bill.paidOccurrences).forEach((rec) => {
+        if (rec.linkedExpenseId) linkedTxIds.add(rec.linkedExpenseId);
+      });
     }
+    setTransactions((prev) =>
+      prev.filter((tx) => !linkedTxIds.has(tx.id) && tx.linkedBillId !== id)
+    );
     setBills((prev) => prev.filter((b) => b.id !== id));
   };
 
   const markBillPaid = (
     billId: string,
     actualAmount: number,
-    paymentDate: string
+    paymentDate: string,
+    occurrenceDueDate?: string
   ) => {
     const bill = bills.find((b) => b.id === billId);
     if (!bill) return;
 
+    const occKey = occurrenceDueDate || bill.dueDate;
+    const existingPaid = bill.paidOccurrences?.[occKey];
+
     // Check if already paid to prevent double-charging
-    if (bill.isPaid && bill.linkedExpenseId) {
-      // Just update existing expense
+    if (existingPaid?.linkedExpenseId || (occKey === bill.dueDate && bill.isPaid && bill.linkedExpenseId)) {
+      const txId = existingPaid?.linkedExpenseId || bill.linkedExpenseId;
       setTransactions((prev) =>
         prev.map((tx) =>
-          tx.id === bill.linkedExpenseId
+          tx.id === txId
             ? { ...tx, amount: actualAmount, date: paymentDate }
             : tx
         )
       );
       setBills((prev) =>
-        prev.map((b) =>
-          b.id === billId
-            ? { ...b, actualPaidAmount: actualAmount, paidDate: paymentDate }
-            : b
-        )
+        prev.map((b) => {
+          if (b.id !== billId) return b;
+          const updatedOccurrences = {
+            ...(b.paidOccurrences || {}),
+            [occKey]: {
+              actualPaidAmount: actualAmount,
+              paidDate: paymentDate,
+              linkedExpenseId: txId,
+            },
+          };
+          return {
+            ...b,
+            paidOccurrences: updatedOccurrences,
+            ...(occKey === b.dueDate ? { actualPaidAmount: actualAmount, paidDate: paymentDate } : {}),
+          };
+        })
       );
       return;
     }
@@ -1160,42 +1423,66 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     setTransactions((prev) => [newTx, ...prev]);
     setBills((prev) =>
-      prev.map((b) =>
-        b.id === billId
-          ? {
-              ...b,
-              isPaid: true,
-              actualPaidAmount: actualAmount,
-              paidDate: paymentDate,
-              linkedExpenseId: linkedTxId,
-            }
-          : b
-      )
+      prev.map((b) => {
+        if (b.id !== billId) return b;
+        const updatedOccurrences = {
+          ...(b.paidOccurrences || {}),
+          [occKey]: {
+            actualPaidAmount: actualAmount,
+            paidDate: paymentDate,
+            linkedExpenseId: linkedTxId,
+          },
+        };
+        const isBase = occKey === b.dueDate;
+        return {
+          ...b,
+          paidOccurrences: updatedOccurrences,
+          ...(isBase
+            ? {
+                isPaid: true,
+                actualPaidAmount: actualAmount,
+                paidDate: paymentDate,
+                linkedExpenseId: linkedTxId,
+              }
+            : {}),
+        };
+      })
     );
   };
 
-  const unpayBill = (billId: string) => {
+  const unpayBill = (billId: string, occurrenceDueDate?: string) => {
     const bill = bills.find((b) => b.id === billId);
     if (!bill) return;
 
-    if (bill.linkedExpenseId) {
+    const occKey = occurrenceDueDate || bill.dueDate;
+    const existingPaid = bill.paidOccurrences?.[occKey];
+    const txIdToRemove = existingPaid?.linkedExpenseId || (occKey === bill.dueDate ? bill.linkedExpenseId : undefined);
+
+    if (txIdToRemove) {
       setTransactions((prev) =>
-        prev.filter((tx) => tx.id !== bill.linkedExpenseId)
+        prev.filter((tx) => tx.id !== txIdToRemove)
       );
     }
 
     setBills((prev) =>
-      prev.map((b) =>
-        b.id === billId
-          ? {
-              ...b,
-              isPaid: false,
-              actualPaidAmount: undefined,
-              paidDate: undefined,
-              linkedExpenseId: undefined,
-            }
-          : b
-      )
+      prev.map((b) => {
+        if (b.id !== billId) return b;
+        const nextPaidOccurrences = { ...(b.paidOccurrences || {}) };
+        delete nextPaidOccurrences[occKey];
+        const isBase = occKey === b.dueDate;
+        return {
+          ...b,
+          paidOccurrences: nextPaidOccurrences,
+          ...(isBase
+            ? {
+                isPaid: false,
+                actualPaidAmount: undefined,
+                paidDate: undefined,
+                linkedExpenseId: undefined,
+              }
+            : {}),
+        };
+      })
     );
   };
 
@@ -1216,6 +1503,9 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const deleteSavingsPot = (id: string) => {
+    setTransactions((prev) =>
+      prev.map((tx) => (tx.linkedPotId === id ? { ...tx, linkedPotId: undefined } : tx))
+    );
     setSavingsPots((prev) => prev.filter((p) => p.id !== id));
   };
 
@@ -1293,6 +1583,9 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const deleteRecipe = (id: string) => {
+    setPlannedMeals((prev) =>
+      prev.map((m) => (m.recipeId === id ? { ...m, recipeId: undefined } : m))
+    );
     setRecipes((prev) => prev.filter((r) => r.id !== id));
   };
 
@@ -1332,109 +1625,13 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const weekMeals = plannedMeals.filter((meal) => weekDates.has(meal.date));
 
-    // 2. Aggregate ingredients with NIST conversion & scaling
-    interface AggregatedIng {
-      name: string;
-      totalNormalized: number;
-      primaryUnit: string;
-      category: 'Produce' | 'Pantry' | 'Chilled' | 'Household' | 'Bakery' | 'Other';
-      mealCount: number;
-      sourceMealTitles: string[];
-    }
-
-    const aggregated: Record<string, AggregatedIng> = {};
-
-    for (const meal of weekMeals) {
-      const ratio = meal.baseServings > 0 ? meal.plannedServings / meal.baseServings : 1;
-      for (const ing of meal.ingredientsSnapshot) {
-        const key = ing.name.toLowerCase().trim();
-        const scaledAmt = ing.amount * ratio;
-
-        // Determine category hint
-        let cat: 'Produce' | 'Pantry' | 'Chilled' | 'Household' | 'Bakery' | 'Other' = 'Pantry';
-        const n = key;
-        if (n.includes('pepper') || n.includes('spinach') || n.includes('lemon') || n.includes('broccoli') || n.includes('onion') || n.includes('garlic')) {
-          cat = 'Produce';
-        } else if (n.includes('milk') || n.includes('yogurt') || n.includes('cheese') || n.includes('butter') || n.includes('egg') || n.includes('chicken') || n.includes('salmon')) {
-          cat = 'Chilled';
-        }
-
-        // Standardize mass (g/kg) and volume (ml/L)
-        let normalizedAmt = scaledAmt;
-        let baseUnit = ing.unit;
-
-        if (ing.unit === 'g') {
-          // Keep in grams
-        } else if (ing.unit === 'kg') {
-          normalizedAmt = scaledAmt * 1000;
-          baseUnit = 'g';
-        } else if (ing.unit === 'ml') {
-          // Keep in ml
-        } else if (ing.unit === 'L') {
-          normalizedAmt = scaledAmt * 1000;
-          baseUnit = 'ml';
-        }
-
-        const mealTitle = meal.recipeTitle || 'Planned meal';
-
-        if (!aggregated[key]) {
-          aggregated[key] = {
-            name: ing.name,
-            totalNormalized: normalizedAmt,
-            primaryUnit: baseUnit,
-            category: cat,
-            mealCount: 1,
-            sourceMealTitles: [mealTitle],
-          };
-        } else {
-          aggregated[key].totalNormalized += normalizedAmt;
-          aggregated[key].mealCount += 1;
-          if (!aggregated[key].sourceMealTitles.includes(mealTitle)) {
-            aggregated[key].sourceMealTitles.push(mealTitle);
-          }
-        }
-      }
-    }
-
-    // 3. Keep manual extras intact
-    const manualExtras = groceries.filter((g) => g.sourceType === 'manual');
-
-    // 4. Create new list of generated grocery rows
-    const newGenerated: GroceryItem[] = Object.values(aggregated).map((agg) => {
-      let finalAmt = agg.totalNormalized;
-      let finalUnit = agg.primaryUnit;
-
-      if (agg.primaryUnit === 'g' && agg.totalNormalized >= 1000) {
-        finalAmt = Math.round((agg.totalNormalized / 1000) * 10) / 10;
-        finalUnit = 'kg';
-      } else if (agg.primaryUnit === 'ml' && agg.totalNormalized >= 1000) {
-        finalAmt = Math.round((agg.totalNormalized / 1000) * 10) / 10;
-        finalUnit = 'L';
-      }
-
-      // Check if item was previously purchased with identical amount
-      const existing = groceries.find(
-        (g) =>
-          g.sourceType === 'generated' &&
-          g.name.toLowerCase() === agg.name.toLowerCase() &&
-          g.unit === finalUnit &&
-          g.amount === finalAmt
-      );
-
-      return {
-        id: existing ? existing.id : `gro-gen-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-        name: agg.name,
-        amount: finalAmt,
-        unit: finalUnit,
-        category: agg.category,
-        isPurchased: existing ? existing.isPurchased : false,
-        sourceType: 'generated',
-        sourceMealCount: agg.mealCount,
-        sourceMealTitles: agg.sourceMealTitles,
-      };
+    // 2. Aggregate ingredients by normalized ingredient name & compatible measurement dimension
+    const nextGroceries = aggregateGroceriesFromMeals({
+      weekMeals,
+      existingGroceries: groceries,
     });
 
-    setGroceries([...newGenerated, ...manualExtras]);
+    setGroceries(nextGroceries);
   };
 
   const addGroceryItem = (item: Omit<GroceryItem, 'id' | 'sourceType'>) => {
@@ -1717,6 +1914,42 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setCalendarEvents((prev) => prev.filter((e) => e.id !== id));
   };
 
+  // Weekly Review Actions
+  const saveWeeklyReview = (
+    entry: Omit<WeeklyReviewEntry, 'id' | 'updatedAt'> & { id?: string }
+  ): WeeklyReviewEntry => {
+    const existing = weeklyReviewsRef.current.find(
+      (r) => r.weekStartDate === entry.weekStartDate || (entry.id && r.id === entry.id)
+    );
+    const savedEntry: WeeklyReviewEntry = {
+      ...existing,
+      ...entry,
+      id: existing?.id || entry.id || `wrv-${entry.weekStartDate}`,
+      updatedAt: new Date().toISOString(),
+    };
+    setWeeklyReviews((prev) => {
+      const filtered = prev.filter(
+        (r) => r.weekStartDate !== savedEntry.weekStartDate && r.id !== savedEntry.id
+      );
+      const next = [savedEntry, ...filtered].sort((a, b) =>
+        b.weekStartDate.localeCompare(a.weekStartDate)
+      );
+      weeklyReviewsRef.current = next;
+      return next;
+    });
+    return savedEntry;
+  };
+
+  const deleteWeeklyReview = (idOrWeekStartDate: string) => {
+    setWeeklyReviews((prev) => {
+      const next = prev.filter(
+        (r) => r.id !== idOrWeekStartDate && r.weekStartDate !== idOrWeekStartDate
+      );
+      weeklyReviewsRef.current = next;
+      return next;
+    });
+  };
+
   // Household & Tool Customization Actions
   const addHouseholdMember = (name: string, color: string) => {
     const newMember: HouseholdMember = {
@@ -1730,72 +1963,40 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const removeHouseholdMember = (id: string) => {
     const current = settings.householdMembers || [];
+    setTasks((prev) =>
+      prev.map((t) => (t.assignedMemberId === id ? { ...t, assignedMemberId: undefined } : t))
+    );
+    setRoutines((prev) =>
+      prev.map((r) => (r.assignedMemberId === id ? { ...r, assignedMemberId: undefined } : r))
+    );
     updateSettings({ householdMembers: current.filter((m) => m.id !== id) });
   };
 
   const toggleToolEnabled = (toolId: string) => {
-    const current = settings.enabledTools || [
-      'today', 'tasks', 'calendar', 'routines', 'goals', 'habits',
-      'inbox', 'money', 'food', 'body', 'settings'
-    ];
-    const next = current.includes(toolId)
-      ? current.filter((t) => t !== toolId)
-      : [...current, toolId];
+    const next = toggleModuleEnabledInList(settings.enabledTools, toolId);
     updateSettings({ enabledTools: next });
+    if (!isModuleOrToolEnabled(activeView, next)) {
+      setActiveView(getFallbackEnabledToolView(next));
+    }
   };
 
   const toggleToolPinned = (toolId: string) => {
-    const current = settings.pinnedTools || [];
-    const next = current.includes(toolId)
-      ? current.filter((t) => t !== toolId)
-      : [...current, toolId];
+    const next = toggleModulePinnedInList(settings.pinnedTools, toolId);
     updateSettings({ pinnedTools: next });
   };
 
   // Calendar Export
   const exportCalendarIcs = () => {
-    const formatIcsDate = (dateStr: string, timeStr?: string) => {
-      const cleanDate = dateStr.replace(/-/g, '');
-      if (!timeStr) {
-        return `VALUE=DATE:${cleanDate}`;
-      }
-      const [hh, mm] = timeStr.split(':');
-      return `${cleanDate}T${hh || '00'}${mm || '00'}00`;
-    };
-
-    const icsLines = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//Our Life Planner//EN',
-      'CALSCALE:GREGORIAN',
-      'METHOD:PUBLISH',
-    ];
-
-    tasks.forEach((t) => {
-      if (!t.dueDate || t.isArchived) return;
-      icsLines.push('BEGIN:VEVENT');
-      icsLines.push(`UID:task-${t.id}@ourlifeplanner.app`);
-      icsLines.push(`DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`);
-      icsLines.push(`SUMMARY:${t.title.replace(/[\n\r]/g, ' ')}`);
-      if (t.description) icsLines.push(`DESCRIPTION:${t.description.replace(/[\n\r]/g, ' ')}`);
-      icsLines.push(`DTSTART;${formatIcsDate(t.dueDate, t.scheduledStart || t.dueTime)}`);
-      if (t.status === 'completed') icsLines.push('STATUS:COMPLETED');
-      icsLines.push('END:VEVENT');
+    const icsContent = serializePlannerCalendarToIcs({
+      tasks,
+      calendarEvents,
+      timeZone: settings.timeZone,
+      calendarName: settings.ownerName
+        ? `${settings.ownerName}'s Life Planner`
+        : 'Our Life Planner',
     });
 
-    calendarEvents.forEach((ev) => {
-      icsLines.push('BEGIN:VEVENT');
-      icsLines.push(`UID:event-${ev.id}@ourlifeplanner.app`);
-      icsLines.push(`DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`);
-      icsLines.push(`SUMMARY:${ev.title.replace(/[\n\r]/g, ' ')}`);
-      if (ev.notes) icsLines.push(`DESCRIPTION:${ev.notes.replace(/[\n\r]/g, ' ')}`);
-      icsLines.push(`DTSTART;${formatIcsDate(ev.date, ev.startTime)}`);
-      icsLines.push('END:VEVENT');
-    });
-
-    icsLines.push('END:VCALENDAR');
-
-    const blob = new Blob([icsLines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -1824,6 +2025,7 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setWeightRecords((prev) => prev.filter((i) => !i.isSample));
     setHydrationEntries((prev) => prev.filter((i) => !i.isSample));
     setCalendarEvents((prev) => prev.filter((i) => !i.isSample));
+    setWeeklyReviews((prev) => prev.filter((i) => !i.isSample));
     updateSettings({ isSampleDataActive: false });
   };
 
@@ -1844,6 +2046,7 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setWeightRecords([]);
     setHydrationEntries([]);
     setCalendarEvents([]);
+    setWeeklyReviews([]);
     updateSettings({ isSampleDataActive: false });
   };
 
@@ -1871,55 +2074,59 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const exportBackup = (): PlannerBackupData => {
     return {
-      version: '1.0.0',
-      exportedAt: new Date().toISOString(),
-      settings,
-      tasks,
-      routines,
-      goals,
-      habits,
-      inbox,
-      transactions,
-      bills,
-      savingsPots,
-      debts,
-      recipes,
-      plannedMeals,
-      groceries,
-      workouts,
-      weightProfiles,
-      weightRecords,
-      hydrationEntries,
-      hydrationTargets,
-      calendarEvents,
+      ...createDataSnapshot(),
+      revision: currentRevisionRef.current,
     };
   };
 
+  const validateBackup = (input: unknown): BackupValidationResult => {
+    return validateBackupData(input);
+  };
+
   const restoreBackup = (backup: PlannerBackupData): boolean => {
-    if (!backup || backup.version !== '1.0.0') {
+    const result = atomicRestoreBackup({
+      incomingBackup: backup,
+      currentSnapshot: createDataSnapshot(),
+      currentRevision: currentRevisionRef.current,
+    });
+
+    if (!result.success || !result.restoredData || result.nextRevision === undefined) {
       return false;
     }
+
     try {
-      if (backup.tasks) setTasks(backup.tasks);
-      if (backup.routines) setRoutines(backup.routines);
-      if (backup.goals) setGoals(backup.goals);
-      if (backup.habits) setHabits(backup.habits);
-      if (backup.inbox) setInbox(backup.inbox);
-      if (backup.transactions) setTransactions(backup.transactions);
-      if (backup.bills) setBills(backup.bills);
-      if (backup.savingsPots) setSavingsPots(backup.savingsPots);
-      if (backup.debts) setDebts(backup.debts);
-      if (backup.recipes) setRecipes(backup.recipes);
-      if (backup.plannedMeals) setPlannedMeals(backup.plannedMeals);
-      if (backup.groceries) setGroceries(backup.groceries);
-      if (backup.workouts) setWorkouts(backup.workouts);
-      if (backup.weightProfiles) setWeightProfiles(backup.weightProfiles);
-      if (backup.weightRecords) setWeightRecords(backup.weightRecords);
-      if (backup.hydrationEntries) setHydrationEntries(backup.hydrationEntries);
-      if (backup.hydrationTargets) setHydrationTargets(backup.hydrationTargets);
-      if (backup.calendarEvents) setCalendarEvents(backup.calendarEvents);
-      if (backup.settings) setSettings(backup.settings);
-      triggerSave(backup.settings);
+      isApplyingExternalSyncRef.current = true;
+      applyStateFromBackup(result.restoredData);
+      currentRevisionRef.current = result.nextRevision;
+      baseSnapshotRef.current = result.restoredData;
+      setPreRestoreSnapshot(result.previousSnapshot || getPreRestoreSnapshot());
+      syncManagerRef.current?.broadcast(result.nextRevision, result.restoredData);
+      setSavingState('saved_local');
+      return true;
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
+  };
+
+  const rollbackLastRestore = (): boolean => {
+    const result = rollbackPreRestoreSnapshot({
+      currentSnapshot: createDataSnapshot(),
+      currentRevision: currentRevisionRef.current,
+    });
+
+    if (!result.success || !result.restoredData || result.nextRevision === undefined) {
+      return false;
+    }
+
+    try {
+      isApplyingExternalSyncRef.current = true;
+      applyStateFromBackup(result.restoredData);
+      currentRevisionRef.current = result.nextRevision;
+      baseSnapshotRef.current = result.restoredData;
+      setPreRestoreSnapshot(result.previousSnapshot || getPreRestoreSnapshot());
+      syncManagerRef.current?.broadcast(result.nextRevision, result.restoredData);
+      setSavingState('saved_local');
       return true;
     } catch (e) {
       console.error(e);
@@ -1929,45 +2136,11 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const generateStandaloneHtml = (): string => {
     const backup = exportBackup();
-    const dataJson = JSON.stringify(backup).replace(/</g, '\\u003c');
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Our Life Planner - Standalone Edition</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: system-ui, -apple-system, sans-serif; background: #F3F8FC; color: #071A3A; padding: 2rem; max-width: 800px; margin: auto; }
-    .card { background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 12px rgba(7,26,58,0.06); }
-    h1 { color: #087F83; margin-top: 0; }
-    .btn { background: #087F83; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    pre { background: #F8FAFC; border: 1px solid #E2E8F0; padding: 1rem; border-radius: 8px; overflow: auto; max-height: 300px; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h1>Our Life Planner - Downloaded Offline Edition</h1>
-    <p>This is your independent offline planner bundle. Your records are preserved below and will continue to persist in this browser's local storage.</p>
-    <p><strong>Export Date:</strong> ${backup.exportedAt}</p>
-    <p><strong>Total Records:</strong> ${backup.tasks.length} tasks, ${backup.routines.length} routines, ${backup.bills.length} bills, ${backup.recipes.length} recipes.</p>
-    <button class="btn" onclick="downloadJson()">Export JSON Backup</button>
-    <h3>Embedded Planner Payload</h3>
-    <pre id="data-preview"></pre>
-  </div>
-  <script>
-    const plannerData = ${dataJson};
-    document.getElementById('data-preview').textContent = JSON.stringify(plannerData, null, 2);
-    function downloadJson() {
-      const blob = new Blob([JSON.stringify(plannerData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'our-life-planner-backup.json';
-      a.click();
-    }
-  </script>
-</body>
-</html>`;
+    backup.settings = {
+      ...backup.settings,
+      edition: 'downloaded',
+    };
+    return buildStandaloneFallbackHtml(backup);
   };
 
   return (
@@ -2009,7 +2182,11 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         hydrationEntries,
         hydrationTargets,
         calendarEvents,
+        weeklyReviews,
         cashFlow,
+        budgetPeriodRange: activeBudgetPeriodRange,
+        navigateBudgetPeriod: navigateBudgetPeriodRange,
+        resetBudgetPeriodToCurrent,
         addTask,
         updateTask,
         deleteTask,
@@ -2086,6 +2263,8 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updateWaterTarget,
         addCalendarEvent,
         deleteCalendarEvent,
+        saveWeeklyReview,
+        deleteWeeklyReview,
         addHouseholdMember,
         removeHouseholdMember,
         toggleToolEnabled,
@@ -2095,7 +2274,10 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         resetAllData,
         loadSampleData,
         exportBackup,
+        validateBackup,
         restoreBackup,
+        preRestoreSnapshot,
+        rollbackLastRestore,
         generateStandaloneHtml,
       }}
     >

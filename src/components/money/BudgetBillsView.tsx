@@ -20,8 +20,12 @@ import {
   Sliders,
   DollarSign,
   PiggyBank,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
 } from 'lucide-react';
-import { BillItem, FinancialTransaction } from '../../types/planner';
+import { BillItem, FinancialTransaction, BillOccurrence, BudgetPeriodType } from '../../types/planner';
+import { getBudgetPeriodAllocations } from '../../utils/calculations';
 
 const CATEGORY_COLORS: Record<string, { bg: string; dot: string; text: string }> = {
   Food: { bg: 'bg-teal-500', dot: 'bg-teal-500', text: 'text-teal-600' },
@@ -52,6 +56,9 @@ export const BudgetBillsView: React.FC = () => {
     settings,
     updateSettings,
     cashFlow,
+    budgetPeriodRange,
+    navigateBudgetPeriod,
+    resetBudgetPeriodToCurrent,
     bills,
     markBillPaid,
     unpayBill,
@@ -68,14 +75,15 @@ export const BudgetBillsView: React.FC = () => {
   const currencySymbol = settings.currencySymbol || getCurrencySymbol(settings.currency) || '$';
 
   const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'bills'>('overview');
+  const [txPeriodFilter, setTxPeriodFilter] = useState<'active' | 'all'>('active');
 
-  // Mark Paid Modal state
-  const [payingBill, setPayingBill] = useState<BillItem | null>(null);
+  // Mark Paid Modal state for occurrences
+  const [payingOccurrence, setPayingOccurrence] = useState<BillOccurrence | null>(null);
   const [actualPaidAmount, setActualPaidAmount] = useState<number>(0);
   const [paidDate, setPaidDate] = useState<string>(currentDate);
 
-  // Unpay Confirm Modal
-  const [unpayingBill, setUnpayingBill] = useState<BillItem | null>(null);
+  // Unpay Confirm Modal for occurrences
+  const [unpayingOccurrence, setUnpayingOccurrence] = useState<BillOccurrence | null>(null);
 
   // Add / Edit Transaction Modal state
   const [isTxModalOpen, setIsTxModalOpen] = useState(false);
@@ -100,7 +108,9 @@ export const BudgetBillsView: React.FC = () => {
   const [planOpeningBalance, setPlanOpeningBalance] = useState<number>(100);
   const [planPlannedIncome, setPlanPlannedIncome] = useState<number>(1200);
   const [planPlannedSavings, setPlanPlannedSavings] = useState<number>(250);
-  const [planPeriodType, setPlanPeriodType] = useState<'monthly' | 'weekly' | 'paycheck' | 'custom'>('monthly');
+  const [planPeriodType, setPlanPeriodType] = useState<BudgetPeriodType>('monthly');
+  const [planCustomStartDate, setPlanCustomStartDate] = useState<string>('');
+  const [planCustomEndDate, setPlanCustomEndDate] = useState<string>('');
   const [planCategoryLimits, setPlanCategoryLimits] = useState<Record<string, number>>({
     Food: 250,
     Transport: 100,
@@ -110,29 +120,16 @@ export const BudgetBillsView: React.FC = () => {
   const [newCatName, setNewCatName] = useState('');
   const [newCatLimit, setNewCatLimit] = useState<number>(100);
 
-  // Dynamic category calculations strictly derived from ledger
+  // Dynamic category calculations derived from period allocations
   const categoryLimitsMap = useMemo(() => {
-    return (
-      settings.budgetCategoryLimits ?? {
-        Food: 250,
-        Transport: 100,
-        Home: 200,
-        Personal: 150,
-      }
-    );
-  }, [settings.budgetCategoryLimits]);
+    const alloc = getBudgetPeriodAllocations(settings, budgetPeriodRange);
+    return alloc.categoryLimits;
+  }, [settings, budgetPeriodRange]);
 
-  // Actual spent per category from expense transactions
+  // Actual spent per category within the active budget period
   const categorySpentMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    transactions
-      .filter((t) => t.type === 'expense')
-      .forEach((t) => {
-        const cat = t.category || 'Other';
-        map[cat] = Math.round(((map[cat] || 0) + t.amount) * 100) / 100;
-      });
-    return map;
-  }, [transactions]);
+    return cashFlow.periodCategorySpent || {};
+  }, [cashFlow.periodCategorySpent]);
 
   // Unified list of categories (union of configured limits and actual recorded spending)
   const categoryRows = useMemo(() => {
@@ -184,23 +181,30 @@ export const BudgetBillsView: React.FC = () => {
     return categoryRows.filter((c) => c.spent > 0);
   }, [categoryRows]);
 
-  const openMarkPaid = (b: BillItem) => {
-    setPayingBill(b);
-    setActualPaidAmount(b.plannedAmount);
+  const displayedTransactions = useMemo(() => {
+    if (txPeriodFilter === 'all') return transactions;
+    return transactions.filter(
+      (t) => t.date >= budgetPeriodRange.startDate && t.date <= budgetPeriodRange.endDate
+    );
+  }, [transactions, txPeriodFilter, budgetPeriodRange]);
+
+  const openMarkPaid = (occ: BillOccurrence) => {
+    setPayingOccurrence(occ);
+    setActualPaidAmount(occ.plannedAmount);
     setPaidDate(currentDate);
   };
 
   const confirmMarkPaid = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!payingBill) return;
-    markBillPaid(payingBill.id, actualPaidAmount, paidDate);
-    setPayingBill(null);
+    if (!payingOccurrence) return;
+    markBillPaid(payingOccurrence.billId, actualPaidAmount, paidDate, payingOccurrence.dueDate);
+    setPayingOccurrence(null);
   };
 
   const confirmUnpay = () => {
-    if (!unpayingBill) return;
-    unpayBill(unpayingBill.id);
-    setUnpayingBill(null);
+    if (!unpayingOccurrence) return;
+    unpayBill(unpayingOccurrence.billId, unpayingOccurrence.dueDate);
+    setUnpayingOccurrence(null);
   };
 
   // Transaction handlers
@@ -299,31 +303,65 @@ export const BudgetBillsView: React.FC = () => {
 
   // Budget plan editing handlers
   const openBudgetPlanModal = () => {
+    const curType = settings.budgetPeriodType ?? 'monthly';
     setPlanOpeningBalance(settings.budgetOpeningBalance ?? 100);
-    setPlanPlannedIncome(settings.budgetPlannedIncome ?? 1200);
-    setPlanPlannedSavings(settings.budgetPlannedSavings ?? 250);
-    setPlanPeriodType(settings.budgetPeriodType ?? 'monthly');
-    setPlanCategoryLimits(
-      settings.budgetCategoryLimits ?? {
-        Food: 250,
-        Transport: 100,
-        Home: 200,
-        Personal: 150,
-      }
-    );
+    setPlanPeriodType(curType);
+    setPlanCustomStartDate(settings.budgetStartDate ?? '');
+    setPlanCustomEndDate(settings.budgetEndDate ?? '');
+
+    const alloc = getBudgetPeriodAllocations(settings, budgetPeriodRange);
+    setPlanPlannedIncome(alloc.plannedIncome);
+    setPlanPlannedSavings(alloc.plannedSavings);
+    setPlanCategoryLimits({ ...alloc.categoryLimits });
+
     setNewCatName('');
     setNewCatLimit(100);
     setIsBudgetPlanModalOpen(true);
   };
 
+  const handlePeriodTypeChange = (newType: BudgetPeriodType) => {
+    setPlanPeriodType(newType);
+    if (settings.budgetPeriodAllocations && settings.budgetPeriodAllocations[newType]) {
+      const a = settings.budgetPeriodAllocations[newType]!;
+      setPlanPlannedIncome(a.plannedIncome ?? 1200);
+      setPlanPlannedSavings(a.plannedSavings ?? 250);
+      setPlanCategoryLimits(a.categoryLimits ?? { Food: 250, Transport: 100, Home: 200, Personal: 150 });
+    } else {
+      const baseInc = settings.budgetPlannedIncome ?? 1200;
+      const baseSav = settings.budgetPlannedSavings ?? 250;
+      const baseLim = settings.budgetCategoryLimits ?? { Food: 250, Transport: 100, Home: 200, Personal: 150 };
+      let ratio = 1.0;
+      if (newType === 'weekly') ratio = 7 / 30.4167;
+      else if (newType === 'paycheck') ratio = 14 / 30.4167;
+      setPlanPlannedIncome(Math.round(baseInc * ratio));
+      setPlanPlannedSavings(Math.round(baseSav * ratio));
+      const scaled: Record<string, number> = {};
+      for (const [k, v] of Object.entries(baseLim)) {
+        scaled[k] = Math.round(v * ratio);
+      }
+      setPlanCategoryLimits(scaled);
+    }
+  };
+
   const handleSaveBudgetPlan = (e: React.FormEvent) => {
     e.preventDefault();
+    const updatedAllocations = {
+      ...(settings.budgetPeriodAllocations || {}),
+      [planPeriodType]: {
+        plannedIncome: planPlannedIncome,
+        plannedSavings: planPlannedSavings,
+        categoryLimits: planCategoryLimits,
+      },
+    };
     updateSettings({
       budgetOpeningBalance: planOpeningBalance,
       budgetPlannedIncome: planPlannedIncome,
       budgetPlannedSavings: planPlannedSavings,
       budgetPeriodType: planPeriodType,
       budgetCategoryLimits: planCategoryLimits,
+      budgetPeriodAllocations: updatedAllocations,
+      budgetStartDate: planPeriodType === 'custom' ? planCustomStartDate : settings.budgetStartDate,
+      budgetEndDate: planPeriodType === 'custom' ? planCustomEndDate : settings.budgetEndDate,
     });
     setIsBudgetPlanModalOpen(false);
   };
@@ -346,29 +384,48 @@ export const BudgetBillsView: React.FC = () => {
     });
   };
 
-  const currentMonthLabel = useMemo(() => {
-    try {
-      const parts = currentDate.split('-');
-      const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
-      const monthName = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-      const lastDay = new Date(parseInt(parts[0]), parseInt(parts[1]), 0).getDate();
-      return `${monthName.split(' ')[0]} 1 – ${lastDay}, ${parts[0]} · Monthly schedule`;
-    } catch {
-      return 'Monthly schedule';
-    }
-  }, [currentDate]);
-
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
       {/* Top Header */}
       <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
-        <div>
-          <h2 className="text-xl font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-            Budget & Bills
-          </h2>
-          <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
-            {currentMonthLabel}
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+              Budget & Bills
+            </h2>
+            <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
+              {budgetPeriodRange.label} · {budgetPeriodRange.subLabel}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs font-semibold text-[#526782] self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => navigateBudgetPeriod('prev')}
+              className="p-1 rounded-lg hover:bg-white dark:hover:bg-[#152238] hover:text-[#087F83] dark:hover:text-[#38D0C5] transition-colors cursor-pointer"
+              title="Previous budget period"
+              aria-label="Previous budget period"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={resetBudgetPeriodToCurrent}
+              className="px-2 py-0.5 rounded-lg hover:bg-white dark:hover:bg-[#152238] hover:text-[#087F83] dark:hover:text-[#38D0C5] transition-colors cursor-pointer text-[11px]"
+              title="Return to current period"
+            >
+              Current
+            </button>
+            <button
+              type="button"
+              onClick={() => navigateBudgetPeriod('next')}
+              className="p-1 rounded-lg hover:bg-white dark:hover:bg-[#152238] hover:text-[#087F83] dark:hover:text-[#38D0C5] transition-colors cursor-pointer"
+              title="Next budget period"
+              aria-label="Next budget period"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -414,7 +471,7 @@ export const BudgetBillsView: React.FC = () => {
         {/* Left to spend */}
         <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
           <div className="text-xs text-[#526782] dark:text-[#A8B8CE] font-medium">
-            Left to spend (Oct 1 – 31)
+            Left to spend ({budgetPeriodRange.label})
           </div>
           <div className="text-3xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] mt-1">
             {currencySymbol}{cashFlow.leftToSpend.toFixed(0)}
@@ -446,7 +503,13 @@ export const BudgetBillsView: React.FC = () => {
             {currencySymbol}{cashFlow.unpaidBills.toFixed(0)}
           </div>
           <div className="text-[11px] text-[#526782] mt-1.5">
-            Due this month
+            {cashFlow.overdueOccurrences.length > 0 ? (
+              <span className="text-amber-600 dark:text-amber-400 font-semibold">
+                Due this period + overdue
+              </span>
+            ) : (
+              'Due this period'
+            )}
           </div>
         </div>
 
@@ -459,18 +522,18 @@ export const BudgetBillsView: React.FC = () => {
             {currencySymbol}{cashFlow.plannedSavingsDue.toFixed(0)}
           </div>
           <div className="text-[11px] text-[#526782] mt-1.5">
-            Scheduled transfers
+            Period target: {currencySymbol}{cashFlow.plannedSavingsTotal.toFixed(0)}
           </div>
         </div>
       </div>
 
       {activeTab === 'overview' && (
         <div className="space-y-6">
-          {/* Monthly Cash Flow Calculation Banner */}
+          {/* Cash Flow Calculation Banner */}
           <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-bold text-[#526782] uppercase tracking-wider">
-                Monthly cash flow (for budget)
+                {budgetPeriodRange.subLabel}: Cash flow summary
               </h3>
               <button
                 onClick={openBudgetPlanModal}
@@ -537,7 +600,7 @@ export const BudgetBillsView: React.FC = () => {
                   <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
                     Category limits
                   </h3>
-                  <span className="text-xs text-[#526782]">Monthly budget allocations</span>
+                  <span className="text-xs text-[#526782]">{budgetPeriodRange.subLabel} allocations</span>
                 </div>
 
                 <button
@@ -682,7 +745,7 @@ export const BudgetBillsView: React.FC = () => {
       {/* Transactions Tab */}
       {activeTab === 'transactions' && (
         <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A] gap-3">
             <div>
               <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
                 Transactions ledger
@@ -692,22 +755,49 @@ export const BudgetBillsView: React.FC = () => {
               </p>
             </div>
 
-            <button
-              onClick={openAddTransaction}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add entry</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-medium text-[#526782]">
+                <button
+                  type="button"
+                  onClick={() => setTxPeriodFilter('active')}
+                  className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                    txPeriodFilter === 'active'
+                      ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs font-semibold'
+                      : ''
+                  }`}
+                >
+                  This period ({displayedTransactions.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTxPeriodFilter('all')}
+                  className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                    txPeriodFilter === 'all'
+                      ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs font-semibold'
+                      : ''
+                  }`}
+                >
+                  All time ({transactions.length})
+                </button>
+              </div>
+
+              <button
+                onClick={openAddTransaction}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add entry</span>
+              </button>
+            </div>
           </div>
 
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
-            {transactions.length === 0 ? (
+            {displayedTransactions.length === 0 ? (
               <div className="py-8 text-center text-xs text-[#526782]">
-                No transactions recorded.
+                No transactions recorded for this period.
               </div>
             ) : (
-              transactions.map((tx) => (
+              displayedTransactions.map((tx) => (
                 <div
                   key={tx.id}
                   className="py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/40 px-2 rounded-xl transition-colors"
@@ -793,10 +883,10 @@ export const BudgetBillsView: React.FC = () => {
           <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
             <div>
               <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-                Bills this month
+                Bills for {budgetPeriodRange.label}
               </h3>
               <p className="text-xs text-[#526782]">
-                Marking paid creates one linked expense automatically; unpaying reverses it cleanly
+                Period commitments and overdue obligations ({budgetPeriodRange.subLabel})
               </p>
             </div>
 
@@ -809,89 +899,153 @@ export const BudgetBillsView: React.FC = () => {
             </button>
           </div>
 
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
-            {bills.map((bill) => (
-              <div
-                key={bill.id}
-                className="py-3.5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/40 px-2 rounded-xl transition-colors"
-              >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-                      {bill.title}
-                    </span>
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-[#526782]">
-                      {bill.category}
-                    </span>
-                    {bill.repeatInterval && bill.repeatInterval !== 'none' && (
-                      <span className="px-1.5 py-0.5 rounded text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 font-medium">
-                        {bill.repeatInterval}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-xs text-[#526782] mt-0.5 font-mono">
-                    Due: {bill.dueDate}{' '}
-                    {bill.isPaid && (
-                      <span className="text-emerald-600 font-semibold ml-2">
-                        · Paid {currencySymbol}{bill.actualPaidAmount} on {bill.paidDate}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF]">
-                    {currencySymbol}{bill.plannedAmount.toFixed(0)}
+          {/* Overdue Bills Section */}
+          {cashFlow.overdueOccurrences.length > 0 && (
+            <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold text-xs">
+                  <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span>
+                    {cashFlow.overdueOccurrences.length} Overdue Bill{cashFlow.overdueOccurrences.length > 1 ? 's' : ''} ({currencySymbol}{cashFlow.overdueOccurrences.reduce((s, o) => s + o.plannedAmount, 0).toFixed(0)})
                   </span>
-
-                  {bill.isPaid ? (
-                    <div className="flex items-center gap-1.5">
-                      <span className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
-                        Paid
+                </div>
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-200/80 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200">
+                  Carried Over
+                </span>
+              </div>
+              <p className="text-[11px] text-amber-700 dark:text-amber-300/80">
+                These bills were due before this period and remain unpaid. They are included in your unpaid bills total.
+              </p>
+              <div className="divide-y divide-amber-200/60 dark:divide-amber-800/40">
+                {cashFlow.overdueOccurrences.map((occ) => (
+                  <div key={occ.id} className="py-2.5 flex items-center justify-between text-xs">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                          {occ.title}
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-200/60 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300">
+                          {occ.category}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-amber-700 dark:text-amber-400 font-mono mt-0.5">
+                        Due: {occ.dueDate} · Overdue
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <span className="font-mono font-bold text-rose-600 dark:text-rose-400">
+                        {currencySymbol}{occ.plannedAmount.toFixed(0)}
                       </span>
                       <button
                         type="button"
-                        onClick={() => setUnpayingBill(bill)}
-                        className="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px] font-medium text-[#526782] hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-                        aria-label={`Unpay bill "${bill.title}"`}
-                        title="Unpay bill (reverse expense)"
+                        onClick={() => openMarkPaid(occ)}
+                        className="px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold cursor-pointer shadow-xs"
                       >
-                        Unpay
+                        Pay overdue
                       </button>
                     </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => openMarkPaid(bill)}
-                      className="px-3 py-1 rounded-lg bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] text-white dark:text-[#071A3A] text-xs font-semibold cursor-pointer shadow-xs"
-                      aria-label={`Mark bill "${bill.title}" as paid`}
-                    >
-                      Mark paid
-                    </button>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => openEditBill(bill)}
-                    className="p-1 rounded-md text-slate-400 hover:text-[#087F83] cursor-pointer"
-                    aria-label={`Edit bill "${bill.title}"`}
-                    title="Edit bill"
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => deleteBill(bill.id)}
-                    className="p-1 rounded-md text-slate-400 hover:text-rose-600 cursor-pointer"
-                    aria-label={`Delete bill "${bill.title}"`}
-                    title="Delete bill"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+          )}
+
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            {cashFlow.periodOccurrences.length === 0 ? (
+              <div className="py-8 text-center text-xs text-[#526782]">
+                No bills scheduled for this period ({budgetPeriodRange.label}).
+              </div>
+            ) : (
+              cashFlow.periodOccurrences.map((occ) => {
+                const parentBill = bills.find((b) => b.id === occ.billId);
+                return (
+                  <div
+                    key={occ.id}
+                    className="py-3.5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/40 px-2 rounded-xl transition-colors"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                          {occ.title}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-[#526782]">
+                          {occ.category}
+                        </span>
+                        {occ.repeatInterval && occ.repeatInterval !== 'none' && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 font-medium">
+                            {occ.repeatInterval}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-[#526782] mt-0.5 font-mono">
+                        Due: {occ.dueDate}{' '}
+                        {occ.isPaid && (
+                          <span className="text-emerald-600 font-semibold ml-2">
+                            · Paid {currencySymbol}{occ.actualPaidAmount} on {occ.paidDate}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF]">
+                        {currencySymbol}{occ.plannedAmount.toFixed(0)}
+                      </span>
+
+                      {occ.isPaid ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
+                            Paid
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setUnpayingOccurrence(occ)}
+                            className="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px] font-medium text-[#526782] hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                            aria-label={`Unpay bill "${occ.title}"`}
+                            title="Unpay bill (reverse expense)"
+                          >
+                            Unpay
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => openMarkPaid(occ)}
+                          className="px-3 py-1 rounded-lg bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] text-white dark:text-[#071A3A] text-xs font-semibold cursor-pointer shadow-xs"
+                          aria-label={`Mark bill "${occ.title}" as paid`}
+                        >
+                          Mark paid
+                        </button>
+                      )}
+
+                      {parentBill && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => openEditBill(parentBill)}
+                            className="p-1 rounded-md text-slate-400 hover:text-[#087F83] cursor-pointer"
+                            aria-label={`Edit bill "${occ.title}"`}
+                            title="Edit bill"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => deleteBill(parentBill.id)}
+                            className="p-1 rounded-md text-slate-400 hover:text-rose-600 cursor-pointer"
+                            aria-label={`Delete bill "${occ.title}"`}
+                            title="Delete bill"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       )}
@@ -906,10 +1060,14 @@ export const BudgetBillsView: React.FC = () => {
         <form onSubmit={handleSaveBudgetPlan} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="budget-plan-opening-balance"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Opening Balance ({currencySymbol})
               </label>
               <input
+                id="budget-plan-opening-balance"
                 type="number"
                 step="0.01"
                 required
@@ -920,10 +1078,14 @@ export const BudgetBillsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="budget-plan-planned-income"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Planned Income ({currencySymbol})
               </label>
               <input
+                id="budget-plan-planned-income"
                 type="number"
                 step="0.01"
                 required
@@ -934,10 +1096,14 @@ export const BudgetBillsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="budget-plan-planned-savings"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Planned Savings ({currencySymbol})
               </label>
               <input
+                id="budget-plan-planned-savings"
                 type="number"
                 step="0.01"
                 required
@@ -949,12 +1115,16 @@ export const BudgetBillsView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="budget-plan-period-cadence"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Budget Period Cadence
             </label>
             <select
+              id="budget-plan-period-cadence"
               value={planPeriodType}
-              onChange={(e) => setPlanPeriodType(e.target.value as any)}
+              onChange={(e) => handlePeriodTypeChange(e.target.value as BudgetPeriodType)}
               className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
             >
               <option value="monthly">Monthly</option>
@@ -963,6 +1133,43 @@ export const BudgetBillsView: React.FC = () => {
               <option value="custom">Custom</option>
             </select>
           </div>
+
+          {planPeriodType === 'custom' && (
+            <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+              <div>
+                <label
+                  htmlFor="budget-plan-start-date"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
+                  Start Date
+                </label>
+                <input
+                  id="budget-plan-start-date"
+                  type="date"
+                  required
+                  value={planCustomStartDate}
+                  onChange={(e) => setPlanCustomStartDate(e.target.value)}
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-mono bg-white dark:bg-[#152238]"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="budget-plan-end-date"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
+                  End Date
+                </label>
+                <input
+                  id="budget-plan-end-date"
+                  type="date"
+                  required
+                  value={planCustomEndDate}
+                  onChange={(e) => setPlanCustomEndDate(e.target.value)}
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-mono bg-white dark:bg-[#152238]"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Category Limits / Allocations Editor */}
           <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -989,6 +1196,7 @@ export const BudgetBillsView: React.FC = () => {
                     <span className="text-xs text-[#526782] font-mono">{currencySymbol}</span>
                     <input
                       type="number"
+                      aria-label={`Budget limit for ${cat}`}
                       step="1"
                       min="0"
                       value={limit}
@@ -1019,6 +1227,7 @@ export const BudgetBillsView: React.FC = () => {
             <div className="flex items-center gap-2 pt-1">
               <input
                 type="text"
+                aria-label="New category name"
                 placeholder="New category (e.g. Health)"
                 value={newCatName}
                 onChange={(e) => setNewCatName(e.target.value)}
@@ -1026,6 +1235,7 @@ export const BudgetBillsView: React.FC = () => {
               />
               <input
                 type="number"
+                aria-label="New category limit"
                 min="0"
                 value={newCatLimit}
                 onChange={(e) => setNewCatLimit(parseFloat(e.target.value) || 0)}
@@ -1075,28 +1285,32 @@ export const BudgetBillsView: React.FC = () => {
 
       {/* Mark Bill Paid Modal */}
       <Modal
-        isOpen={!!payingBill}
-        onClose={() => setPayingBill(null)}
+        isOpen={!!payingOccurrence}
+        onClose={() => setPayingOccurrence(null)}
         title="Mark bill as paid"
-        subtitle="Mark a planned bill as paid. Creates one linked expense in your ledger."
+        subtitle="Mark a planned bill occurrence as paid. Creates one linked expense in your ledger."
       >
-        {payingBill && (
+        {payingOccurrence && (
           <form onSubmit={confirmMarkPaid} className="space-y-4">
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs">
               <span className="font-semibold text-[#071A3A] dark:text-[#EDF4FF] block">
-                {payingBill.title}
+                {payingOccurrence.title}
               </span>
               <span className="text-[#526782]">
-                Category: {payingBill.category} · Planned: {currencySymbol}{payingBill.plannedAmount.toFixed(2)} · Due: {payingBill.dueDate}
+                Category: {payingOccurrence.category} · Planned: {currencySymbol}{payingOccurrence.plannedAmount.toFixed(2)} · Due: {payingOccurrence.dueDate}
               </span>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="mark-paid-actual-amount"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Actual amount *
                 </label>
                 <input
+                  id="mark-paid-actual-amount"
                   type="number"
                   step="0.01"
                   required
@@ -1107,10 +1321,14 @@ export const BudgetBillsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="mark-paid-payment-date"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Payment date *
                 </label>
                 <input
+                  id="mark-paid-payment-date"
                   type="date"
                   required
                   value={paidDate}
@@ -1123,14 +1341,14 @@ export const BudgetBillsView: React.FC = () => {
             <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 text-xs text-[#087F83] dark:text-[#38D0C5] flex items-start gap-2">
               <Check className="w-4 h-4 shrink-0 mt-0.5" />
               <span>
-                Creates a single linked expense under {payingBill.category}. Your actual balance and {payingBill.category} spending update together.
+                Creates a single linked expense under {payingOccurrence.category}. Your actual balance and {payingOccurrence.category} spending update together.
               </span>
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
-                onClick={() => setPayingBill(null)}
+                onClick={() => setPayingOccurrence(null)}
                 className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-[#526782]"
               >
                 Cancel
@@ -1148,18 +1366,18 @@ export const BudgetBillsView: React.FC = () => {
 
       {/* Unpay Confirmation Modal */}
       <Modal
-        isOpen={!!unpayingBill}
-        onClose={() => setUnpayingBill(null)}
+        isOpen={!!unpayingOccurrence}
+        onClose={() => setUnpayingOccurrence(null)}
         title="Unpay this bill?"
         subtitle="Reverse the linked expense transaction"
       >
         <div className="space-y-4">
           <p className="text-xs text-[#526782] leading-relaxed">
-            Reversing this paid bill will delete its linked expense from your transactions ledger and restore it as an unpaid obligation. Category spending and balances adjust automatically.
+            Reversing this paid bill ({unpayingOccurrence?.title} due {unpayingOccurrence?.dueDate}) will delete its linked expense from your transactions ledger and restore it as an unpaid obligation. Category spending and balances adjust automatically.
           </p>
           <div className="flex justify-end gap-2 pt-2">
             <button
-              onClick={() => setUnpayingBill(null)}
+              onClick={() => setUnpayingOccurrence(null)}
               className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-[#526782]"
             >
               Cancel
@@ -1204,10 +1422,14 @@ export const BudgetBillsView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="tx-modal-amount"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Amount ({currencySymbol}) *
               </label>
               <input
+                id="tx-modal-amount"
                 type="number"
                 step="0.01"
                 required
@@ -1218,10 +1440,14 @@ export const BudgetBillsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="tx-modal-category"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Category
               </label>
               <select
+                id="tx-modal-category"
                 value={txCategory}
                 onChange={(e) => setTxCategory(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
@@ -1239,10 +1465,14 @@ export const BudgetBillsView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="tx-modal-date"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Date
             </label>
             <input
+              id="tx-modal-date"
               type="date"
               required
               value={txDate}
@@ -1252,10 +1482,14 @@ export const BudgetBillsView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="tx-modal-note"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Note (optional)
             </label>
             <input
+              id="tx-modal-note"
               type="text"
               value={txNote}
               onChange={(e) => setTxNote(e.target.value)}
@@ -1297,10 +1531,14 @@ export const BudgetBillsView: React.FC = () => {
       >
         <form onSubmit={handleSaveBill} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="bill-modal-title"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Bill title *
             </label>
             <input
+              id="bill-modal-title"
               type="text"
               required
               value={billTitle}
@@ -1312,10 +1550,14 @@ export const BudgetBillsView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="bill-modal-planned-amount"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Planned amount ({currencySymbol}) *
               </label>
               <input
+                id="bill-modal-planned-amount"
                 type="number"
                 step="0.01"
                 required
@@ -1326,10 +1568,14 @@ export const BudgetBillsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="bill-modal-category"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Category
               </label>
               <select
+                id="bill-modal-category"
                 value={billCategory}
                 onChange={(e) => setBillCategory(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
@@ -1345,10 +1591,14 @@ export const BudgetBillsView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="bill-modal-due-date"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Due date
               </label>
               <input
+                id="bill-modal-due-date"
                 type="date"
                 required
                 value={billDueDate}
@@ -1358,10 +1608,14 @@ export const BudgetBillsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="bill-modal-repeat"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Repeat interval
               </label>
               <select
+                id="bill-modal-repeat"
                 value={billRepeat}
                 onChange={(e) => setBillRepeat(e.target.value as any)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"

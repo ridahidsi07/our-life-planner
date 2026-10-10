@@ -431,6 +431,7 @@ export const TasksView: React.FC = () => {
                 <Search className="w-4 h-4 absolute left-3 top-2.5 text-[#526782]" />
                 <input
                   type="text"
+                  aria-label="Search tasks"
                   placeholder="Search tasks…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -474,6 +475,7 @@ export const TasksView: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <select
+                    aria-label="Filter tasks by category"
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
                     className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium"
@@ -487,6 +489,7 @@ export const TasksView: React.FC = () => {
                   </select>
 
                   <select
+                    aria-label="Filter tasks by priority"
                     value={priorityFilter}
                     onChange={(e) => setPriorityFilter(e.target.value)}
                     className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium"
@@ -500,6 +503,7 @@ export const TasksView: React.FC = () => {
                   </select>
 
                   <select
+                    aria-label="Filter tasks by status"
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium"
@@ -521,6 +525,7 @@ export const TasksView: React.FC = () => {
               <Search className="w-4 h-4 absolute left-3 top-3 text-[#526782]" />
               <input
                 type="text"
+                aria-label="Search tasks"
                 placeholder="Search tasks…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -529,6 +534,7 @@ export const TasksView: React.FC = () => {
             </div>
 
             <select
+              aria-label="Filter tasks by category"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
               className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium"
@@ -542,6 +548,7 @@ export const TasksView: React.FC = () => {
             </select>
 
             <select
+              aria-label="Filter tasks by priority"
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
               className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium"
@@ -555,6 +562,7 @@ export const TasksView: React.FC = () => {
             </select>
 
             <select
+              aria-label="Filter tasks by status"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium"
@@ -1037,10 +1045,14 @@ export const TasksView: React.FC = () => {
       >
         <form onSubmit={handleSaveTask} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="task-modal-title"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Task title *
             </label>
             <input
+              id="task-modal-title"
               type="text"
               required
               value={modalTitle}
@@ -1052,10 +1064,14 @@ export const TasksView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="task-modal-category"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Category
               </label>
               <select
+                id="task-modal-category"
                 value={modalCategory}
                 onChange={(e) => setModalCategory(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
@@ -1069,10 +1085,14 @@ export const TasksView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="task-modal-assigned"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Assign to
               </label>
               <input
+                id="task-modal-assigned"
                 type="text"
                 value={modalAssigned}
                 onChange={(e) => setModalAssigned(e.target.value)}
@@ -1084,10 +1104,14 @@ export const TasksView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="task-modal-due-date"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Due date
               </label>
               <input
+                id="task-modal-due-date"
                 type="date"
                 value={modalDueDate}
                 onChange={(e) => setModalDueDate(e.target.value)}
@@ -1096,10 +1120,14 @@ export const TasksView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="task-modal-due-time"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Due time (optional)
               </label>
               <input
+                id="task-modal-due-time"
                 type="time"
                 value={modalDueTime}
                 onChange={(e) => setModalDueTime(e.target.value)}
@@ -1110,10 +1138,14 @@ export const TasksView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="task-modal-priority"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Priority
               </label>
               <select
+                id="task-modal-priority"
                 value={modalPriority}
                 onChange={(e) => setModalPriority(e.target.value as Priority)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
@@ -1127,10 +1159,14 @@ export const TasksView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="task-modal-status"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Status
               </label>
               <select
+                id="task-modal-status"
                 value={modalStatus}
                 onChange={(e) => setModalStatus(e.target.value as TaskStatus)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
@@ -1144,10 +1180,14 @@ export const TasksView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="task-modal-description"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Description (optional)
             </label>
             <textarea
+              id="task-modal-description"
               rows={2}
               value={modalDescription}
               onChange={(e) => setModalDescription(e.target.value)}

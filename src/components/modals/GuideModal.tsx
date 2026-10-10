@@ -97,19 +97,19 @@ export const GuideModal: React.FC = () => {
                 <tr className="border-b border-slate-200 dark:border-slate-700 text-[#071A3A] dark:text-[#EDF4FF]">
                   <th className="py-2 pr-3 font-bold">Feature</th>
                   <th className="py-2 px-3 font-bold bg-slate-50 dark:bg-slate-800/40 rounded-t-lg">
-                    Downloaded Offline
+                    Standalone HTML File
                   </th>
-                  <th className="py-2 pl-3 font-bold">Online Synced</th>
+                  <th className="py-2 pl-3 font-bold">Web Browser Edition</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 <tr>
                   <td className="py-2 pr-3 font-medium">Storage Location</td>
                   <td className="py-2 px-3 bg-slate-50/60 dark:bg-slate-800/20 font-mono text-[11px]">
-                    Local device storage
+                    Local file storage (localStorage)
                   </td>
                   <td className="py-2 pl-3 font-mono text-[11px]">
-                    Encrypted cloud sync
+                    Local browser storage (localStorage)
                   </td>
                 </tr>
                 <tr>
@@ -117,21 +117,23 @@ export const GuideModal: React.FC = () => {
                   <td className="py-2 px-3 bg-slate-50/60 dark:bg-slate-800/20 text-emerald-600 dark:text-emerald-400 font-semibold">
                     100% Offline (No wifi)
                   </td>
-                  <td className="py-2 pl-3">Only to sync between devices</td>
+                  <td className="py-2 pl-3">Only to load initial web assets</td>
                 </tr>
                 <tr>
                   <td className="py-2 pr-3 font-medium">Account / Login</td>
                   <td className="py-2 px-3 bg-slate-50/60 dark:bg-slate-800/20">
                     None required
                   </td>
-                  <td className="py-2 pl-3">Personal secure sign-in</td>
+                  <td className="py-2 pl-3">None required (Private local profile)</td>
                 </tr>
                 <tr>
                   <td className="py-2 pr-3 font-medium">Data Privacy</td>
                   <td className="py-2 px-3 bg-slate-50/60 dark:bg-slate-800/20 text-emerald-600 dark:text-emerald-400 font-semibold">
                     Zero data leaves device
                   </td>
-                  <td className="py-2 pl-3">Encrypted per user account</td>
+                  <td className="py-2 pl-3 text-emerald-600 dark:text-emerald-400 font-semibold">
+                    Zero data leaves device
+                  </td>
                 </tr>
                 <tr>
                   <td className="py-2 pr-3 font-medium">Cross-device transfer</td>
@@ -139,7 +141,7 @@ export const GuideModal: React.FC = () => {
                     JSON Backup file export/import
                   </td>
                   <td className="py-2 pl-3 text-teal-600 dark:text-teal-400 font-semibold">
-                    Automatic real-time sync
+                    JSON Backup file export/import
                   </td>
                 </tr>
                 <tr>
@@ -148,7 +150,7 @@ export const GuideModal: React.FC = () => {
                     $0 (Forever free)
                   </td>
                   <td className="py-2 pl-3 font-bold text-emerald-600 dark:text-emerald-400">
-                    $0 (Included)
+                    $0 (Forever free)
                   </td>
                 </tr>
               </tbody>
@@ -156,7 +158,7 @@ export const GuideModal: React.FC = () => {
           </div>
 
           <p>
-            You can seamlessly switch between editions or export your data at any time from Settings &gt; Data & Storage.
+            You can export your data at any time from Settings &gt; Data & Storage or download an independent offline HTML bundle.
           </p>
         </div>
       ),
@@ -238,20 +240,19 @@ export const GuideModal: React.FC = () => {
     },
     saving_backups: {
       title: 'Saving states & data recovery',
-      subtitle: 'How your planner data persists securely and how to create backups',
+      subtitle: 'How your planner data persists locally and how to create backups',
       content: (
         <div className="space-y-3 text-xs text-[#526782] dark:text-[#A8B8CE]">
           <p>
-            Your planner data is persistently stored in your browser using structured local storage and synchronized when online.
+            Your planner data is persistently stored in your browser using structured local storage (<code className="font-mono text-[11px] bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">localStorage</code>). No data leaves your machine.
           </p>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Saved online:</strong> Synchronized with the personal account cloud.</li>
-            <li><strong>Saved locally:</strong> Confirmed saved on your current device.</li>
-            <li><strong>Waiting to synchronize:</strong> Edits are safely stored locally while offline and will upload when reconnected.</li>
-            <li><strong>Needs your choice:</strong> If you edit the same item on two devices while offline, a side-by-side comparison lets you choose which version to preserve.</li>
+            <li><strong>Saved locally:</strong> Confirmed saved safely in this browser&apos;s local database.</li>
+            <li><strong>Storage issue:</strong> Indicated if your browser quota is exceeded or storage is disabled.</li>
+            <li><strong>Version review:</strong> Displayed if comparing different backup snapshots during restoration.</li>
           </ul>
           <p className="pt-2">
-            <strong>Data safety recommendation:</strong> Export a JSON backup once a week from Settings &gt; Data & Storage to keep a permanent local snapshot of your life data.
+            <strong>Data safety recommendation:</strong> Export a JSON backup once a week from Settings &gt; Data & Storage to keep a permanent local snapshot of your life data or transfer to another device.
           </p>
         </div>
       ),
@@ -312,14 +313,14 @@ export const GuideModal: React.FC = () => {
             </div>
           </div>
           <p>
-            You can also open our in-app support desk at any time to submit questions or bug reports directly from Settings.
+            You can also open the Support &amp; Contact helper in Settings to prepare a pre-filled support email, copy environment diagnostics, or access local backup recovery tools.
           </p>
           <button
             type="button"
             onClick={() => setActiveModal('support')}
             className="px-3.5 py-1.5 rounded-xl bg-[#087F83] text-white font-semibold text-xs hover:bg-[#06676A] cursor-pointer"
           >
-            Open in-app support desk
+            Open support &amp; contact helper
           </button>
         </div>
       ),

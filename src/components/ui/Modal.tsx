@@ -11,49 +11,94 @@ interface ModalProps {
   children: React.ReactNode;
 }
 
-export const Modal: React.FC<ModalProps> = ({
-  isOpen,
-  onClose,
-  title,
-  subtitle,
-  maxWidth = 'max-w-lg',
-  ariaLabel,
-  children,
-}) => {
+export function focusFirstDialogElement(
+  container: HTMLElement | null,
+  preferredTarget?: HTMLElement | null
+): void {
+  if (!container) return;
+
+  const active = document.activeElement as HTMLElement | null;
+  if (active && container.contains(active) && active !== container) {
+    return;
+  }
+
+  if (preferredTarget && container.contains(preferredTarget)) {
+    preferredTarget.focus();
+    return;
+  }
+
+  const focusableElements = Array.from(
+    container.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )
+  ).filter((el) => {
+    if (el.getAttribute('aria-hidden') === 'true') return false;
+    const style = window.getComputedStyle(el);
+    return style.display !== 'none' && style.visibility !== 'hidden';
+  });
+
+  if (focusableElements.length > 0) {
+    // Prefer first input/select/textarea if present, otherwise first focusable control
+    const firstField = focusableElements.find((el) =>
+      ['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName)
+    );
+    (firstField || focusableElements[0]).focus();
+  } else {
+    container.focus();
+  }
+}
+
+export function useDialogAccessibility(
+  isOpen: boolean,
+  onClose: () => void,
+  initialFocusRef?: React.RefObject<HTMLElement | null>
+) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
-  const uniqueId = useId();
-  const titleId = `modal-title-${uniqueId}`;
-  const subtitleId = `modal-desc-${uniqueId}`;
+  const wasOpenRef = useRef(false);
+  const onCloseRef = useRef(onClose);
 
-  // Focus placement, trapping, return, and Escape key handling
   useEffect(() => {
-    if (!isOpen) return;
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
-    // Remember currently focused element to return focus on close
-    previousFocusRef.current = document.activeElement as HTMLElement;
+  if (isOpen && !wasOpenRef.current && typeof document !== 'undefined') {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && active !== document.body) {
+      previousFocusRef.current = active;
+    }
+  }
 
-    // Focus placement: focus first interactive element or dialog itself
-    const timer = setTimeout(() => {
-      if (!dialogRef.current) return;
-      const focusableElements = dialogRef.current.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusableElements.length > 0) {
-        // Prefer first input/select/textarea if present, otherwise first focusable
-        const firstField = Array.from(focusableElements).find((el) =>
-          ['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName)
-        );
-        (firstField || focusableElements[0]).focus();
-      } else {
-        dialogRef.current.focus();
+  useEffect(() => {
+    if (!isOpen) {
+      wasOpenRef.current = false;
+      return;
+    }
+
+    if (!wasOpenRef.current) {
+      wasOpenRef.current = true;
+      const active = document.activeElement;
+      if (
+        active instanceof HTMLElement &&
+        active !== document.body &&
+        (!dialogRef.current || !dialogRef.current.contains(active))
+      ) {
+        previousFocusRef.current = active;
       }
+    }
+
+    // Immediate focus placement on dialog open
+    focusFirstDialogElement(dialogRef.current, initialFocusRef?.current);
+
+    // Fallback check in case child controls mount asynchronously
+    const timer = setTimeout(() => {
+      focusFirstDialogElement(dialogRef.current, initialFocusRef?.current);
     }, 50);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        onClose();
+        onCloseRef.current();
         return;
       }
 
@@ -62,10 +107,15 @@ export const Modal: React.FC<ModalProps> = ({
           dialogRef.current.querySelectorAll<HTMLElement>(
             'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
           )
-        ).filter((el) => el.offsetParent !== null);
+        ).filter((el) => {
+          if (el.getAttribute('aria-hidden') === 'true') return false;
+          const style = window.getComputedStyle(el);
+          return style.display !== 'none' && style.visibility !== 'hidden';
+        });
 
         if (focusables.length === 0) {
           e.preventDefault();
+          dialogRef.current.focus();
           return;
         }
 
@@ -91,12 +141,29 @@ export const Modal: React.FC<ModalProps> = ({
     return () => {
       clearTimeout(timer);
       window.removeEventListener('keydown', handleKeyDown);
-      // Focus return
-      if (previousFocusRef.current && typeof previousFocusRef.current.focus === 'function') {
-        previousFocusRef.current.focus();
+      const previous = previousFocusRef.current;
+      if (previous && typeof previous.focus === 'function' && document.contains(previous)) {
+        previous.focus();
       }
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, initialFocusRef]);
+
+  return { dialogRef };
+}
+
+export const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  subtitle,
+  maxWidth = 'max-w-lg',
+  ariaLabel,
+  children,
+}) => {
+  const { dialogRef } = useDialogAccessibility(isOpen, onClose);
+  const uniqueId = useId();
+  const titleId = `modal-title-${uniqueId}`;
+  const subtitleId = `modal-desc-${uniqueId}`;
 
   if (!isOpen) return null;
 

@@ -89,12 +89,12 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({
           <span>Quick add</span>
         </button>
 
-        {/* Profile Avatar / Account Manager */}
+        {/* Profile Avatar / Storage Manager */}
         <button
           type="button"
           onClick={() => setActiveModal('account')}
-          aria-label={`Manage account for ${settings.ownerName}`}
-          title={`Account & Sync: ${settings.ownerName}`}
+          aria-label={`Profile and local storage for ${settings.ownerName}`}
+          title={`Profile & Storage: ${settings.ownerName}`}
           className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#087F83] to-[#38D0C5] text-white flex items-center justify-center font-bold text-xs shadow-xs ml-1 hover:ring-2 hover:ring-[#087F83] focus:ring-2 focus:ring-[#087F83] transition-all cursor-pointer"
         >
           {settings.ownerName.charAt(0) || 'R'}

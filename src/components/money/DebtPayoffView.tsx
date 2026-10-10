@@ -303,10 +303,14 @@ export const DebtPayoffView: React.FC = () => {
         {/* Inputs Row */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="debt-sim-start-date"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Start date
             </label>
             <input
+              id="debt-sim-start-date"
               type="date"
               value={startDateStr}
               onChange={(e) => setStartDateStr(e.target.value)}
@@ -315,10 +319,14 @@ export const DebtPayoffView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="debt-sim-base-payment"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Base monthly payment
             </label>
             <input
+              id="debt-sim-base-payment"
               type="number"
               step="10"
               value={basePayment}
@@ -328,10 +336,14 @@ export const DebtPayoffView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="debt-sim-extra-payment"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Extra monthly payment
             </label>
             <input
+              id="debt-sim-extra-payment"
               type="number"
               step="10"
               value={extraPayment}
@@ -448,10 +460,14 @@ export const DebtPayoffView: React.FC = () => {
       >
         <form onSubmit={handleSaveDebt} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="debt-modal-name"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Debt name *
             </label>
             <input
+              id="debt-modal-name"
               type="text"
               required
               value={debtName}
@@ -463,10 +479,14 @@ export const DebtPayoffView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="debt-modal-orig-balance"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Original balance ({currencySymbol})
               </label>
               <input
+                id="debt-modal-orig-balance"
                 type="number"
                 step="0.01"
                 min="0"
@@ -477,10 +497,14 @@ export const DebtPayoffView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="debt-modal-cur-balance"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Current balance ({currencySymbol}) *
               </label>
               <input
+                id="debt-modal-cur-balance"
                 type="number"
                 step="0.01"
                 min="0.01"
@@ -494,10 +518,14 @@ export const DebtPayoffView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="debt-modal-rate"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Annual interest rate (%) *
               </label>
               <input
+                id="debt-modal-rate"
                 type="number"
                 step="0.1"
                 min="0"
@@ -509,10 +537,14 @@ export const DebtPayoffView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="debt-modal-min-payment"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Minimum monthly payment ({currencySymbol}) *
               </label>
               <input
+                id="debt-modal-min-payment"
                 type="number"
                 step="1"
                 min="1"
@@ -525,10 +557,14 @@ export const DebtPayoffView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="debt-modal-chosen-payment"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Your monthly payment budget ({currencySymbol}) *
             </label>
             <input
+              id="debt-modal-chosen-payment"
               type="number"
               step="1"
               min="1"

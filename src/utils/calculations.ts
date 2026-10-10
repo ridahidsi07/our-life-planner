@@ -1,4 +1,5 @@
 import { DebtItem, DebtStrategy, HabitItem, WorkoutSession } from '../types/planner';
+export * from './budgetPeriod';
 
 /**
  * Section 6: Financial Calculations
@@ -342,8 +343,10 @@ export function calculateHabitStreak(
     let best = 0;
     let temp = 0;
 
-    // Sort dates
-    const sortedDates = [...habit.checkedDates].sort();
+    // Sort unique valid dates
+    const sortedDates = Array.from(checkSet)
+      .filter((dStr) => /^\d{4}-\d{2}-\d{2}$/.test(dStr))
+      .sort();
     if (sortedDates.length > 0) {
       let prevDate: Date | null = null;
       for (const dStr of sortedDates) {
@@ -397,11 +400,12 @@ export function calculateHabitStreak(
     // Weekly frequency habit (e.g. 3 days/week)
     // Counts week streaks: a week succeeds when distinct check-in days reach weeklyTargetDays.
     // An unfinished current week neither breaks nor extends streak; reaching target adds that week once.
-    const target = habit.weeklyTargetDays || 3;
+    const target = Math.max(1, habit.weeklyTargetDays ?? 3);
 
     // Group check-in dates by week key (Monday-based)
     const weekMap: Record<string, Set<string>> = {};
     for (const dStr of habit.checkedDates) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dStr)) continue;
       const d = parseLocalDateParts(dStr);
       const day = d.getDay();
       const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
@@ -445,18 +449,28 @@ export function calculateHabitStreak(
       }
     }
 
-    // Find best week streak across all history
+    // Find best week streak across all history by stepping through every consecutive
+    // calendar week from the earliest recorded week to the latest recorded week
+    // so that empty intervening weeks properly break the streak.
     const allWeekKeys = Object.keys(weekMap).sort();
-    let temp = 0;
-    for (let i = 0; i < allWeekKeys.length; i++) {
-      const count = weekMap[allWeekKeys[i]]?.size || 0;
-      if (count >= target) {
-        temp++;
-        if (temp > bestStreak) bestStreak = temp;
-      } else {
-        temp = 0;
+    if (allWeekKeys.length > 0) {
+      const cursorWeek = parseLocalDateParts(allWeekKeys[0]);
+      const lastWeek = parseLocalDateParts(allWeekKeys[allWeekKeys.length - 1]);
+      let temp = 0;
+
+      while (cursorWeek.getTime() <= lastWeek.getTime()) {
+        const key = formatLocalDateParts(cursorWeek);
+        const count = weekMap[key]?.size || 0;
+        if (count >= target) {
+          temp++;
+          if (temp > bestStreak) bestStreak = temp;
+        } else {
+          temp = 0;
+        }
+        cursorWeek.setDate(cursorWeek.getDate() + 7);
       }
     }
+
     if (streak > bestStreak) bestStreak = streak;
 
     return {

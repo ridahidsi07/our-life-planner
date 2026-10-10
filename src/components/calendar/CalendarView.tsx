@@ -102,10 +102,14 @@ export const CalendarView: React.FC = () => {
     if (entryType === 'task') {
       addTask({
         title: entryTitle,
+        description: entryNotes || undefined,
         category: 'Personal',
         assignedTo: 'Rida',
         dueDate: entryDate,
         dueTime: isAllDay ? undefined : entryStartTime,
+        scheduledStart: isAllDay ? undefined : entryStartTime,
+        scheduledEnd: isAllDay ? undefined : entryEndTime,
+        isAllDay,
         priority: 'medium',
         status: 'not_started',
       });
@@ -252,7 +256,11 @@ export const CalendarView: React.FC = () => {
             id: t.id,
             title: t.title,
             type: 'Task',
-            time: t.dueTime || t.scheduledStart || 'All day',
+            time: t.isAllDay
+              ? 'All day'
+              : t.scheduledStart && t.scheduledEnd
+              ? `${t.scheduledStart} - ${t.scheduledEnd}`
+              : t.dueTime || t.scheduledStart || 'All day',
             isCompleted: t.status === 'completed',
             badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300',
             onToggle: () => toggleTaskCompletion(t.id),
@@ -1003,10 +1011,14 @@ export const CalendarView: React.FC = () => {
       >
         <form onSubmit={handleSaveEntry} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="calendar-entry-type"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Type
             </label>
             <select
+              id="calendar-entry-type"
               value={entryType}
               onChange={(e) => setEntryType(e.target.value as any)}
               className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium focus:ring-2 focus:ring-[#087F83]"
@@ -1020,10 +1032,14 @@ export const CalendarView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="calendar-entry-title"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Title *
             </label>
             <input
+              id="calendar-entry-title"
               type="text"
               required
               value={entryTitle}
@@ -1035,10 +1051,14 @@ export const CalendarView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="calendar-entry-date"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Date
               </label>
               <input
+                id="calendar-entry-date"
                 type="date"
                 required
                 value={entryDate}
@@ -1062,10 +1082,14 @@ export const CalendarView: React.FC = () => {
           {!isAllDay && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="calendar-entry-start-time"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   Start time
                 </label>
                 <input
+                  id="calendar-entry-start-time"
                   type="time"
                   value={entryStartTime}
                   onChange={(e) => setEntryStartTime(e.target.value)}
@@ -1073,10 +1097,14 @@ export const CalendarView: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                <label
+                  htmlFor="calendar-entry-end-time"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
                   End time
                 </label>
                 <input
+                  id="calendar-entry-end-time"
                   type="time"
                   value={entryEndTime}
                   onChange={(e) => setEntryEndTime(e.target.value)}
@@ -1091,10 +1119,14 @@ export const CalendarView: React.FC = () => {
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="calendar-entry-notes"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Notes (optional)
             </label>
             <textarea
+              id="calendar-entry-notes"
               rows={2}
               value={entryNotes}
               onChange={(e) => setEntryNotes(e.target.value)}

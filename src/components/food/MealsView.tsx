@@ -565,10 +565,14 @@ export const MealsView: React.FC = () => {
       >
         <form onSubmit={handleSavePlannedMeal} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="meal-plan-recipe"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Select Recipe
             </label>
             <select
+              id="meal-plan-recipe"
               value={planRecipeId}
               onChange={(e) => setPlanRecipeId(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
@@ -583,10 +587,14 @@ export const MealsView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="meal-plan-type"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Meal type
               </label>
               <select
+                id="meal-plan-type"
                 value={planMealType}
                 onChange={(e) => setPlanMealType(e.target.value as any)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium capitalize"
@@ -599,10 +607,14 @@ export const MealsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="meal-plan-servings"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Planned servings (scales recipe)
               </label>
               <input
+                id="meal-plan-servings"
                 type="number"
                 min="1"
                 required
@@ -615,10 +627,14 @@ export const MealsView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="meal-plan-date"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Date
               </label>
               <input
+                id="meal-plan-date"
                 type="date"
                 required
                 value={planDate}
@@ -628,10 +644,14 @@ export const MealsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="meal-plan-time"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Time
               </label>
               <input
+                id="meal-plan-time"
                 type="time"
                 value={planTime}
                 onChange={(e) => setPlanTime(e.target.value)}
@@ -667,10 +687,14 @@ export const MealsView: React.FC = () => {
       >
         <form onSubmit={handleSaveRecipe} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="recipe-modal-title"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Recipe title *
             </label>
             <input
+              id="recipe-modal-title"
               type="text"
               required
               value={recTitle}
@@ -682,10 +706,14 @@ export const MealsView: React.FC = () => {
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="recipe-modal-category"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Category
               </label>
               <select
+                id="recipe-modal-category"
                 value={recCategory}
                 onChange={(e) => setRecCategory(e.target.value as any)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
@@ -699,10 +727,14 @@ export const MealsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="recipe-modal-servings"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Base servings
               </label>
               <input
+                id="recipe-modal-servings"
                 type="number"
                 min="1"
                 required
@@ -713,10 +745,14 @@ export const MealsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="recipe-modal-prep-mins"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Prep mins
               </label>
               <input
+                id="recipe-modal-prep-mins"
                 type="number"
                 min="0"
                 value={recPrepMins}
@@ -727,11 +763,14 @@ export const MealsView: React.FC = () => {
           </div>
 
           {/* Ingredients list editor */}
-          <div>
+          <div role="group" aria-labelledby="recipe-modal-ingredients-label">
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
+              <span
+                id="recipe-modal-ingredients-label"
+                className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF]"
+              >
                 Ingredients
-              </label>
+              </span>
               <button
                 type="button"
                 onClick={() =>
@@ -748,6 +787,7 @@ export const MealsView: React.FC = () => {
                 <div key={i} className="flex gap-2 items-center">
                   <input
                     type="text"
+                    aria-label={`Ingredient ${i + 1} name`}
                     placeholder="Name (e.g. Rice)"
                     value={ing.name}
                     onChange={(e) => {
@@ -759,6 +799,7 @@ export const MealsView: React.FC = () => {
                   />
                   <input
                     type="number"
+                    aria-label={`Ingredient ${i + 1} amount`}
                     step="0.1"
                     min="0"
                     placeholder="Amount"
@@ -771,6 +812,7 @@ export const MealsView: React.FC = () => {
                     className="w-20 px-3 py-1.5 rounded-lg border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-mono"
                   />
                   <select
+                    aria-label={`Ingredient ${i + 1} unit`}
                     value={ing.unit}
                     onChange={(e) => {
                       const updated = [...recIngredients];
@@ -781,11 +823,16 @@ export const MealsView: React.FC = () => {
                   >
                     <option value="g">g</option>
                     <option value="kg">kg</option>
+                    <option value="oz">oz</option>
+                    <option value="lb">lb</option>
                     <option value="ml">ml</option>
                     <option value="L">L</option>
+                    <option value="cup">cup</option>
+                    <option value="cups">cups</option>
+                    <option value="tbsp">tbsp</option>
+                    <option value="tsp">tsp</option>
                     <option value="count">count</option>
                     <option value="pcs">pcs</option>
-                    <option value="cups">cups</option>
                     <option value="bottle">bottle</option>
                   </select>
                 </div>

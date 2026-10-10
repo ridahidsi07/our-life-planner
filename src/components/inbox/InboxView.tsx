@@ -200,10 +200,14 @@ export const InboxView: React.FC = () => {
             {convertingItem ? (
               <form onSubmit={handleConfirmConversion} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                  <label
+                    htmlFor="inbox-convert-title"
+                    className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                  >
                     Title *
                   </label>
                   <input
+                    id="inbox-convert-title"
                     type="text"
                     required
                     value={taskTitle}
@@ -214,10 +218,14 @@ export const InboxView: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                    <label
+                      htmlFor="inbox-convert-category"
+                      className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                    >
                       Category
                     </label>
                     <select
+                      id="inbox-convert-category"
                       value={taskCategory}
                       onChange={(e) => setTaskCategory(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
@@ -231,10 +239,14 @@ export const InboxView: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                    <label
+                      htmlFor="inbox-convert-assigned"
+                      className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                    >
                       Assigned to
                     </label>
                     <input
+                      id="inbox-convert-assigned"
                       type="text"
                       value={taskAssigned}
                       onChange={(e) => setTaskAssigned(e.target.value)}
@@ -245,10 +257,14 @@ export const InboxView: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                    <label
+                      htmlFor="inbox-convert-due-date"
+                      className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                    >
                       Due date
                     </label>
                     <input
+                      id="inbox-convert-due-date"
                       type="date"
                       value={taskDueDate}
                       onChange={(e) => setTaskDueDate(e.target.value)}
@@ -257,10 +273,14 @@ export const InboxView: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                    <label
+                      htmlFor="inbox-convert-due-time"
+                      className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                    >
                       Time (optional)
                     </label>
                     <input
+                      id="inbox-convert-due-time"
                       type="time"
                       value={taskDueTime}
                       onChange={(e) => setTaskDueTime(e.target.value)}
@@ -271,10 +291,14 @@ export const InboxView: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                    <label
+                      htmlFor="inbox-convert-priority"
+                      className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                    >
                       Priority
                     </label>
                     <select
+                      id="inbox-convert-priority"
                       value={taskPriority}
                       onChange={(e) => setTaskPriority(e.target.value as Priority)}
                       className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
@@ -287,10 +311,14 @@ export const InboxView: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+                    <label
+                      htmlFor="inbox-convert-status"
+                      className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                    >
                       Status
                     </label>
                     <select
+                      id="inbox-convert-status"
                       value={taskStatus}
                       onChange={(e) => setTaskStatus(e.target.value as TaskStatus)}
                       className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"

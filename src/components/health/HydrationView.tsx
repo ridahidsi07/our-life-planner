@@ -260,10 +260,14 @@ export const HydrationView: React.FC = () => {
 
           <form onSubmit={handleSaveTarget} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="hydration-daily-target-amount"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Amount (ml)
               </label>
               <input
+                id="hydration-daily-target-amount"
                 type="number"
                 step="50"
                 min="500"
@@ -421,10 +425,14 @@ export const HydrationView: React.FC = () => {
         <form onSubmit={handleCustomAdd} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="hydration-modal-amount"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Amount (ml) *
               </label>
               <input
+                id="hydration-modal-amount"
                 type="number"
                 step="50"
                 min="10"
@@ -436,10 +444,14 @@ export const HydrationView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="hydration-modal-time"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Time
               </label>
               <input
+                id="hydration-modal-time"
                 type="time"
                 value={customTime}
                 onChange={(e) => setCustomTime(e.target.value)}

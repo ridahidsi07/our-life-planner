@@ -29,6 +29,11 @@ import {
   AVAILABLE_TIMEZONES,
   getCurrencySymbol,
 } from '../../utils/formatters';
+import {
+  MODULE_REGISTRY,
+  isModuleOrToolEnabled,
+  isModulePinnedRaw,
+} from '../../utils/moduleRegistry';
 
 export const SettingsView: React.FC = () => {
   const {
@@ -139,7 +144,7 @@ export const SettingsView: React.FC = () => {
             onClick={() => setActiveModal('account')}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-100 text-xs font-semibold cursor-pointer transition-colors self-start sm:self-auto"
           >
-            <span>Manage Account & Cloud Sync</span>
+            <span>Manage Profile & Local Storage</span>
           </button>
         </div>
 
@@ -408,23 +413,13 @@ export const SettingsView: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {[
-            { id: 'today', name: 'Today & Next Up', desc: 'Unified daily schedule & capture' },
-            { id: 'tasks', name: 'Tasks & Projects', desc: 'Prioritized actions & all-day backlog' },
-            { id: 'calendar', name: 'Calendar Schedule', desc: 'Visual month & week time-blocks' },
-            { id: 'routines', name: 'Recurring Routines', desc: 'Daily, weekly & forgiving rituals' },
-            { id: 'habits', name: 'Habit Consistency', desc: 'Daily rhythm & streak tracker' },
-            { id: 'goals', name: 'Milestone Goals', desc: 'Long-term goals with step breakdowns' },
-            { id: 'inbox', name: 'Brain Dump Inbox', desc: 'Quick capture before triaging' },
-            { id: 'money', name: 'Money & Budgets', desc: 'Cash flow, bills, savings pots & debts' },
-            { id: 'food', name: 'Meals & Groceries', desc: 'Weekly menu planning & smart list' },
-            { id: 'body', name: 'Health & Hydration', desc: 'Workouts, weight metrics & water log' },
-          ].map((tool) => {
-            const isEnabled = !(settings.enabledTools) || settings.enabledTools.includes(tool.id);
-            const isPinned = (settings.pinnedTools || []).includes(tool.id);
+          {MODULE_REGISTRY.map((tool) => {
+            const isEnabled = isModuleOrToolEnabled(tool.id, settings.enabledTools);
+            const isPinned = isModulePinnedRaw(tool.id, settings.pinnedTools);
             return (
               <div
                 key={tool.id}
+                data-testid={`module-card-${tool.id}`}
                 className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 flex items-center justify-between gap-3"
               >
                 <div className="truncate">
@@ -439,6 +434,7 @@ export const SettingsView: React.FC = () => {
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     type="button"
+                    data-testid={`module-pin-${tool.id}`}
                     onClick={() => toggleToolPinned(tool.id)}
                     aria-pressed={isPinned}
                     className={`p-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
@@ -446,13 +442,20 @@ export const SettingsView: React.FC = () => {
                         ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
                         : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/50'
                     }`}
-                    title={isPinned ? 'Unpin favorite' : 'Pin to favorites'}
+                    title={
+                      !isEnabled
+                        ? 'Module is currently hidden (enable to show in Favorites)'
+                        : isPinned
+                        ? 'Unpin favorite'
+                        : 'Pin to favorites'
+                    }
                   >
                     <Pin className="w-3.5 h-3.5" />
                   </button>
 
                   <button
                     type="button"
+                    data-testid={`module-toggle-${tool.id}`}
                     onClick={() => toggleToolEnabled(tool.id)}
                     aria-pressed={isEnabled}
                     className={`px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer transition-colors ${
@@ -563,7 +566,7 @@ export const SettingsView: React.FC = () => {
           Product Edition & Offline Independence
         </h3>
         <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
-          Your purchase grants both an online synchronized edition and an independent standalone download.
+          Choose how you interact with Our Life Planner: in your web browser with local storage, or as an independent downloadable HTML file.
         </p>
 
         <div role="radiogroup" aria-label="Product edition preference" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -571,7 +574,7 @@ export const SettingsView: React.FC = () => {
             type="button"
             role="radio"
             aria-checked={settings.edition === 'online'}
-            aria-label="Online Edition: Syncs across your devices with local offline cache"
+            aria-label="Web Browser Edition: Runs in your browser with private local device storage"
             onClick={() => updateSettings({ edition: 'online' })}
             className={`p-4 rounded-xl border text-left cursor-pointer transition-all ${
               settings.edition === 'online'
@@ -580,13 +583,13 @@ export const SettingsView: React.FC = () => {
             }`}
           >
             <div className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-              Online Edition
+              Web Browser Edition
             </div>
             <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE] mt-0.5">
-              Syncs across your devices with local offline cache.
+              Runs in your web browser with private local browser storage.
             </div>
             <span className="inline-block mt-2 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
-              Active account
+              Local browser storage
             </span>
           </button>
 
@@ -594,7 +597,7 @@ export const SettingsView: React.FC = () => {
             type="button"
             role="radio"
             aria-checked={settings.edition === 'downloaded'}
-            aria-label="Downloaded Offline Edition: 100% independent. Works without an account or internet"
+            aria-label="Standalone Offline Bundle: 100% independent single-file HTML app"
             onClick={() => updateSettings({ edition: 'downloaded' })}
             className={`p-4 rounded-xl border text-left cursor-pointer transition-all ${
               settings.edition === 'downloaded'
@@ -603,13 +606,13 @@ export const SettingsView: React.FC = () => {
             }`}
           >
             <div className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-              Downloaded Offline Edition
+              Standalone Offline Bundle
             </div>
             <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE] mt-0.5">
-              100% independent. Works without an account or internet.
+              100% independent. Works without an internet connection.
             </div>
             <span className="inline-block mt-2 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">
-              Self-contained
+              Self-contained file
             </span>
           </button>
         </div>
@@ -715,10 +718,10 @@ export const SettingsView: React.FC = () => {
           >
             <div>
               <div className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-                Get Support Desk
+                Contact Support
               </div>
               <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
-                Troubleshooting, email & in-app desk
+                Direct email contact, diagnostics &amp; recovery help
               </div>
             </div>
             <Mail className="w-4 h-4 text-[#087F83]" />

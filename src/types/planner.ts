@@ -13,6 +13,14 @@ export type TaskStatus = 'not_started' | 'in_progress' | 'on_hold' | 'completed'
 export type RoutineInterval = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
 export type DebtStrategy = 'snowball' | 'avalanche' | 'custom';
 
+export type BudgetPeriodType = 'monthly' | 'weekly' | 'paycheck' | 'custom';
+
+export interface BudgetPeriodAllocation {
+  plannedIncome?: number;
+  plannedSavings?: number;
+  categoryLimits?: Record<string, number>;
+}
+
 export interface HouseholdMember {
   id: string;
   name: string;
@@ -37,9 +45,10 @@ export interface UserSettings {
   budgetCategoryLimits?: Record<string, number>;
   budgetPlannedIncome?: number;
   budgetPlannedSavings?: number;
-  budgetPeriodType?: 'monthly' | 'weekly' | 'paycheck' | 'custom';
+  budgetPeriodType?: BudgetPeriodType;
   budgetStartDate?: string;
   budgetEndDate?: string;
+  budgetPeriodAllocations?: Partial<Record<BudgetPeriodType, BudgetPeriodAllocation>>;
   lastBackupDate?: string;
   lastSyncDate?: string;
   enabledTools?: string[];
@@ -147,6 +156,12 @@ export interface FinancialTransaction {
   isSample?: boolean;
 }
 
+export interface BillPaidRecord {
+  actualPaidAmount: number;
+  paidDate: string;
+  linkedExpenseId?: string;
+}
+
 export interface BillItem {
   id: string;
   title: string;
@@ -158,7 +173,24 @@ export interface BillItem {
   actualPaidAmount?: number;
   paidDate?: string;
   linkedExpenseId?: string;
+  paidOccurrences?: Record<string, BillPaidRecord>;
   isSample?: boolean;
+}
+
+export interface BillOccurrence {
+  id: string;
+  billId: string;
+  title: string;
+  category: string;
+  plannedAmount: number;
+  dueDate: string; // YYYY-MM-DD
+  repeatInterval?: 'none' | 'monthly' | 'weekly' | 'yearly';
+  isPaid: boolean;
+  actualPaidAmount?: number;
+  paidDate?: string;
+  linkedExpenseId?: string;
+  isOverdue: boolean;
+  status: 'paid' | 'unpaid' | 'overdue';
 }
 
 export interface SavingsDeposit {
@@ -314,9 +346,25 @@ export interface CalendarEvent {
   isSample?: boolean;
 }
 
+export interface WeeklyReviewEntry {
+  id: string;
+  weekStartDate: string; // YYYY-MM-DD
+  weekEndDate: string; // YYYY-MM-DD
+  reflection: string;
+  intentions: string[]; // 3 priority strings
+  linkedTaskIds?: Record<number, string>;
+  completedTasksCount: number;
+  completedWorkoutsCount: number;
+  habitCheckInsCount: number;
+  completedAt?: string;
+  updatedAt: string;
+  isSample?: boolean;
+}
+
 export interface PlannerBackupData {
   version: '1.0.0';
   exportedAt: string;
+  revision?: number;
   settings: UserSettings;
   tasks: TaskItem[];
   routines: RoutineItem[];
@@ -336,6 +384,7 @@ export interface PlannerBackupData {
   hydrationEntries: HydrationLogEntry[];
   hydrationTargets: DailyHydrationTarget[];
   calendarEvents: CalendarEvent[];
+  weeklyReviews?: WeeklyReviewEntry[];
 }
 
 export interface ConflictItem {

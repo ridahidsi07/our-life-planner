@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
+import { useDialogAccessibility } from '../ui/Modal';
 import {
   X,
   CheckCircle2,
@@ -9,7 +10,6 @@ import {
   RotateCcw,
   Calendar,
   Sparkles,
-  ArrowRight,
   Coffee,
 } from 'lucide-react';
 import { TaskItem } from '../../types/planner';
@@ -22,8 +22,10 @@ export const FocusModal: React.FC = () => {
     toggleTaskCompletion,
     rescheduleTask,
     todayDate,
-    settings,
   } = usePlanner();
+
+  const isOpen = activeModal === 'focus_mode';
+  const { dialogRef } = useDialogAccessibility(isOpen, () => setActiveModal(null));
 
   // Find next pending task (not completed, not archived)
   const pendingTasks = useMemo(() => {
@@ -92,29 +94,26 @@ export const FocusModal: React.FC = () => {
     }
   };
 
-  // Keyboard escape
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && activeModal === 'focus_mode') {
-        setActiveModal(null);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeModal, setActiveModal]);
-
-  if (activeModal !== 'focus_mode') return null;
+  if (!isOpen) return null;
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="focus-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#071A3A]/70 backdrop-blur-md animate-in fade-in"
-    >
-      <div className="bg-white dark:bg-[#152238] rounded-3xl max-w-xl w-full p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl relative flex flex-col items-center text-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#071A3A]/70 backdrop-blur-md animate-in fade-in">
+      <div
+        className="fixed inset-0"
+        onClick={() => setActiveModal(null)}
+        aria-hidden="true"
+      />
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="focus-title"
+        tabIndex={-1}
+        className="bg-white dark:bg-[#152238] rounded-3xl max-w-xl w-full p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl relative z-10 flex flex-col items-center text-center outline-none"
+      >
         {/* Close Button */}
         <button
+          type="button"
           onClick={() => setActiveModal(null)}
           aria-label="Close focus view"
           className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"

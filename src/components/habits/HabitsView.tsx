@@ -110,14 +110,16 @@ export const HabitsView: React.FC = () => {
   const overallBestHabit = useMemo(() => {
     let best = 0;
     let habitName = '';
+    let isDaily = true;
     habits.forEach((h) => {
       const s = calculateHabitStreak(h, currentDate);
       if (s.bestStreak > best) {
         best = s.bestStreak;
         habitName = h.title;
+        isDaily = s.isDaily;
       }
     });
-    return { best, habitName };
+    return { best, habitName, isDaily };
   }, [habits, currentDate]);
 
   const todayCompletedCount = habits.filter((h) =>
@@ -206,7 +208,7 @@ export const HabitsView: React.FC = () => {
             <span className="text-xs font-semibold text-[#526782]">Best streak</span>
           </div>
           <div className="text-xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF]">
-            {overallBestHabit.best}-day
+            {overallBestHabit.best}-{overallBestHabit.isDaily ? 'day' : 'week'}
           </div>
           <div className="text-[11px] text-[#526782] truncate">
             {overallBestHabit.habitName}
@@ -513,10 +515,14 @@ export const HabitsView: React.FC = () => {
       >
         <form onSubmit={handleSaveHabit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="habit-modal-title"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Habit name *
             </label>
             <input
+              id="habit-modal-title"
               type="text"
               required
               value={modalTitle}
@@ -526,10 +532,13 @@ export const HabitsView: React.FC = () => {
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+          <div role="group" aria-labelledby="habit-modal-frequency-label">
+            <span
+              id="habit-modal-frequency-label"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Frequency
-            </label>
+            </span>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -558,10 +567,14 @@ export const HabitsView: React.FC = () => {
 
           {modalFreqType === 'weekly' && (
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="habit-modal-weekly-target"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Target days per week (1 - 7)
               </label>
               <input
+                id="habit-modal-weekly-target"
                 type="number"
                 min={1}
                 max={7}
@@ -573,10 +586,14 @@ export const HabitsView: React.FC = () => {
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="habit-modal-effective-date"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Effective date
             </label>
             <input
+              id="habit-modal-effective-date"
               type="date"
               value={modalEffectiveDate}
               onChange={(e) => setModalEffectiveDate(e.target.value)}
@@ -585,10 +602,14 @@ export const HabitsView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="habit-modal-note"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Personal note / Affirmation (optional)
             </label>
             <textarea
+              id="habit-modal-note"
               rows={2}
               maxLength={300}
               value={modalNote}

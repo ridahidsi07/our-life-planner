@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
 import { Modal } from '../ui/Modal';
 import { Download, Check, ShieldCheck } from 'lucide-react';
+import { injectBootstrapDataIntoHtml } from '../../utils/standaloneHtml';
 
 export const OfflineDownloadModal: React.FC = () => {
   const { activeModal, setActiveModal, exportBackup, generateStandaloneHtml } = usePlanner();
@@ -16,7 +17,6 @@ export const OfflineDownloadModal: React.FC = () => {
         ...backupData.settings,
         edition: 'downloaded',
       };
-      const serializedData = JSON.stringify(backupData);
 
       let htmlTemplate = '';
       try {
@@ -30,17 +30,16 @@ export const OfflineDownloadModal: React.FC = () => {
 
       let finalHtml = '';
       if (htmlTemplate && htmlTemplate.includes('embedded-planner-bootstrap-data')) {
-        finalHtml = htmlTemplate.replace(
-          /<!--BOOTSTRAP_DATA_PLACEHOLDER-->|<script id="embedded-planner-bootstrap-data"[^>]*>[\s\S]*?<\/script>/,
-          `<script id="embedded-planner-bootstrap-data" type="application/json">\n${serializedData}\n</script>`
-        );
-      } else if (document.getElementById('embedded-planner-bootstrap-data')) {
-        // We are already running inside the standalone offline app bundle!
-        const currentDoc = '<!DOCTYPE html>\n<html lang="en">' + document.documentElement.outerHTML + '</html>';
-        finalHtml = currentDoc.replace(
-          /<script id="embedded-planner-bootstrap-data"[^>]*>[\s\S]*?<\/script>/,
-          `<script id="embedded-planner-bootstrap-data" type="application/json">\n${serializedData}\n</script>`
-        );
+        finalHtml = injectBootstrapDataIntoHtml(htmlTemplate, backupData);
+      } else if (typeof document !== 'undefined' && document.getElementById('embedded-planner-bootstrap-data')) {
+        // Already running inside the standalone offline app bundle: clone document, clear live #root, and inject safely
+        const docClone = document.documentElement.cloneNode(true) as HTMLElement;
+        const rootClone = docClone.querySelector('#root');
+        if (rootClone) {
+          rootClone.innerHTML = '';
+        }
+        const currentDoc = `<!DOCTYPE html>\n${docClone.outerHTML}`;
+        finalHtml = injectBootstrapDataIntoHtml(currentDoc, backupData);
       } else {
         finalHtml = generateStandaloneHtml();
       }

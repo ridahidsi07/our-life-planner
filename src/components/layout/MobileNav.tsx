@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
 import { Clock, Calendar, Plus, MoreHorizontal } from 'lucide-react';
 import { MoreSheet } from './MoreSheet';
+import { isModuleOrToolEnabled } from '../../utils/moduleRegistry';
 
 interface MobileNavProps {
   isMoreOpen?: boolean;
@@ -14,7 +15,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
   onOpenMore,
   onCloseMore,
 }) => {
-  const { activeView, setActiveView, setActiveModal, activeModal } = usePlanner();
+  const { activeView, setActiveView, setActiveModal, activeModal, settings } = usePlanner();
   const [internalIsMoreOpen, setInternalIsMoreOpen] = useState(false);
 
   const isMoreSheetOpen = Boolean(
@@ -23,6 +24,9 @@ export const MobileNav: React.FC<MobileNavProps> = ({
       activeModal === 'menu' ||
       activeModal === 'more_sheet'
   );
+
+  const showTodayTab = isModuleOrToolEnabled('today', settings.enabledTools);
+  const showCalendarTab = isModuleOrToolEnabled('calendar', settings.enabledTools);
 
   const handleOpenMore = () => {
     setActiveModal('more_sheet');
@@ -46,30 +50,36 @@ export const MobileNav: React.FC<MobileNavProps> = ({
     <>
       <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white dark:bg-[#152238] border-t border-[#E2E8F0] dark:border-[#1E2D4A] flex items-center justify-around px-2 z-40 shadow-lg">
         {/* Today */}
-        <button
-          onClick={() => setActiveView('today')}
-          className={`flex flex-col items-center justify-center w-16 h-full transition-colors cursor-pointer ${
-            activeView === 'today'
-              ? 'text-[#087F83] dark:text-[#38D0C5]'
-              : 'text-[#526782] dark:text-[#A8B8CE]'
-          }`}
-        >
-          <Clock className="w-5 h-5 mb-0.5" />
-          <span className="text-[10px] font-medium">Today</span>
-        </button>
+        {showTodayTab && (
+          <button
+            data-testid="mobile-nav-today"
+            onClick={() => setActiveView('today')}
+            className={`flex flex-col items-center justify-center w-16 h-full transition-colors cursor-pointer ${
+              activeView === 'today'
+                ? 'text-[#087F83] dark:text-[#38D0C5]'
+                : 'text-[#526782] dark:text-[#A8B8CE]'
+            }`}
+          >
+            <Clock className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] font-medium">Today</span>
+          </button>
+        )}
 
         {/* Calendar */}
-        <button
-          onClick={() => setActiveView('calendar')}
-          className={`flex flex-col items-center justify-center w-16 h-full transition-colors cursor-pointer ${
-            activeView === 'calendar'
-              ? 'text-[#087F83] dark:text-[#38D0C5]'
-              : 'text-[#526782] dark:text-[#A8B8CE]'
-          }`}
-        >
-          <Calendar className="w-5 h-5 mb-0.5" />
-          <span className="text-[10px] font-medium">Calendar</span>
-        </button>
+        {showCalendarTab && (
+          <button
+            data-testid="mobile-nav-calendar"
+            onClick={() => setActiveView('calendar')}
+            className={`flex flex-col items-center justify-center w-16 h-full transition-colors cursor-pointer ${
+              activeView === 'calendar'
+                ? 'text-[#087F83] dark:text-[#38D0C5]'
+                : 'text-[#526782] dark:text-[#A8B8CE]'
+            }`}
+          >
+            <Calendar className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] font-medium">Calendar</span>
+          </button>
+        )}
 
         {/* Quick Add Pill */}
         <button

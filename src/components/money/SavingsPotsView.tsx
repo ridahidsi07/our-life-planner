@@ -392,10 +392,14 @@ export const SavingsPotsView: React.FC = () => {
         <form onSubmit={handleSaveDeposit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="savings-deposit-amount"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Amount *
               </label>
               <input
+                id="savings-deposit-amount"
                 type="number"
                 step="1"
                 min="1"
@@ -407,10 +411,14 @@ export const SavingsPotsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="savings-deposit-date"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Date
               </label>
               <input
+                id="savings-deposit-date"
                 type="date"
                 required
                 value={depDate}
@@ -420,10 +428,13 @@ export const SavingsPotsView: React.FC = () => {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
+          <div className="space-y-2" role="radiogroup" aria-labelledby="savings-deposit-source-label">
+            <span
+              id="savings-deposit-source-label"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF]"
+            >
               Source *
-            </label>
+            </span>
             <div className="space-y-2">
               <label className="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer">
                 <input
@@ -490,10 +501,14 @@ export const SavingsPotsView: React.FC = () => {
       >
         <form onSubmit={handleCreatePot} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="savings-pot-name"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Pot name *
             </label>
             <input
+              id="savings-pot-name"
               type="text"
               required
               value={potName}
@@ -505,10 +520,14 @@ export const SavingsPotsView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="savings-pot-target-amount"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Target amount ({currencySymbol}) *
               </label>
               <input
+                id="savings-pot-target-amount"
                 type="number"
                 min="1"
                 required
@@ -519,10 +538,14 @@ export const SavingsPotsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+              <label
+                htmlFor="savings-pot-target-date"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
                 Target date
               </label>
               <input
+                id="savings-pot-target-date"
                 type="date"
                 required
                 value={potTargetDate}
@@ -533,10 +556,14 @@ export const SavingsPotsView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
+            <label
+              htmlFor="savings-pot-opening-balance"
+              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+            >
               Opening balance ({currencySymbol})
             </label>
             <input
+              id="savings-pot-opening-balance"
               type="number"
               min="0"
               value={potOpeningBal}
