@@ -1,0 +1,274 @@
+[
+  {
+    "name": "Sample Dataset: JSON.stringify (Serialization)",
+    "category": "Persistence",
+    "executionEnvironment": "Node.js v22 (isolated VM)",
+    "runs": [
+      0.123,
+      0.099,
+      0.095,
+      0.093,
+      0.083
+    ],
+    "median": 0.095,
+    "min": 0.083,
+    "max": 0.123,
+    "mean": 0.099
+  },
+  {
+    "name": "Stress Dataset: JSON.stringify (Serialization)",
+    "category": "Persistence",
+    "executionEnvironment": "Node.js v22 (isolated VM)",
+    "runs": [
+      2.938,
+      3.104,
+      2.845,
+      2.598,
+      3.982
+    ],
+    "median": 2.938,
+    "min": 2.598,
+    "max": 3.982,
+    "mean": 3.093
+  },
+  {
+    "name": "Sample Dataset: JSON.parse (Deserialization)",
+    "category": "Persistence",
+    "executionEnvironment": "Node.js v22 (isolated VM)",
+    "runs": [
+      0.165,
+      0.158,
+      0.127,
+      0.12,
+      0.13
+    ],
+    "median": 0.13,
+    "min": 0.12,
+    "max": 0.165,
+    "mean": 0.14
+  },
+  {
+    "name": "Stress Dataset: JSON.parse (Deserialization)",
+    "category": "Persistence",
+    "executionEnvironment": "Node.js v22 (isolated VM)",
+    "runs": [
+      3.626,
+      4.336,
+      5.362,
+      3.494,
+      3.08
+    ],
+    "median": 3.626,
+    "min": 3.08,
+    "max": 5.362,
+    "mean": 3.98
+  },
+  {
+    "name": "Sample Dataset: Schema Validation",
+    "category": "Persistence",
+    "executionEnvironment": "Node.js v22 (isolated VM)",
+    "runs": [
+      0.297,
+      0.633,
+      0.179,
+      0.137,
+      0.238
+    ],
+    "median": 0.238,
+    "min": 0.137,
+    "max": 0.633,
+    "mean": 0.297
+  },
+  {
+    "name": "Stress Dataset: Schema Validation",
+    "category": "Persistence",
+    "executionEnvironment": "Node.js v22 (isolated VM)",
+    "runs": [
+      3.626,
+      3.587,
+      3.746,
+      3.127,
+      2.834
+    ],
+    "median": 3.587,
+    "min": 2.834,
+    "max": 3.746,
+    "mean": 3.384
+  },
+  {
+    "name": "Sample Dataset: Cash Flow Calculation",
+    "category": "Calculations",
+    "executionEnvironment": "Node.js v22 (isolated VM)",
+    "runs": [
+      0.481,
+      0.091,
+      0.05,
+      0.042,
+      0.038
+    ],
+    "median": 0.05,
+    "min": 0.038,
+    "max": 0.481,
+    "mean": 0.14
+  },
+  {
+    "name": "Stress Dataset: Cash Flow Calculation (1,000 tx)",
+    "category": "Calculations",
+    "executionEnvironment": "Node.js v22 (isolated VM)",
+    "runs": [
+      0.397,
+      0.627,
+      0.494,
+      0.33,
+      0.268
+    ],
+    "median": 0.397,
+    "min": 0.268,
+    "max": 0.627,
+    "mean": 0.423
+  },
+  {
+    "name": "Sample Dataset: Search Filtering (\"milestone\")",
+    "category": "Search",
+    "executionEnvironment": "Node.js v22 (isolated VM)",
+    "runs": [
+      0.025,
+      0.007,
+      0.007,
+      0.005,
+      0.004
+    ],
+    "median": 0.007,
+    "min": 0.004,
+    "max": 0.025,
+    "mean": 0.01
+  },
+  {
+    "name": "Stress Dataset: Search Filtering (\"milestone\")",
+    "category": "Search",
+    "executionEnvironment": "Node.js v22 (isolated VM)",
+    "runs": [
+      0.488,
+      0.529,
+      0.51,
+      0.502,
+      0.222
+    ],
+    "median": 0.502,
+    "min": 0.222,
+    "max": 0.529,
+    "mean": 0.45
+  },
+  {
+    "name": "Stress Dataset: Search Filtering (\"tax\")",
+    "category": "Search",
+    "executionEnvironment": "Node.js v22 (isolated VM)",
+    "runs": [
+      0.472,
+      0.462,
+      0.5,
+      0.462,
+      0.466
+    ],
+    "median": 0.466,
+    "min": 0.462,
+    "max": 0.5,
+    "mean": 0.472
+  },
+  {
+    "name": "Stress Dataset: Search Filtering (\"zznonexistent\")",
+    "category": "Search",
+    "executionEnvironment": "Node.js v22 (isolated VM)",
+    "runs": [
+      0.265,
+      0.482,
+      0.269,
+      0.263,
+      0.275
+    ],
+    "median": 0.269,
+    "min": 0.263,
+    "max": 0.482,
+    "mean": 0.311
+  },
+  {
+    "name": "Sample Dataset: Calendar ICS Export",
+    "category": "Export",
+    "executionEnvironment": "Node.js v22 (isolated VM)",
+    "runs": [
+      0.762,
+      0.318,
+      0.27,
+      0.304,
+      0.279
+    ],
+    "median": 0.304,
+    "min": 0.27,
+    "max": 0.762,
+    "mean": 0.387
+  },
+  {
+    "name": "Stress Dataset: Calendar ICS Export (1,150 items)",
+    "category": "Export",
+    "executionEnvironment": "Node.js v22 (isolated VM)",
+    "runs": [
+      77.488,
+      88.522,
+      73.087,
+      83.419,
+      96.973
+    ],
+    "median": 83.419,
+    "min": 73.087,
+    "max": 96.973,
+    "mean": 83.898
+  },
+  {
+    "name": "Sample Dataset: Cross-Tab Reconcile",
+    "category": "Sync",
+    "executionEnvironment": "Node.js v22 (isolated VM)",
+    "runs": [
+      0.193,
+      0.155,
+      0.145,
+      0.142,
+      0.154
+    ],
+    "median": 0.154,
+    "min": 0.142,
+    "max": 0.193,
+    "mean": 0.158
+  },
+  {
+    "name": "Stress Dataset: Cross-Tab Reconcile (3,045 items)",
+    "category": "Sync",
+    "executionEnvironment": "Node.js v22 (isolated VM)",
+    "runs": [
+      3.911,
+      3.903,
+      4.785,
+      5.174,
+      5.306
+    ],
+    "median": 4.785,
+    "min": 3.903,
+    "max": 5.306,
+    "mean": 4.616
+  },
+  {
+    "name": "Stress Dataset: fastDeepEqual (Dirty check)",
+    "category": "Sync",
+    "executionEnvironment": "Node.js v22 (isolated VM)",
+    "runs": [
+      0.02,
+      0.01,
+      0.014,
+      0.009,
+      0.011
+    ],
+    "median": 0.011,
+    "min": 0.009,
+    "max": 0.02,
+    "mean": 0.013
+  }
+]

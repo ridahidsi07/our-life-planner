@@ -1,0 +1,25 @@
+{
+  "testedVersionFingerprint": "c300201465fc8d17857811bda41b3becd370a44af83a067969c98322139deb44",
+  "gitCommit": "None (unversioned container; fingerprint computed across all tracked project files)",
+  "browserVersion": "Chrome/155.0.8059.39 (Chromium Headless)",
+  "hostOS": "Linux 4.19.0-gvisor x64",
+  "cpus": [
+    {
+      "model": "unknown",
+      "speed": 0
+    },
+    {
+      "model": "unknown",
+      "speed": 0
+    }
+  ],
+  "totalMemoryBytes": 4294967296,
+  "freeMemoryBytes": 2484674560,
+  "nodeVersion": "v22.23.2",
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "throttling": "None (Local execution on 127.0.0.1:5050)",
+  "testServerUrl": "http://127.0.0.1:5050"
+}

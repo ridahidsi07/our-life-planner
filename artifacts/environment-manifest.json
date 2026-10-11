@@ -1,0 +1,21 @@
+{
+  "testedVersionFingerprint": "7accc0150a27480a2dc1b1f2114518560c8d55e689e9694f9464df1cd9c76ae7",
+  "gitCommit": "None (unversioned container; fingerprint computed across all tracked project files)",
+  "hostOS": "Linux 4.19.0-gvisor x64",
+  "cpus": [
+    {
+      "model": "unknown",
+      "speed": 0
+    },
+    {
+      "model": "unknown",
+      "speed": 0
+    }
+  ],
+  "totalMemoryBytes": 4294967296,
+  "freeMemoryBytes": 3352809472,
+  "nodeVersion": "v22.23.2",
+  "runtime": "Node.js v22.23.2 (isolated headless container)",
+  "browserEnvironment": "Real browser (Chrome/Chromium/Playwright) is NOT installed in container. Browser-only metrics marked NOT MEASURED.",
+  "sourceFingerprintMethod": "find src public scripts index.html package.json vite.config.ts tsconfig.json -type f -exec sha256sum {} + | sort | sha256sum"
+}

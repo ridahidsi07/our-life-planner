@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
 import { getWeekDaysForDate } from '../../utils/formatters';
 import { RingProgress } from '../ui/RingProgress';
@@ -17,6 +17,8 @@ import {
   Edit2,
   PieChart,
   List,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { TaskItem, Priority, TaskStatus } from '../../types/planner';
 
@@ -39,6 +41,10 @@ export const TasksView: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedDateFilter, setSelectedDateFilter] = useState<string>('all');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+
+  // Pagination / bounded rendering state (50 per page default)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   // Task Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -132,6 +138,20 @@ export const TasksView: React.FC = () => {
     (priorityFilter !== 'All' ? 1 : 0) +
     (statusFilter !== 'All' ? 1 : 0) +
     (selectedDateFilter !== 'all' ? 1 : 0);
+
+  // Reset to first page whenever search query or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, categoryFilter, assignedFilter, priorityFilter, statusFilter, selectedDateFilter]);
+
+  // Bounded pagination: slices filteredTasks to avoid mounting thousands of DOM nodes simultaneously
+  const totalPages = Math.max(1, Math.ceil(filteredTasks.length / pageSize));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(filteredTasks.length, startIndex + pageSize);
+  const paginatedTasks = useMemo(() => {
+    return filteredTasks.slice(startIndex, endIndex);
+  }, [filteredTasks, startIndex, endIndex]);
 
   const handleClearFilters = () => {
     setSearchQuery('');
@@ -582,7 +602,7 @@ export const TasksView: React.FC = () => {
                 No tasks found matching your filters.
               </div>
             ) : (
-              filteredTasks.map((task) => {
+              paginatedTasks.map((task) => {
                 const isOverdue =
                   task.status !== 'completed' &&
                   task.dueDate &&
@@ -721,7 +741,7 @@ export const TasksView: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredTasks.map((task) => {
+                  paginatedTasks.map((task) => {
                     const isOverdue =
                       task.status !== 'completed' &&
                       task.dueDate &&
@@ -840,6 +860,62 @@ export const TasksView: React.FC = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Accessible Pagination & Bounded Navigation Controls */}
+          {filteredTasks.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-[#E2E8F0] dark:border-[#1E2D4A] text-xs text-[#526782] dark:text-[#A8B8CE]">
+              <div className="flex items-center gap-2">
+                <span>
+                  Showing <strong className="text-[#071A3A] dark:text-[#EDF4FF]">{startIndex + 1}</strong>–<strong className="text-[#071A3A] dark:text-[#EDF4FF]">{endIndex}</strong> of <strong className="text-[#071A3A] dark:text-[#EDF4FF]">{filteredTasks.length}</strong> tasks
+                </span>
+                <span className="hidden sm:inline text-slate-300 dark:text-slate-700">|</span>
+                <label className="hidden sm:flex items-center gap-1.5 text-xs">
+                  <span>Per page:</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="px-2 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-medium text-[#071A3A] dark:text-[#EDF4FF]"
+                    aria-label="Tasks per page"
+                  >
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs">
+                  Page <strong className="text-[#071A3A] dark:text-[#EDF4FF]">{safeCurrentPage}</strong> of <strong className="text-[#071A3A] dark:text-[#EDF4FF]">{totalPages}</strong>
+                </span>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={safeCurrentPage <= 1}
+                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                    aria-label="Previous page of tasks"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={safeCurrentPage >= totalPages}
+                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                    aria-label="Next page of tasks"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
