@@ -7,12 +7,34 @@
   html.light {
     --canvas: #F3F8FC;
     --surface: #FFFFFF;
+    --surface-elevated: #FFFFFF;
+    --surface-subtle: #F8FAFC;
+    --surface-muted: #F1F5F9;
     --text-primary: #071A3A;
-    --text-muted: #475569;
+    --text-secondary: #526782;
+    --text-muted: #64748B;
     --accent: #087F83;
     --accent-hover: #06676A;
     --accent-light: #E0F2F1;
+    --accent-subtle: #F0FDFA;
     --border-color: #E2E8F0;
+    --border-subtle: #E2E8F0;
+    --border-strong: #CBD5E1;
+    --focus-ring: #087F83;
+    --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.05);
+    --shadow-card-hover: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+    --shadow-dropdown: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
+    --btn-primary-bg: #087F83;
+    --btn-primary-fg: #FFFFFF;
+    --btn-primary-hover-bg: #06676A;
+    --btn-tonal-bg: #F0FDFA;
+    --btn-tonal-fg: #087F83;
+    --btn-tonal-hover-bg: #CCFBF1;
+    --btn-tonal-border: #99F6E4;
+    --btn-warning-bg: #FEF3C7;
+    --btn-warning-fg: #78350F;
+    --btn-warning-hover-bg: #FDE68A;
+    --btn-warning-border: #FCD34D;
     color-scheme: light;
   }
 
@@ -20,19 +42,43 @@
   .dark {
     --canvas: #0B1220;
     --surface: #152238;
+    --surface-elevated: #1A2A46;
+    --surface-subtle: #192740;
+    --surface-muted: #1E2D4A;
     --text-primary: #EDF4FF;
-    --text-muted: #CBD5E1;
+    --text-secondary: #A8B8CE;
+    --text-muted: #94A3B8;
     --accent: #38D0C5;
     --accent-hover: #2BB5AB;
     --accent-light: #163642;
+    --accent-subtle: rgba(19, 78, 74, 0.55);
     --border-color: #1E2D4A;
+    --border-subtle: #1E2D4A;
+    --border-strong: #2D4268;
+    --focus-ring: #38D0C5;
+    --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.35);
+    --shadow-card-hover: 0 4px 10px 0 rgba(0, 0, 0, 0.45);
+    --shadow-dropdown: 0 10px 20px -3px rgba(0, 0, 0, 0.6);
+    --btn-primary-bg: #38D0C5;
+    --btn-primary-fg: #071A3A;
+    --btn-primary-hover-bg: #2BB5AB;
+    --btn-tonal-bg: rgba(19, 78, 74, 0.55);
+    --btn-tonal-fg: #5EEAD4;
+    --btn-tonal-hover-bg: rgba(19, 78, 74, 0.85);
+    --btn-tonal-border: rgba(45, 212, 191, 0.35);
+    --btn-warning-bg: rgba(120, 53, 15, 0.65);
+    --btn-warning-fg: #FDE68A;
+    --btn-warning-hover-bg: rgba(146, 64, 14, 0.85);
+    --btn-warning-border: rgba(245, 158, 11, 0.45);
     color-scheme: dark;
   }
 
   body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--canvas);
     color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   html.light body,
@@ -48,6 +94,21 @@
     background-color: #0B1220 !important;
     color: #EDF4FF !important;
   }
+}
+
+/* Visible, high-contrast keyboard focus indicator across both themes (LP-13 / LP-14) */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="checkbox"]:focus-visible,
+[role="radio"]:focus-visible,
+[role="switch"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 2px solid var(--focus-ring) !important;
+  outline-offset: 2px !important;
 }
 
 /* Custom scrollbars for clean desktop appearance */
@@ -66,7 +127,262 @@
   background: rgba(71, 85, 105, 0.55);
 }
 
-/* WCAG 2.2 AA Contrast Enforcement across themes (F13) */
+/* ==========================================================================
+   CONSOLIDATED DESIGN FOUNDATIONS (Stage 2)
+   ========================================================================== */
+
+/* 1. Tabular Figures for Numbers, Financial Ledgers & Timers */
+.tabular-nums,
+.tabular-numbers {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* 2. Surface Elevations */
+.card-surface {
+  background-color: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-card);
+}
+
+.card-elevated {
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-dropdown);
+}
+
+.card-interactive {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.card-interactive:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* 3. Button Foundations */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  min-height: 40px;
+  border-radius: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+.btn-primary:hover {
+  background-color: var(--btn-primary-hover-bg);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  min-height: 40px;
+  border-radius: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background-color: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.btn-secondary:hover {
+  background-color: var(--surface-subtle);
+  border-color: var(--border-strong);
+}
+
+.btn-tonal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  min-height: 36px;
+  border-radius: 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: var(--btn-tonal-bg);
+  color: var(--btn-tonal-fg);
+  border: 1px solid var(--btn-tonal-border);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.btn-tonal:hover {
+  background-color: var(--btn-tonal-hover-bg);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  min-height: 36px;
+  border-radius: 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.btn-ghost:hover {
+  background-color: var(--surface-muted);
+  color: var(--text-primary);
+}
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  min-height: 40px;
+  border-radius: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background-color: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.btn-danger:hover {
+  background-color: #FCA5A5;
+}
+.dark .btn-danger {
+  background-color: rgba(153, 27, 27, 0.4);
+  color: #FCA5A5;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+.dark .btn-danger:hover {
+  background-color: rgba(153, 27, 27, 0.65);
+}
+
+/* 4. Form Control Foundations */
+.form-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.form-helper {
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  min-height: 40px;
+  border-radius: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  background-color: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  border-color: var(--focus-ring);
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+/* 5. Priority Badges */
+.badge-priority-urgent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background-color: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+.dark .badge-priority-urgent {
+  background-color: rgba(153, 27, 27, 0.35);
+  color: #FCA5A5;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.badge-priority-high {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background-color: #FFEDD5;
+  color: #9A3412;
+  border: 1px solid #FED7AA;
+}
+.dark .badge-priority-high {
+  background-color: rgba(154, 52, 18, 0.35);
+  color: #FDBA74;
+  border: 1px solid rgba(249, 115, 22, 0.4);
+}
+
+.badge-priority-medium {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background-color: #FEF3C7;
+  color: #78350F;
+  border: 1px solid #FDE68A;
+}
+.dark .badge-priority-medium {
+  background-color: rgba(120, 53, 15, 0.35);
+  color: #FDE68A;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.badge-priority-low {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background-color: #F0FDFA;
+  color: #087F83;
+  border: 1px solid #CCFBF1;
+}
+.dark .badge-priority-low {
+  background-color: rgba(19, 78, 74, 0.45);
+  color: #5EEAD4;
+  border: 1px solid rgba(45, 212, 191, 0.35);
+}
+
+/* WCAG 2.2 AA Contrast Enforcement across themes (LP-14) */
 /* Normal text requires minimum 4.5:1; large/bold text requires 3.0:1 */
 
 /* Dark mode supporting and muted text elevation over dark surfaces (#152238 and #0B1220) */
@@ -93,6 +409,46 @@ html.light .text-slate-400,
 html[data-theme='light'] .text-slate-400,
 :root:not(.dark) .text-slate-400 {
   color: #475569;
+}
+
+/* Defensive paired dark-mode hover background safeguards (prevents light hover backgrounds with dark text) */
+html.dark .hover\:bg-amber-200:hover,
+.dark .hover\:bg-amber-200:hover,
+html.dark .hover\:bg-amber-100:hover,
+.dark .hover\:bg-amber-100:hover {
+  background-color: rgba(146, 64, 14, 0.85) !important;
+  color: #FEF3C7 !important;
+}
+
+html.dark .hover\:bg-teal-100:hover,
+.dark .hover\:bg-teal-100:hover,
+html.dark .hover\:bg-teal-50:hover,
+.dark .hover\:bg-teal-50:hover {
+  background-color: rgba(19, 78, 74, 0.85) !important;
+  color: #5EEAD4 !important;
+}
+
+html.dark .hover\:bg-blue-100:hover,
+.dark .hover\:bg-blue-100:hover {
+  background-color: rgba(30, 58, 138, 0.8) !important;
+  color: #93C5FD !important;
+}
+
+html.dark .hover\:bg-rose-100:hover,
+.dark .hover\:bg-rose-100:hover,
+html.dark .hover\:bg-red-100:hover,
+.dark .hover\:bg-red-100:hover {
+  background-color: rgba(136, 19, 55, 0.8) !important;
+  color: #FECDD3 !important;
+}
+
+html.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-100:hover,
+.dark .hover\:bg-slate-100:hover,
+html.dark .hover\:bg-slate-200:hover,
+.dark .hover\:bg-slate-200:hover {
+  background-color: #1E293B !important;
 }
 
 /* Inputs and placeholders */
@@ -125,4 +481,205 @@ textarea:disabled {
 .chart-label {
   fill: currentColor;
 }
+
+/* =========================================================================
+   Stage 6: Restrained Motion & Microinteractions Specification
+   ========================================================================= */
+
+@keyframes motionBackdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes motionPanelSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0.95;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes motionModalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes motionCheckPop {
+  0% {
+    transform: scale(0.85);
+  }
+  60% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes motionFilterFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes motionSavingPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(0.92);
+  }
+}
+
+/* Restrained motion classes with explicit duration budgets (120-200ms) */
+.motion-backdrop-enter {
+  animation: motionBackdropFadeIn 180ms ease-out forwards;
+}
+
+.motion-panel-enter {
+  animation: motionPanelSlideIn 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.motion-modal-enter {
+  animation: motionModalFadeIn 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.motion-check-pop {
+  animation: motionCheckPop 140ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.motion-filter-enter {
+  animation: motionFilterFadeIn 140ms ease-out forwards;
+}
+
+.motion-saving-pulse {
+  animation: motionSavingPulse 1000ms ease-in-out infinite;
+}
+
+/* Microinteraction button active tap feedback */
+.micro-tap {
+  transition: transform 120ms ease-out, background-color 140ms ease-out, border-color 140ms ease-out, color 140ms ease-out;
+}
+
+.micro-tap:active {
+  transform: scale(0.97);
+}
+
+/* Microinteraction checkbox transition */
+.micro-checkbox {
+  transition: background-color 140ms ease-out, border-color 140ms ease-out, color 140ms ease-out, transform 120ms ease-out;
+}
+
+.micro-checkbox:active {
+  transform: scale(0.92);
+}
+
+/* Smooth SVG stroke transition for progress rings (180ms budget) */
+.progress-ring-stroke {
+  transition: stroke-dashoffset 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Reduced Motion Preference Support (LP-14) */
+/* Suppresses non-essential animations and transitions while preserving state/color/border feedback */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-spin,
+  .animate-pulse,
+  .animate-bounce,
+  .animate-in,
+  .motion-backdrop-enter,
+  .motion-panel-enter,
+  .motion-modal-enter,
+  .motion-check-pop,
+  .motion-filter-enter,
+  .motion-saving-pulse {
+    animation: none !important;
+  }
+
+  button:hover,
+  button:active,
+  .micro-tap:active,
+  .micro-checkbox:active {
+    transform: none !important;
+  }
+}
+
+/* Print-optimized styling for user guide and clean document printing (LP-16) */
+@media print {
+  @page {
+    margin: 15mm;
+    size: letter portrait;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #071A3A !important;
+    font-size: 10pt !important;
+  }
+
+  /* Suppress interactive app navigation, modals overlays and buttons */
+  header,
+  aside,
+  nav,
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Make modal content flow inline cleanly */
+  div[role="dialog"] {
+    position: static !important;
+    box-shadow: none !important;
+    border: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .fixed,
+  .absolute {
+    position: static !important;
+  }
+
+  /* Avoid unsightly page cuts inside cards and tables */
+  .p-3,
+  .p-3\.5,
+  .rounded-xl,
+  table,
+  tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
 

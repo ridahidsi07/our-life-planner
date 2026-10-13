@@ -17,6 +17,13 @@ import {
   Mail,
   Download,
 } from 'lucide-react';
+import {
+  APP_VERSION,
+  APP_RELEASE_NAME,
+  SUPPORT_EMAIL,
+  SUPPORT_HOURS,
+  OFFLINE_FILE_NAME,
+} from '../../utils/releaseInfo';
 
 export const GuideModal: React.FC = () => {
   const { activeModal, setActiveModal } = usePlanner();
@@ -45,7 +52,7 @@ export const GuideModal: React.FC = () => {
               <span className="font-bold text-[#071A3A] dark:text-[#EDF4FF] block mb-1">
                 2. Schedule
               </span>
-              Assign due dates or drag items into time blocks on the Calendar.
+              Assign due dates or schedule explicit time blocks directly from the Calendar, Task editor, or Quick Add.
             </div>
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
               <span className="font-bold text-[#071A3A] dark:text-[#EDF4FF] block mb-1">
@@ -259,27 +266,35 @@ export const GuideModal: React.FC = () => {
     },
     updates: {
       title: 'Release information & updates',
-      subtitle: 'Version 1.2.0 changelog and lifetime update policy',
+      subtitle: `${APP_RELEASE_NAME} · Changelog & update guide`,
       content: (
         <div className="space-y-3 text-xs text-[#526782] dark:text-[#A8B8CE]">
           <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
             <div className="font-bold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
-              Version 1.2.0 Stable Release
+              {APP_RELEASE_NAME}
             </div>
             <ul className="list-disc pl-5 space-y-1 text-[11px]">
               <li><strong>Calm Focus View:</strong> Distraction-free single-task momentum view with 25m focus & 5m break timer.</li>
               <li><strong>Weekly Review:</strong> 4-step guided triage of wins, overdue tasks, habits, and next week intentions.</li>
-              <li><strong>Moroccan Dirham (MAD / DH):</strong> Full currency formatting and Africa/Casablanca timezone.</li>
-              <li><strong>Schedule Conflict Detection:</strong> Automatic badge alerts for overlapping time blocks.</li>
-              <li><strong>Recurring Schedule Previews:</strong> Preview future occurrences and protect rest-day streaks.</li>
+              <li><strong>Moroccan Dirham (MAD / DH):</strong> Full currency formatting and Africa/Casablanca timezone support.</li>
+              <li><strong>Schedule Conflict Detection:</strong> Automatic badge alerts and queued resolutions for overlapping time blocks.</li>
+              <li><strong>Recurring Schedule Previews:</strong> Preview future occurrences and protect rest-day streaks without fabricated values.</li>
               <li><strong>Household Member Assignment:</strong> Color-coded profiles assignable to tasks and routines.</li>
-              <li><strong>Calendar .ics Export:</strong> Export all appointments and tasks to Apple, Google, or Outlook calendar.</li>
-              <li><strong>WCAG 2.2 Accessibility:</strong> High contrast, explicit input associations, dialog semantics, and screen reader live regions.</li>
+              <li><strong>Calendar .ics Export:</strong> Export appointments and tasks to Apple, Google, or Outlook calendar format.</li>
+              <li><strong>Verified Accessibility:</strong> High contrast color tokens (≥4.5:1), visible focus rings, dialog focus management, explicit programmatic control labels, screen reader live regions, and reduced-motion support.</li>
             </ul>
           </div>
-          <p>
-            <strong>Lifetime Update Policy:</strong> All Version 1 maintenance patches and feature improvements are delivered automatically and free of charge. Your local data is preserved across all updates.
-          </p>
+          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
+            <div className="font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+              How Updates &amp; Upgrades Work
+            </div>
+            <p className="text-[11px]">
+              <strong>Standalone HTML Edition:</strong> Updates are completely manual and privacy-preserving. To upgrade to a newer version of the HTML file, first export a backup from Settings &gt; Data &amp; Storage, open the new HTML file, and click <strong>Restore from Backup</strong>. Your personal data is never overwritten automatically.
+            </p>
+            <p className="text-[11px]">
+              <strong>Web App / PWA Edition:</strong> When hosted on an online server and installed as a PWA, Service Worker caches updated static assets when your device connects to the internet.
+            </p>
+          </div>
         </div>
       ),
     },
@@ -297,14 +312,14 @@ export const GuideModal: React.FC = () => {
               <span>Official Support Email</span>
             </div>
             <div className="font-mono text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF] select-all">
-              support@ourlifeplanner.app
+              {SUPPORT_EMAIL}
             </div>
             <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
-              Response time: Monday to Friday within 24 hours
+              Response time: {SUPPORT_HOURS}
             </div>
             <div className="pt-1">
               <a
-                href="mailto:support@ourlifeplanner.app?subject=Our%20Life%20Planner%20Support%20Request"
+                href={`mailto:${SUPPORT_EMAIL}?subject=Our%20Life%20Planner%20Support%20Request`}
                 className="inline-flex items-center gap-1 text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline"
               >
                 <span>Send direct email</span>

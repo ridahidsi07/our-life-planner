@@ -2,7 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
 import { getWeekDaysForDate } from '../../utils/formatters';
 import { RingProgress } from '../ui/RingProgress';
-import { Modal } from '../ui/Modal';
+import { ContextualDetailPanel } from '../ui/ContextualDetailPanel';
+import { FilterEmptyState } from '../ui/FilterEmptyState';
 import {
   Check,
   Plus,
@@ -19,6 +20,8 @@ import {
   List,
   ChevronLeft,
   ChevronRight,
+  Archive,
+  RotateCcw,
 } from 'lucide-react';
 import { TaskItem, Priority, TaskStatus } from '../../types/planner';
 
@@ -28,10 +31,15 @@ export const TasksView: React.FC = () => {
     addTask,
     updateTask,
     deleteTask,
+    restoreDeletedTask,
+    archiveTask,
+    unarchiveTask,
     toggleTaskCompletion,
     currentDate,
     settings,
   } = usePlanner();
+
+  const defaultOwner = settings.ownerName || 'Me';
 
   const [activeTab, setActiveTab] = useState<'list' | 'insights'>('list');
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,6 +49,7 @@ export const TasksView: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedDateFilter, setSelectedDateFilter] = useState<string>('all');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [lastDeletedTask, setLastDeletedTask] = useState<TaskItem | null>(null);
 
   // Pagination / bounded rendering state (50 per page default)
   const [currentPage, setCurrentPage] = useState(1);
@@ -51,18 +60,20 @@ export const TasksView: React.FC = () => {
   const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
   const [modalTitle, setModalTitle] = useState('');
   const [modalCategory, setModalCategory] = useState('Personal');
-  const [modalAssigned, setModalAssigned] = useState('Rida');
+  const [modalAssigned, setModalAssigned] = useState(defaultOwner);
   const [modalDueDate, setModalDueDate] = useState('');
   const [modalDueTime, setModalDueTime] = useState('');
   const [modalPriority, setModalPriority] = useState<Priority>('medium');
   const [modalStatus, setModalStatus] = useState<TaskStatus>('not_started');
   const [modalDescription, setModalDescription] = useState('');
+  const [modalTitleError, setModalTitleError] = useState('');
 
   const openCreateModal = () => {
     setEditingTask(null);
     setModalTitle('');
+    setModalTitleError('');
     setModalCategory('Personal');
-    setModalAssigned('Rida');
+    setModalAssigned(settings.ownerName || 'Me');
     setModalDueDate(currentDate);
     setModalDueTime('');
     setModalPriority('medium');
@@ -74,6 +85,7 @@ export const TasksView: React.FC = () => {
   const openEditModal = (task: TaskItem) => {
     setEditingTask(task);
     setModalTitle(task.title);
+    setModalTitleError('');
     setModalCategory(task.category);
     setModalAssigned(task.assignedTo);
     setModalDueDate(task.dueDate || '');
@@ -84,9 +96,24 @@ export const TasksView: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  const handleDeleteTaskWithUndo = (task: TaskItem) => {
+    setLastDeletedTask(task);
+    deleteTask(task.id);
+  };
+
+  const handleUndoDeleteTask = () => {
+    if (!lastDeletedTask) return;
+    restoreDeletedTask(lastDeletedTask);
+    setLastDeletedTask(null);
+  };
+
   const handleSaveTask = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!modalTitle.trim()) return;
+    if (!modalTitle.trim()) {
+      setModalTitleError('Please enter a task title.');
+      return;
+    }
+    setModalTitleError('');
 
     if (editingTask) {
       updateTask(editingTask.id, {
@@ -114,16 +141,30 @@ export const TasksView: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  // Filter tasks
+  const archivedCount = useMemo(
+    () => tasks.filter((t) => Boolean(t.isArchived)).length,
+    [tasks]
+  );
+
+  // Filter tasks (excluding archived tasks from active views unless 'Archived' filter is chosen)
   const filteredTasks = useMemo(() => {
     return tasks.filter((t) => {
+      if (statusFilter === 'Archived') {
+        if (!t.isArchived) return false;
+      } else {
+        if (t.isArchived) return false;
+      }
       if (searchQuery && !t.title.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false;
       }
       if (categoryFilter !== 'All' && t.category !== categoryFilter) return false;
       if (assignedFilter !== 'Anyone' && t.assignedTo !== assignedFilter) return false;
       if (priorityFilter !== 'All' && t.priority !== priorityFilter.toLowerCase()) return false;
-      if (statusFilter !== 'All' && t.status !== statusFilter.toLowerCase().replace(' ', '_')) {
+      if (
+        statusFilter !== 'All' &&
+        statusFilter !== 'Archived' &&
+        t.status !== statusFilter.toLowerCase().replace(' ', '_')
+      ) {
         return false;
       }
       if (selectedDateFilter !== 'all' && t.dueDate !== selectedDateFilter) {
@@ -210,12 +251,12 @@ export const TasksView: React.FC = () => {
     return assignees;
   }, [filteredTasks]);
 
-  // Deadlines next 7 days based on settings.weekStartsOn
+  // Deadlines next 7 days based on settings.weekStartsOn (excluding archived tasks)
   const next7DaysCounts = useMemo(() => {
     const list = getWeekDaysForDate(currentDate, settings.weekStartsOn);
     return list.map((d) => {
       const count = tasks.filter(
-        (t) => t.dueDate === d.dateStr && t.status !== 'completed'
+        (t) => !t.isArchived && t.dueDate === d.dateStr && t.status !== 'completed'
       ).length;
       return {
         name: d.dayName,
@@ -229,28 +270,28 @@ export const TasksView: React.FC = () => {
   const priorityBadge = (priority: Priority) => {
     switch (priority) {
       case 'urgent':
-        return 'text-rose-600 dark:text-rose-400 font-semibold';
+        return 'badge-priority-urgent';
       case 'high':
-        return 'text-orange-600 dark:text-orange-400 font-medium';
+        return 'badge-priority-high';
       case 'medium':
-        return 'text-amber-600 dark:text-amber-400 font-medium';
+        return 'badge-priority-medium';
       case 'low':
-        return 'text-blue-600 dark:text-blue-400 font-medium';
+        return 'badge-priority-low';
       case 'lowest':
-        return 'text-slate-500 font-normal';
+        return 'inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
     }
   };
 
   const statusBadge = (status: TaskStatus) => {
     switch (status) {
       case 'completed':
-        return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300';
+        return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
       case 'in_progress':
-        return 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300';
+        return 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800';
       case 'on_hold':
-        return 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300';
+        return 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800';
       case 'not_started':
-        return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+        return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
     }
   };
 
@@ -262,7 +303,7 @@ export const TasksView: React.FC = () => {
       </div>
 
       {/* Top Header & New Task button */}
-      <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
+      <div className="card-surface p-5 flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-[#071A3A] dark:text-[#EDF4FF]">
             Tasks
@@ -301,13 +342,70 @@ export const TasksView: React.FC = () => {
 
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+            data-testid="tasks-new-task-btn"
+            className="btn-primary min-h-[44px] px-4 py-2"
           >
             <Plus className="w-4 h-4" />
             <span>New task</span>
           </button>
         </div>
       </div>
+
+      {/* Undo Delete Banner (LP-08) */}
+      {lastDeletedTask && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="p-3.5 rounded-2xl bg-slate-900 dark:bg-slate-800 text-white flex items-center justify-between gap-4 shadow-md border border-slate-700"
+        >
+          <div className="text-xs">
+            Deleted task <span className="font-bold">&ldquo;{lastDeletedTask.title}&rdquo;</span>.
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleUndoDeleteTask}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#38D0C5] text-[#071A3A] text-xs font-bold hover:bg-[#2BB5AB] transition-colors cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Undo delete</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setLastDeletedTask(null)}
+              className="px-2 py-1 rounded-lg text-slate-300 hover:text-white text-xs cursor-pointer"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* First-Use Empty State Hero CTA */}
+      {tasks.length === 0 && statusFilter !== 'Archived' && (
+        <div
+          data-testid="tasks-empty-hero"
+          className="bg-teal-50/70 dark:bg-teal-950/30 rounded-2xl p-6 border border-teal-200 dark:border-teal-800/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
+        >
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+              Create your first task
+            </h3>
+            <p className="text-xs sm:text-sm text-[#526782] dark:text-[#A8B8CE] max-w-xl">
+              Capture what matters most today, set a due date or priority, and keep your daily focus clear.
+            </p>
+          </div>
+          <button
+            type="button"
+            data-testid="tasks-empty-cta"
+            onClick={openCreateModal}
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Create your first task</span>
+          </button>
+        </div>
+      )}
 
       {/* Desktop Metric Cards Row */}
       <div className="hidden md:grid md:grid-cols-4 gap-4">
@@ -443,19 +541,19 @@ export const TasksView: React.FC = () => {
 
       {/* List Tab View */}
       {activeTab === 'list' && (
-        <div className="bg-white dark:bg-[#152238] rounded-2xl p-4 md:p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
+        <div className="card-surface p-4 md:p-5 space-y-4">
           {/* Mobile Search & Filters: Single control toggle */}
           <div className="md:hidden space-y-2">
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
-                <Search className="w-4 h-4 absolute left-3 top-2.5 text-[#526782]" />
+                <Search className="w-4 h-4 absolute left-3 top-3 text-[#526782]" />
                 <input
                   type="text"
                   aria-label="Search tasks"
                   placeholder="Search tasks…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:ring-2 focus:ring-[#087F83]"
+                  className="form-input pl-9 text-xs"
                 />
               </div>
 
@@ -533,6 +631,7 @@ export const TasksView: React.FC = () => {
                     <option value="In progress">In progress</option>
                     <option value="On hold">On hold</option>
                     <option value="Completed">Completed</option>
+                    <option value="Archived">Archived ({archivedCount})</option>
                   </select>
                 </div>
               </div>
@@ -549,7 +648,7 @@ export const TasksView: React.FC = () => {
                 placeholder="Search tasks…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:ring-2 focus:ring-[#087F83]"
+                className="form-input pl-9 text-xs"
               />
             </div>
 
@@ -557,7 +656,7 @@ export const TasksView: React.FC = () => {
               aria-label="Filter tasks by category"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium"
+              className="form-select text-xs font-medium"
             >
               <option value="All">Category: All</option>
               <option value="Personal">Personal</option>
@@ -571,7 +670,7 @@ export const TasksView: React.FC = () => {
               aria-label="Filter tasks by priority"
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium"
+              className="form-select text-xs font-medium"
             >
               <option value="All">Priority: All</option>
               <option value="Urgent">Urgent</option>
@@ -585,22 +684,54 @@ export const TasksView: React.FC = () => {
               aria-label="Filter tasks by status"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium"
+              className="form-select text-xs font-medium"
             >
               <option value="All">Status: All</option>
               <option value="Not started">Not started</option>
               <option value="In progress">In progress</option>
               <option value="On hold">On hold</option>
               <option value="Completed">Completed</option>
+              <option value="Archived">Archived ({archivedCount})</option>
             </select>
           </div>
+
+          {/* Quick Archived View Pill when archived tasks exist */}
+          {(archivedCount > 0 || statusFilter === 'Archived') && (
+            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 text-xs">
+              <div className="flex items-center gap-2 text-[#526782] dark:text-[#A8B8CE]">
+                <Archive className="w-3.5 h-3.5 text-[#087F83]" />
+                <span>
+                  {statusFilter === 'Archived'
+                    ? `Viewing ${archivedCount} archived task${archivedCount === 1 ? '' : 's'}`
+                    : `${archivedCount} archived task${archivedCount === 1 ? '' : 's'} hidden from active list`}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setStatusFilter(statusFilter === 'Archived' ? 'All' : 'Archived')
+                }
+                className="font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline cursor-pointer"
+              >
+                {statusFilter === 'Archived' ? 'Back to active tasks' : 'View archived'}
+              </button>
+            </div>
+          )}
 
           {/* Mobile Task Cards (All vital details visible together) */}
           <div className="md:hidden space-y-2.5">
             {filteredTasks.length === 0 ? (
-              <div className="py-8 text-center text-xs text-[#526782]">
-                No tasks found matching your filters.
-              </div>
+              tasks.length > 0 ? (
+                <FilterEmptyState
+                  title="No tasks match active filters"
+                  description="None of your tasks match the selected search, category, priority, or status filters."
+                  onClearFilters={handleClearFilters}
+                />
+              ) : (
+                <div className="py-8 text-center text-xs text-[#526782] dark:text-[#A8B8CE]">
+                  No tasks created yet.
+                </div>
+              )
             ) : (
               paginatedTasks.map((task) => {
                 const isOverdue =
@@ -618,7 +749,7 @@ export const TasksView: React.FC = () => {
                       role="checkbox"
                       aria-checked={task.status === 'completed'}
                       onClick={() => toggleTaskCompletion(task.id)}
-                      className={`w-5 h-5 mt-0.5 rounded-md flex items-center justify-center shrink-0 cursor-pointer transition-colors ${
+                      className={`w-5 h-5 mt-0.5 rounded-md flex items-center justify-center shrink-0 cursor-pointer micro-checkbox ${
                         task.status === 'completed'
                           ? 'bg-[#087F83] text-white'
                           : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
@@ -626,7 +757,7 @@ export const TasksView: React.FC = () => {
                       aria-label={`Mark task "${task.title}" as ${task.status === 'completed' ? 'incomplete' : 'complete'}`}
                     >
                       {task.status === 'completed' && (
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        <Check className="w-3.5 h-3.5 stroke-[3] motion-check-pop" />
                       )}
                     </button>
 
@@ -634,7 +765,7 @@ export const TasksView: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <span
-                          className={`text-xs font-semibold leading-snug break-words ${
+                          className={`text-xs font-semibold leading-snug break-words transition-all duration-150 ${
                             task.status === 'completed'
                               ? 'line-through text-[#526782] dark:text-[#7A8FA6]'
                               : 'text-[#071A3A] dark:text-[#EDF4FF]'
@@ -645,18 +776,41 @@ export const TasksView: React.FC = () => {
 
                         {/* Actions */}
                         <div className="flex items-center gap-1 shrink-0 -mt-1 -mr-1">
+                          {task.isArchived ? (
+                            <button
+                              type="button"
+                              onClick={() => unarchiveTask(task.id)}
+                              className="px-2 py-0.5 rounded-md bg-teal-50 dark:bg-teal-950/50 text-[#087F83] dark:text-[#38D0C5] text-[10px] font-semibold cursor-pointer"
+                              aria-label={`Restore archived task "${task.title}"`}
+                              title="Restore task"
+                            >
+                              Restore
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => openEditModal(task)}
+                                className="p-1 rounded-md text-[#526782] hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+                                aria-label={`Edit task "${task.title}"`}
+                                title="Edit task"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => archiveTask(task.id)}
+                                className="p-1 rounded-md text-[#526782] hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+                                aria-label={`Archive task "${task.title}"`}
+                                title="Archive task"
+                              >
+                                <Archive className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
                           <button
                             type="button"
-                            onClick={() => openEditModal(task)}
-                            className="p-1 rounded-md text-[#526782] hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
-                            aria-label={`Edit task "${task.title}"`}
-                            title="Edit task"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => deleteTask(task.id)}
+                            onClick={() => handleDeleteTaskWithUndo(task)}
                             className="p-1 rounded-md text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
                             aria-label={`Delete task "${task.title}"`}
                             title="Delete task"
@@ -688,7 +842,7 @@ export const TasksView: React.FC = () => {
 
                         {/* Priority Badge */}
                         <span
-                          className={`font-semibold capitalize px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 ${priorityBadge(
+                          className={`capitalize ${priorityBadge(
                             task.priority
                           )}`}
                         >
@@ -736,8 +890,18 @@ export const TasksView: React.FC = () => {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {filteredTasks.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-8 text-center text-[#526782]">
-                      No tasks found matching your filters.
+                    <td colSpan={8} className="py-4">
+                      {tasks.length > 0 ? (
+                        <FilterEmptyState
+                          title="No tasks match active filters"
+                          description="None of your tasks match the selected search, category, priority, or status filters."
+                          onClearFilters={handleClearFilters}
+                        />
+                      ) : (
+                        <div className="py-8 text-center text-xs text-[#526782] dark:text-[#A8B8CE]">
+                          No tasks created yet.
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ) : (
@@ -758,25 +922,25 @@ export const TasksView: React.FC = () => {
                             aria-checked={task.status === 'completed'}
                             aria-label={`Mark task "${task.title}" as ${task.status === 'completed' ? 'incomplete' : 'complete'}`}
                             onClick={() => toggleTaskCompletion(task.id)}
-                            className={`w-4.5 h-4.5 rounded-md flex items-center justify-center cursor-pointer transition-colors ${
+                            className={`w-4.5 h-4.5 rounded-md flex items-center justify-center cursor-pointer micro-checkbox ${
                               task.status === 'completed'
-                                ? 'bg-[#087F83] text-white'
+                                ? 'bg-[#087F83] text-white shadow-2xs'
                                 : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
                             }`}
                           >
                             {task.status === 'completed' && (
-                              <Check className="w-3.5 h-3.5 stroke-[3]" />
+                              <Check className="w-3.5 h-3.5 stroke-[3] motion-check-pop" />
                             )}
                           </button>
                         </td>
 
                         <td className="py-3 px-3 font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
                           <span
-                            className={
+                            className={`transition-all duration-150 ease-out ${
                               task.status === 'completed'
                                 ? 'line-through text-[#526782]'
                                 : ''
-                            }
+                            }`}
                           >
                             {task.title}
                           </span>
@@ -833,18 +997,41 @@ export const TasksView: React.FC = () => {
 
                         <td className="py-3 px-3 text-right">
                           <div className="flex items-center justify-end gap-1">
+                            {task.isArchived ? (
+                              <button
+                                type="button"
+                                onClick={() => unarchiveTask(task.id)}
+                                className="px-2 py-1 rounded-md bg-teal-50 dark:bg-teal-950/50 text-[#087F83] dark:text-[#38D0C5] text-[10px] font-semibold hover:bg-teal-100 cursor-pointer"
+                                aria-label={`Restore archived task "${task.title}"`}
+                                title="Restore task"
+                              >
+                                Restore
+                              </button>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => openEditModal(task)}
+                                  className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 text-[#526782] cursor-pointer"
+                                  aria-label={`Edit task "${task.title}"`}
+                                  title="Edit task"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => archiveTask(task.id)}
+                                  className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 text-[#526782] cursor-pointer"
+                                  aria-label={`Archive task "${task.title}"`}
+                                  title="Archive task"
+                                >
+                                  <Archive className="w-3.5 h-3.5" />
+                                </button>
+                              </>
+                            )}
                             <button
                               type="button"
-                              onClick={() => openEditModal(task)}
-                              className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 text-[#526782] cursor-pointer"
-                              aria-label={`Edit task "${task.title}"`}
-                              title="Edit task"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => deleteTask(task.id)}
+                              onClick={() => handleDeleteTaskWithUndo(task)}
                               className="p-1 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 cursor-pointer"
                               aria-label={`Delete task "${task.title}"`}
                               title="Delete task"
@@ -998,7 +1185,10 @@ export const TasksView: React.FC = () => {
               Outstanding priorities by category
             </h3>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
+              <table
+                data-testid="tasks-accessible-insights-table"
+                className="w-full text-left text-xs border-collapse"
+              >
                 <thead>
                   <tr className="border-b border-[#E2E8F0] dark:border-[#1E2D4A] text-[#526782]">
                     <th className="py-2.5 px-3">Category</th>
@@ -1112,18 +1302,30 @@ export const TasksView: React.FC = () => {
         </div>
       )}
 
-      {/* Create / Edit Task Modal */}
-      <Modal
+      {/* Create / Edit Task Contextual Detail Panel */}
+      <ContextualDetailPanel
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={editingTask ? 'Edit task' : 'Create a new task'}
         subtitle="Add details to keep your work and personal tasks on track"
+        dataTestId="task-detail-panel"
       >
-        <form onSubmit={handleSaveTask} className="space-y-4">
+        <form onSubmit={handleSaveTask} noValidate className="space-y-4">
+          {modalTitleError && (
+            <div
+              role="alert"
+              data-testid="task-modal-title-error"
+              className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 text-xs flex items-center gap-2"
+            >
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{modalTitleError}</span>
+            </div>
+          )}
+
           <div>
             <label
               htmlFor="task-modal-title"
-              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              className="form-label"
             >
               Task title *
             </label>
@@ -1131,10 +1333,16 @@ export const TasksView: React.FC = () => {
               id="task-modal-title"
               type="text"
               required
+              aria-invalid={Boolean(modalTitleError)}
               value={modalTitle}
-              onChange={(e) => setModalTitle(e.target.value)}
+              onChange={(e) => {
+                setModalTitle(e.target.value);
+                if (modalTitleError && e.target.value.trim()) {
+                  setModalTitleError('');
+                }
+              }}
               placeholder="e.g. Renew car insurance"
-              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs focus:ring-2 focus:ring-[#087F83]"
+              className={`form-input text-xs ${modalTitleError ? 'border-rose-500 focus:ring-rose-500' : ''}`}
             />
           </div>
 
@@ -1142,7 +1350,7 @@ export const TasksView: React.FC = () => {
             <div>
               <label
                 htmlFor="task-modal-category"
-                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                className="form-label"
               >
                 Category
               </label>
@@ -1150,7 +1358,7 @@ export const TasksView: React.FC = () => {
                 id="task-modal-category"
                 value={modalCategory}
                 onChange={(e) => setModalCategory(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
+                className="form-select text-xs font-medium"
               >
                 <option value="Personal">Personal</option>
                 <option value="Career">Career</option>
@@ -1163,7 +1371,7 @@ export const TasksView: React.FC = () => {
             <div>
               <label
                 htmlFor="task-modal-assigned"
-                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                className="form-label"
               >
                 Assign to
               </label>
@@ -1172,8 +1380,8 @@ export const TasksView: React.FC = () => {
                 type="text"
                 value={modalAssigned}
                 onChange={(e) => setModalAssigned(e.target.value)}
-                placeholder="Rida"
-                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
+                placeholder={defaultOwner}
+                className="form-input text-xs"
               />
             </div>
           </div>
@@ -1182,7 +1390,7 @@ export const TasksView: React.FC = () => {
             <div>
               <label
                 htmlFor="task-modal-due-date"
-                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                className="form-label"
               >
                 Due date
               </label>
@@ -1191,14 +1399,14 @@ export const TasksView: React.FC = () => {
                 type="date"
                 value={modalDueDate}
                 onChange={(e) => setModalDueDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
+                className="form-input text-xs"
               />
             </div>
 
             <div>
               <label
                 htmlFor="task-modal-due-time"
-                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                className="form-label"
               >
                 Due time (optional)
               </label>
@@ -1207,7 +1415,7 @@ export const TasksView: React.FC = () => {
                 type="time"
                 value={modalDueTime}
                 onChange={(e) => setModalDueTime(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
+                className="form-input text-xs"
               />
             </div>
           </div>
@@ -1216,7 +1424,7 @@ export const TasksView: React.FC = () => {
             <div>
               <label
                 htmlFor="task-modal-priority"
-                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                className="form-label"
               >
                 Priority
               </label>
@@ -1224,7 +1432,7 @@ export const TasksView: React.FC = () => {
                 id="task-modal-priority"
                 value={modalPriority}
                 onChange={(e) => setModalPriority(e.target.value as Priority)}
-                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
+                className="form-select text-xs font-medium"
               >
                 <option value="urgent">Urgent</option>
                 <option value="high">High</option>
@@ -1237,7 +1445,7 @@ export const TasksView: React.FC = () => {
             <div>
               <label
                 htmlFor="task-modal-status"
-                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                className="form-label"
               >
                 Status
               </label>
@@ -1245,7 +1453,7 @@ export const TasksView: React.FC = () => {
                 id="task-modal-status"
                 value={modalStatus}
                 onChange={(e) => setModalStatus(e.target.value as TaskStatus)}
-                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
+                className="form-select text-xs font-medium"
               >
                 <option value="not_started">Not started</option>
                 <option value="in_progress">In progress</option>
@@ -1258,7 +1466,7 @@ export const TasksView: React.FC = () => {
           <div>
             <label
               htmlFor="task-modal-description"
-              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              className="form-label"
             >
               Description (optional)
             </label>
@@ -1268,7 +1476,7 @@ export const TasksView: React.FC = () => {
               value={modalDescription}
               onChange={(e) => setModalDescription(e.target.value)}
               placeholder="Write a short description…"
-              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
+              className="form-textarea text-xs"
             />
           </div>
 
@@ -1276,19 +1484,20 @@ export const TasksView: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-[#526782] hover:bg-slate-50"
+              className="btn-secondary min-h-[44px] px-4 py-2 rounded-xl text-xs font-semibold"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+              data-testid="task-modal-submit-btn"
+              className="btn-primary min-h-[44px] px-4 py-2 rounded-xl text-xs font-semibold"
             >
               {editingTask ? 'Save changes' : 'Create task'}
             </button>
           </div>
         </form>
-      </Modal>
+      </ContextualDetailPanel>
     </div>
   );
 };

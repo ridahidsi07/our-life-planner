@@ -170,6 +170,32 @@ export const GoalsView: React.FC = () => {
         </button>
       </div>
 
+      {/* First-Use Empty State Hero CTA */}
+      {goals.length === 0 && (
+        <div
+          data-testid="goals-empty-hero"
+          className="bg-teal-50/70 dark:bg-teal-950/30 rounded-2xl p-6 border border-teal-200 dark:border-teal-800/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
+        >
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+              Set your first milestone goal
+            </h3>
+            <p className="text-xs sm:text-sm text-[#526782] dark:text-[#A8B8CE] max-w-xl">
+              Break a meaningful goal into simple, actionable steps so you can see steady progress week by week.
+            </p>
+          </div>
+          <button
+            type="button"
+            data-testid="goals-empty-cta"
+            onClick={openCreateModal}
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Set your first goal</span>
+          </button>
+        </div>
+      )}
+
       {/* Summary Cards Row */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {/* Overall progress donut */}

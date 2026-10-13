@@ -64,7 +64,7 @@ export const QuickAddModal: React.FC = () => {
       addTask({
         title: taskTitle.trim(),
         category: taskCategory,
-        assignedTo: 'Rida',
+        assignedTo: settings.ownerName || 'Me',
         dueDate: currentDate,
         priority: 'medium',
         status: 'not_started',

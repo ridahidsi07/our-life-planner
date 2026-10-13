@@ -594,6 +594,10 @@ export function serializePlannerCalendarToIcs({
       lines.push(serializeDateOrDateTimeProperty('DTEND', nextDay, undefined, timeZoneMode));
     }
 
+    if (ev.type === 'birthday') {
+      lines.push(serializeIcsProperty('RRULE', 'FREQ=YEARLY'));
+    }
+
     lines.push(serializeIcsProperty('END', 'VEVENT'));
   }
 

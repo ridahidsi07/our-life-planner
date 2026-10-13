@@ -23,6 +23,7 @@ import {
   Pin,
   Smartphone,
   Zap,
+  ShieldCheck,
 } from 'lucide-react';
 import {
   ToolViewId,
@@ -42,7 +43,7 @@ interface NavGroup {
 }
 
 export const Sidebar: React.FC = () => {
-  const { activeView, setActiveView, setActiveModal, settings } = usePlanner();
+  const { activeView, setActiveView, setActiveModal, settings, updateSettings } = usePlanner();
 
   const navGroups: NavGroup[] = [
     {
@@ -112,9 +113,19 @@ export const Sidebar: React.FC = () => {
             data-testid="sidebar-favorites-section"
             className="space-y-0.5 pb-2 border-b border-slate-100 dark:border-slate-800"
           >
-            <div className="flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#526782] dark:text-[#A8B8CE]">
-              <Pin className="w-3 h-3 text-[#087F83] dark:text-[#38D0C5]" />
-              <span>Favorites</span>
+            <div className="flex items-center justify-between px-3 py-1">
+              <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#526782] dark:text-[#A8B8CE]">
+                <Pin className="w-3 h-3 text-[#087F83] dark:text-[#38D0C5]" />
+                <span>Favorites</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => updateSettings({ pinnedTools: [] })}
+                title="Hide pinned favorites section"
+                className="text-[10px] font-medium text-[#526782] dark:text-[#A8B8CE] hover:text-[#087F83] dark:hover:text-[#38D0C5] cursor-pointer"
+              >
+                Clear
+              </button>
             </div>
             {pinnedItems.map((item) => {
               const Icon = item.icon;
@@ -185,7 +196,7 @@ export const Sidebar: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveModal('focus_mode')}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] text-[11px] font-semibold hover:bg-teal-100 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] text-[11px] font-semibold hover:bg-teal-100 dark:hover:bg-teal-900/70 transition-colors cursor-pointer"
           >
             <Zap className="w-3 h-3" />
             <span>Focus</span>
@@ -193,7 +204,7 @@ export const Sidebar: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveModal('pwa_install')}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
           >
             <Smartphone className="w-3 h-3" />
             <span>App Install</span>
@@ -220,6 +231,16 @@ export const Sidebar: React.FC = () => {
             </div>
           </div>
           <ChevronRight className="w-4 h-4 text-[#526782] dark:text-[#A8B8CE]" />
+        </button>
+
+        <button
+          type="button"
+          data-testid="sidebar-backup-restore"
+          onClick={() => setActiveModal('backup_restore')}
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-[#526782] dark:text-[#A8B8CE] hover:text-[#071A3A] dark:hover:text-[#EDF4FF] hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+        >
+          <ShieldCheck className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+          <span>Backup & Restore</span>
         </button>
 
         <button

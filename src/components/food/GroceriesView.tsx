@@ -3,6 +3,8 @@ import { usePlanner } from '../../context/PlannerContext';
 import { getWeekDaysForDate, getWeekStartDate } from '../../utils/formatters';
 import { RingProgress } from '../ui/RingProgress';
 import { Modal } from '../ui/Modal';
+import { ContextualDetailPanel } from '../ui/ContextualDetailPanel';
+import { FilterEmptyState } from '../ui/FilterEmptyState';
 import {
   ShoppingCart,
   Plus,
@@ -12,6 +14,7 @@ import {
   Trash2,
   AlertCircle,
   ExternalLink,
+  Search,
 } from 'lucide-react';
 import { GroceryItem } from '../../types/planner';
 
@@ -115,6 +118,22 @@ export const GroceriesView: React.FC = () => {
   // Group by category
   const categories = ['Produce', 'Pantry', 'Chilled', 'Household', 'Bakery', 'Other'] as const;
 
+  // Search and Category Filtering
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('All');
+
+  const filteredGroceries = useMemo(() => {
+    return groceries.filter((g) => {
+      if (searchQuery && !g.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+      if (categoryFilter !== 'All' && g.category !== categoryFilter) {
+        return false;
+      }
+      return true;
+    });
+  }, [groceries, searchQuery, categoryFilter]);
+
   const handleAddManualItem = (e: React.FormEvent) => {
     e.preventDefault();
     if (!itemName.trim() || itemAmount <= 0) return;
@@ -184,6 +203,32 @@ export const GroceriesView: React.FC = () => {
         </div>
       )}
 
+      {/* First-Use Empty State Hero CTA */}
+      {groceries.length === 0 && (
+        <div
+          data-testid="groceries-empty-hero"
+          className="bg-white dark:bg-[#152238] rounded-2xl p-6 border-2 border-dashed border-[#087F83]/35 dark:border-[#38D0C5]/35 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+        >
+          <div className="space-y-1">
+            <h2 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+              Your shopping list is empty
+            </h2>
+            <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
+              Add your first grocery item manually or generate items from your planned weekly meals.
+            </p>
+          </div>
+          <button
+            type="button"
+            data-testid="groceries-empty-cta"
+            onClick={() => setIsAddModalOpen(true)}
+            className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add your first grocery item</span>
+          </button>
+        </div>
+      )}
+
       {/* Progress & Totals Bar (Board 14) */}
       <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -241,10 +286,56 @@ export const GroceriesView: React.FC = () => {
         </div>
       </div>
 
+      {/* Groceries Search & Filter Bar */}
+      {groceries.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="relative flex-1 sm:max-w-xs">
+            <Search className="w-4 h-4 absolute left-3 top-2.5 text-[#526782]" />
+            <input
+              type="text"
+              aria-label="Search grocery items"
+              placeholder="Search grocery items…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs text-[#071A3A] dark:text-[#EDF4FF]"
+            />
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+            {['All', ...categories].map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setCategoryFilter(c)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors whitespace-nowrap ${
+                  categoryFilter === c
+                    ? 'bg-[#087F83] text-white shadow-2xs font-semibold'
+                    : 'bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Filter Empty State when search/category returns 0 results */}
+      {groceries.length > 0 && filteredGroceries.length === 0 && (
+        <FilterEmptyState
+          title="No grocery items found"
+          description="None of your groceries match the search query or category filter."
+          onClearFilters={() => {
+            setSearchQuery('');
+            setCategoryFilter('All');
+          }}
+        />
+      )}
+
       {/* Grouped Shopping List Matrix (Board 14) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {categories.map((cat) => {
-          const items = groceries.filter((g) => g.category === cat);
+          const items = filteredGroceries.filter((g) => g.category === cat);
           if (items.length === 0) return null;
 
           const catPurchased = items.filter((i) => i.isPurchased).length;
@@ -276,19 +367,20 @@ export const GroceriesView: React.FC = () => {
                         aria-checked={item.isPurchased}
                         aria-label={`Mark "${item.name}" as ${item.isPurchased ? 'not purchased' : 'purchased'}`}
                         onClick={() => toggleGroceryPurchased(item.id)}
-                        className={`w-5 h-5 rounded-md flex items-center justify-center cursor-pointer transition-colors shrink-0 ${
+                        className={`w-5 h-5 rounded-md flex items-center justify-center cursor-pointer micro-checkbox shrink-0 ${
                           item.isPurchased
                             ? 'bg-[#087F83] text-white'
                             : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
                         }`}
                       >
-                        {item.isPurchased && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                        {item.isPurchased && <Check className="w-3.5 h-3.5 stroke-[3] motion-check-pop" />}
                       </button>
 
                       <div className="truncate">
                         <span
                           onClick={() => openItemInspection(item)}
-                          className={`text-xs font-semibold cursor-pointer truncate block hover:underline ${
+                          data-testid="grocery-item-title"
+                          className={`text-xs font-semibold cursor-pointer truncate block hover:underline transition-all duration-150 ${
                             item.isPurchased
                               ? 'line-through text-[#526782] dark:text-[#A8B8CE]'
                               : 'text-[#071A3A] dark:text-[#EDF4FF]'
@@ -341,16 +433,17 @@ export const GroceriesView: React.FC = () => {
         })}
       </div>
 
-      {/* Item Details Inspection Modal (Board 14) */}
-      <Modal
-        isOpen={!!selectedItem}
+      {/* Item Details Inspection Contextual Detail Panel */}
+      <ContextualDetailPanel
+        isOpen={Boolean(selectedItem)}
         onClose={() => setSelectedItem(null)}
-        title={selectedItem?.name}
+        title={selectedItem?.name || 'Grocery Item'}
         subtitle={
           selectedItem?.sourceType === 'generated'
             ? 'Recipe derived item'
             : 'Manual extra'
         }
+        dataTestId="grocery-detail-panel"
       >
         {selectedItem && (
           <form onSubmit={handleSaveItemChanges} className="space-y-4">
@@ -468,7 +561,7 @@ export const GroceriesView: React.FC = () => {
             </div>
           </form>
         )}
-      </Modal>
+      </ContextualDetailPanel>
 
       {/* Regeneration Review Preview Modal (Board 23, Part 02D) */}
       <Modal

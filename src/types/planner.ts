@@ -4,9 +4,12 @@ export type SavingState =
   | 'saving'
   | 'saved_local'
   | 'saved_online'
+  | 'saved_cloud'
   | 'waiting_to_sync'
   | 'needs_choice'
   | 'could_not_save';
+
+export type RepeatInterval = 'none' | 'monthly' | 'weekly' | 'yearly';
 
 export type Priority = 'urgent' | 'high' | 'medium' | 'low' | 'lowest';
 export type TaskStatus = 'not_started' | 'in_progress' | 'on_hold' | 'completed';
@@ -394,4 +397,46 @@ export interface ConflictItem {
   localVersion: any;
   onlineVersion: any;
   timestamp: string;
+  source?: 'tab' | 'cloud' | 'import';
 }
+
+export interface CorruptDataQuarantine {
+  quarantinedAt: string;
+  rawData: string | null;
+  rawSettings: string | null;
+  rawRevision: string | null;
+  reason: string;
+  errors: string[];
+  validationErrors?: string[];
+}
+
+export type CloudSyncStatus =
+  | 'local_only'
+  | 'disconnected'
+  | 'connected_synced'
+  | 'syncing'
+  | 'sync_error'
+  | 'conflict_pending';
+
+export interface CloudEntitlement {
+  status: 'active' | 'trial' | 'offline_only' | 'expired';
+  plan: 'lifetime_bundle' | 'annual_sync' | 'free_local' | 'online_plus';
+  canSync: boolean;
+  validUntil?: string;
+}
+
+export interface CloudSyncState {
+  status: CloudSyncStatus;
+  endpointUrl: string;
+  accountId?: string;
+  email?: string;
+  accountUserId?: string;
+  accountEmail?: string;
+  accountDisplayName?: string;
+  serverRevision?: number;
+  etag?: string;
+  lastSyncedAt?: string;
+  lastSyncError?: string | null;
+  entitlement?: CloudEntitlement;
+}
+

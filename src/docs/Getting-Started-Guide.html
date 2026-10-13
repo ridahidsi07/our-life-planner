@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Life Planner — Getting Started & User Guide</title>
+  <style>
+    @page {
+      size: letter portrait;
+      margin: 14mm 16mm 14mm 16mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #071A3A;
+      background-color: #FFFFFF;
+      line-height: 1.45;
+      font-size: 9.5pt;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .header {
+      border-bottom: 2px solid #087F83;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .brand-title {
+      font-size: 19pt;
+      font-weight: 800;
+      color: #071A3A;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-tagline {
+      font-size: 9.5pt;
+      color: #087F83;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .meta-badge {
+      text-align: right;
+      font-size: 8pt;
+      color: #475569;
+      line-height: 1.3;
+    }
+
+    .meta-badge strong {
+      color: #071A3A;
+    }
+
+    h2 {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #087F83;
+      margin-top: 14px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid #E2E8F0;
+      padding-bottom: 3px;
+    }
+
+    h3 {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: #071A3A;
+      margin-top: 8px;
+      margin-bottom: 3px;
+    }
+
+    p {
+      margin-bottom: 6px;
+      color: #334155;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .card {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 6px;
+      padding: 8px 10px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .card-accent {
+      background: #F0FDFA;
+      border: 1px solid #99F6E4;
+      border-radius: 6px;
+      padding: 8px 10px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .card-title {
+      font-weight: 700;
+      color: #071A3A;
+      font-size: 9pt;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .step-num {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      background: #087F83;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 16px;
+      font-size: 7.5pt;
+      font-weight: 700;
+      margin-right: 4px;
+    }
+
+    ul, ol {
+      margin-left: 16px;
+      margin-bottom: 6px;
+      color: #334155;
+    }
+
+    li {
+      margin-bottom: 3px;
+    }
+
+    strong {
+      color: #071A3A;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 8pt;
+      background: #E2E8F0;
+      padding: 1px 4px;
+      border-radius: 3px;
+      color: #0F172A;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 8px;
+      font-size: 8.5pt;
+    }
+
+    th {
+      background: #F1F5F9;
+      color: #071A3A;
+      text-align: left;
+      padding: 4px 6px;
+      font-weight: 700;
+      border-bottom: 1px solid #CBD5E1;
+    }
+
+    td {
+      padding: 4px 6px;
+      border-bottom: 1px solid #E2E8F0;
+      color: #334155;
+    }
+
+    .notice {
+      background: #EFF6FF;
+      border-left: 3px solid #2563EB;
+      padding: 6px 8px;
+      font-size: 8.5pt;
+      border-radius: 0 4px 4px 0;
+      margin: 8px 0;
+      color: #1E3A8A;
+    }
+
+    .page-break {
+      break-after: page;
+      page-break-after: always;
+    }
+
+    .footer {
+      border-top: 1px solid #E2E8F0;
+      padding-top: 6px;
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 7.5pt;
+      color: #64748B;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PAGE 1: QUICK START & DAILY LOOP -->
+  <div class="header">
+    <div>
+      <div class="brand-title">Our Life Planner</div>
+      <div class="brand-tagline">Getting Started Guide & Quick Reference</div>
+    </div>
+    <div class="meta-badge">
+      <strong>Version 1.0.0 Stable</strong><br>
+      Independent Offline HTML &amp; PWA<br>
+      Zero Cloud Telemetry · 100% Private
+    </div>
+  </div>
+
+  <h2>1. Quick Start in 3 Steps</h2>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title"><span class="step-num">1</span> Open the File</div>
+      <p>Double-click <code>Our-Life-Planner-Offline.html</code> in any modern browser (Edge, Chrome, Safari, Firefox). No internet connection or installation required.</p>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="step-num">2</span> Complete Setup</div>
+      <p>Follow the 2-minute Setup Wizard: enter your name, select light/dark theme, choose your week start day (Monday/Sunday), and pick your local currency.</p>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="step-num">3</span> Begin Daily Loop</div>
+      <p>Navigate to <strong>Today</strong> for your morning overview, add tasks via <strong>Quick Add</strong> (press <code>Ctrl+K</code> / <code>Cmd+K</code>), and focus with the built-in timer.</p>
+    </div>
+  </div>
+
+  <h2>2. The Core Daily Momentum Loop</h2>
+  <p>Our Life Planner is organized around a simple 4-step workflow to eliminate mental fatigue:</p>
+  <div class="grid-2">
+    <div class="card-accent">
+      <div class="card-title">1. Capture (Brain Dump)</div>
+      <p>Quickly jot down unfinished thoughts, ideas, or to-dos into the <strong>Brain Dump</strong> or Quick Add modal without worrying about organization yet.</p>
+    </div>
+    <div class="card-accent">
+      <div class="card-title">2. Schedule (Calendar &amp; Tasks)</div>
+      <p>Assign tasks to dates and specific time blocks. The planner alerts you to schedule conflicts automatically so your day remains realistic.</p>
+    </div>
+    <div class="card-accent">
+      <div class="card-title">3. Complete (Focus Mode)</div>
+      <p>Open <strong>Focus View</strong> (press <code>F</code>) to work on one task at a time with a gentle 25-minute focus timer and 5-minute restorative breaks.</p>
+    </div>
+    <div class="card-accent">
+      <div class="card-title">4. Review (Weekly Review)</div>
+      <p>At the end of each week, run the <strong>Weekly Review</strong> helper to triage overdue items, celebrate completed goals, and set next week's priorities.</p>
+    </div>
+  </div>
+
+  <h2>3. The 15 Integrated Modules</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Area</th>
+        <th style="width: 35%;">Modules</th>
+        <th style="width: 40%;">Key Features</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Daily Momentum</strong></td>
+        <td>Today, Calendar, Tasks &amp; Insights, Routines, Brain Dump</td>
+        <td>Rhythm overview, time-blocked scheduling, recurring routines with flexible completion.</td>
+      </tr>
+      <tr>
+        <td><strong>Progress &amp; Growth</strong></td>
+        <td>Goals &amp; Milestones, Habits &amp; Streaks</td>
+        <td>Quarterly/annual milestones, habit streaks with forgiving rest days to protect momentum.</td>
+      </tr>
+      <tr>
+        <td><strong>Money &amp; Cash Flow</strong></td>
+        <td>Budget &amp; Bills, Savings Pots, Debt Payoff</td>
+        <td>Zero-balance ledger, visual target pots, Snowball vs. Avalanche debt payoff forecasts.</td>
+      </tr>
+      <tr>
+        <td><strong>Food &amp; Nourishment</strong></td>
+        <td>Weekly Meal Planner, Food Library, Grocery List</td>
+        <td>7-day recipe planning, automatic ingredients aggregation with normalized unit amounts.</td>
+      </tr>
+      <tr>
+        <td><strong>Health &amp; Wellness</strong></td>
+        <td>Workouts Logger, Weight &amp; CDC BMI, Water Tracker</td>
+        <td>Exercise sets/reps logger, metric/imperial weight trends, 8 multi-profile support.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="notice">
+    <strong>Module Customization:</strong> Want a leaner view? You can toggle any of the 15 modules on or off at any time in <strong>Settings &gt; Module Customization</strong>.
+  </div>
+
+  <div class="footer">
+    <span>Our Life Planner v1.0.0 · Getting Started Guide</span>
+    <span>Page 1 of 2</span>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- PAGE 2: STORAGE, BACKUP, COMPATIBILITY & SUPPORT -->
+  <div class="header">
+    <div>
+      <div class="brand-title">Our Life Planner</div>
+      <div class="brand-tagline">Data Management, Upgrades &amp; Support Reference</div>
+    </div>
+    <div class="meta-badge">
+      <strong>Privacy Guarantee</strong><br>
+      No Cloud Accounts Required<br>
+      Your Data Remains on Your Device
+    </div>
+  </div>
+
+  <h2>4. How Your Data Persists (Storage Architecture)</h2>
+  <p>
+    Our Life Planner saves all information directly into your browser's local origin database (<code>localStorage</code>) using atomic multi-phase verification.
+  </p>
+  <ul>
+    <li><strong>100% Private:</strong> No personal details, financial records, health data, or notes are ever transmitted to remote servers.</li>
+    <li><strong>Device &amp; Folder Boundaries:</strong> Each browser profile and file path maintains its own local storage space. If you relocate the HTML file to a new folder or switch to a new browser, your previous data remains in the original origin.</li>
+    <li><strong>Upgrading &amp; Moving Devices:</strong> Use the built-in <strong>JSON Backup &amp; Restore</strong> feature to move your records seamlessly.</li>
+  </ul>
+
+  <h2>5. Backup, Restore &amp; Upgrade Routine</h2>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">How to Create a Backup</div>
+      <ol>
+        <li>Go to <strong>Settings</strong> &gt; <strong>Data &amp; Storage</strong> (or press <code>Ctrl+B</code>).</li>
+        <li>Click <strong>Export JSON Backup</strong>.</li>
+        <li>A dated JSON file (e.g. <code>our-life-planner-backup-2026-10-13.json</code>) downloads immediately to your computer.</li>
+      </ol>
+      <p style="margin-top: 4px; font-size: 8pt; color: #64748B;"><em>Recommendation: Export a backup once a week or before updating browser versions.</em></p>
+    </div>
+    <div class="card">
+      <div class="card-title">How to Restore or Upgrade</div>
+      <ol>
+        <li>Open your new or relocated <code>Our-Life-Planner-Offline.html</code>.</li>
+        <li>Open <strong>Settings</strong> &gt; <strong>Backup &amp; Restore</strong>.</li>
+        <li>Click <strong>Choose File to Restore</strong> and select your saved backup JSON file.</li>
+        <li>Confirm restore. All your tasks, habits, budgets, and logs are instantly loaded.</li>
+      </ol>
+    </div>
+  </div>
+
+  <h2>6. Device Compatibility &amp; Phone Instructions</h2>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">Desktop (Mac, Windows, Linux)</div>
+      <p>Works natively in Microsoft Edge, Google Chrome, Apple Safari, and Mozilla Firefox. Simply save the file to your Documents or Desktop folder and open it.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">iOS (iPhone &amp; iPad)</div>
+      <p>When accessing the web app version in Safari, tap the <strong>Share</strong> button and choose <strong>Add to Home Screen</strong>. This creates a full-screen app icon with persistent offline storage.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Android Phones &amp; Tablets</div>
+      <p>Open the web version in Chrome, tap the menu (three dots), and select <strong>Install app</strong> or <strong>Add to Home screen</strong> for an app-like experience.</p>
+    </div>
+  </div>
+
+  <h2>7. Keyboard Shortcuts Quick Reference</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Shortcut</th>
+        <th>Action</th>
+        <th>Shortcut</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>Ctrl + K</code> / <code>Cmd + K</code></td>
+        <td>Quick Add modal (new task, habit, bill, note)</td>
+        <td><code>F</code></td>
+        <td>Toggle Calm Focus Mode timer</td>
+      </tr>
+      <tr>
+        <td><code>Ctrl + B</code> / <code>Cmd + B</code></td>
+        <td>Open Backup &amp; Restore dialog</td>
+        <td><code>?</code></td>
+        <td>Open User Guide &amp; Help modal</td>
+      </tr>
+      <tr>
+        <td><code>Esc</code></td>
+        <td>Close active modal or return to view</td>
+        <td><code>Tab</code> / <code>Shift + Tab</code></td>
+        <td>Accessible keyboard navigation</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>8. Need Help? Customer Support Route</h2>
+  <div class="card-accent" style="margin-top: 6px;">
+    <p>
+      If you have questions, experience an issue, or want assistance with backup recovery, our support team is available:
+    </p>
+    <p style="margin-top: 4px;">
+      <strong>Official Support Email:</strong> <code>support@ourlifeplanner.app</code><br>
+      <strong>Support Availability:</strong> Monday to Friday (responses within 24–48 business hours)
+    </p>
+    <p style="margin-top: 4px; font-size: 8pt; color: #475569;">
+      <em>Tip: When reaching out, you can click "Copy Prepared Message" in the in-app Support dialog to automatically include helpful non-personal environment diagnostics (browser, OS, and version number).</em>
+    </p>
+  </div>
+
+  <div class="footer">
+    <span>Our Life Planner v1.0.0 · Getting Started Guide</span>
+    <span>Page 2 of 2</span>
+  </div>
+
+</body>
+</html>

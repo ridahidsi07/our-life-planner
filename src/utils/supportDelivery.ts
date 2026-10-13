@@ -1,6 +1,7 @@
 import { UserSettings } from '../types/planner';
+import { APP_VERSION, SUPPORT_EMAIL } from './releaseInfo';
 
-export const SUPPORT_EMAIL = 'support@ourlifeplanner.app';
+export { SUPPORT_EMAIL };
 
 export type SupportCategory = 'general' | 'bug' | 'recovery' | 'feature';
 
@@ -53,7 +54,7 @@ export function formatSupportDiagnostics(
 
   return [
     'Our Life Planner Diagnostics:',
-    'Version: 1.0.0',
+    `Version: ${APP_VERSION}`,
     `Edition: ${settings.edition}`,
     `Theme: ${settings.theme}`,
     `Timezone: ${settings.timeZone}`,

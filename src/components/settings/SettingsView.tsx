@@ -31,6 +31,8 @@ import {
 } from '../../utils/formatters';
 import {
   MODULE_REGISTRY,
+  STARTER_ENABLED_MODULES,
+  DEFAULT_ENABLED_MODULES,
   isModuleOrToolEnabled,
   isModulePinnedRaw,
 } from '../../utils/moduleRegistry';
@@ -42,6 +44,17 @@ export const SettingsView: React.FC = () => {
     removeSampleData,
     loadSampleData,
     resetAllData,
+    eraseAllPlannerData,
+    exportBackup,
+    preRestoreSnapshot,
+    rollbackLastRestore,
+    tasks,
+    routines,
+    transactions,
+    bills,
+    habits,
+    goals,
+    calendarEvents,
     setActiveModal,
     addHouseholdMember,
     removeHouseholdMember,
@@ -52,6 +65,19 @@ export const SettingsView: React.FC = () => {
   // Reset confirmation modal state
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [resetConfirmInput, setResetConfirmInput] = useState('');
+  const [resetScope, setResetScope] = useState<'full_erase' | 'clear_entries'>('full_erase');
+
+  // Reload Demo confirmation modal state (LP-04)
+  const [isReloadDemoConfirmOpen, setIsReloadDemoConfirmOpen] = useState(false);
+
+  const totalCurrentRecords =
+    tasks.length +
+    routines.length +
+    transactions.length +
+    bills.length +
+    habits.length +
+    goals.length +
+    calendarEvents.length;
 
   // Form states
   const [name, setName] = useState(settings.ownerName);
@@ -101,9 +127,31 @@ export const SettingsView: React.FC = () => {
     applyThemeToDocument(theme);
   };
 
+  const handleExportCurrentBackup = () => {
+    const data = exportBackup();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `our-life-planner-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleConfirmReloadDemo = () => {
+    loadSampleData();
+    setIsReloadDemoConfirmOpen(false);
+  };
+
   const handleConfirmReset = () => {
     if (resetConfirmInput.trim().toUpperCase() === 'RESET') {
-      resetAllData();
+      if (resetScope === 'full_erase') {
+        eraseAllPlannerData();
+      } else {
+        resetAllData();
+      }
       setIsResetConfirmOpen(false);
       setResetConfirmInput('');
     }
@@ -142,7 +190,7 @@ export const SettingsView: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveModal('account')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-100 text-xs font-semibold cursor-pointer transition-colors self-start sm:self-auto"
+            className="min-h-[44px] sm:min-h-9 flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-100 dark:hover:bg-teal-900/70 text-xs font-semibold cursor-pointer transition-colors self-start sm:self-auto"
           >
             <span>Manage Profile & Local Storage</span>
           </button>
@@ -164,7 +212,7 @@ export const SettingsView: React.FC = () => {
                 aria-label="Owner name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
+                className="w-full min-h-[44px] sm:min-h-9 px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-[#071A3A] dark:text-[#EDF4FF] text-xs"
               />
             </div>
 
@@ -180,7 +228,7 @@ export const SettingsView: React.FC = () => {
                 aria-label="Week starts on"
                 value={weekStart}
                 onChange={(e) => setWeekStart(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium"
+                className="w-full min-h-[44px] sm:min-h-9 px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-[#071A3A] dark:text-[#EDF4FF] text-xs font-medium"
               >
                 <option value="Monday">Monday</option>
                 <option value="Sunday">Sunday</option>
@@ -202,7 +250,7 @@ export const SettingsView: React.FC = () => {
                 aria-label="Timezone"
                 value={timeZone}
                 onChange={(e) => setTimeZone(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
+                className="w-full min-h-[44px] sm:min-h-9 px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
               >
                 {AVAILABLE_TIMEZONES.map((tz) => (
                   <option key={tz.value} value={tz.value}>
@@ -226,7 +274,7 @@ export const SettingsView: React.FC = () => {
                 aria-label="Currency"
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
+                className="w-full min-h-[44px] sm:min-h-9 px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
               >
                 {AVAILABLE_CURRENCIES.map((c) => (
                   <option key={c.code} value={c.code}>
@@ -234,9 +282,6 @@ export const SettingsView: React.FC = () => {
                   </option>
                 ))}
               </select>
-              <span className="text-[10px] text-[#526782] dark:text-[#A8B8CE] mt-1 block leading-relaxed">
-                <strong>Display &amp; denomination setting only:</strong> Updates the currency symbol ({getCurrencySymbol(currency)}) and code ({currency}) displayed across your budget, bills, transactions, and savings pots. Existing figures are retained nominally (no automatic currency or exchange-rate conversion is performed).
-              </span>
             </div>
 
             <div>
@@ -251,14 +296,11 @@ export const SettingsView: React.FC = () => {
                 aria-label="Weight unit"
                 value={weightUnit}
                 onChange={(e) => setWeightUnit(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
+                className="w-full min-h-[44px] sm:min-h-9 px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
               >
                 <option value="kg">kg (Metric)</option>
                 <option value="lb">lb (Imperial)</option>
               </select>
-              <span className="text-[10px] text-[#526782] dark:text-[#A8B8CE] mt-1 block">
-                Weights are stored canonically in kg and automatically converted to your selected unit across charts, history, and draft inputs.
-              </span>
             </div>
 
             <div>
@@ -273,7 +315,7 @@ export const SettingsView: React.FC = () => {
                 aria-label="Height unit"
                 value={heightUnit}
                 onChange={(e) => setHeightUnit(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
+                className="w-full min-h-[44px] sm:min-h-9 px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
               >
                 <option value="cm">cm</option>
                 <option value="in">in</option>
@@ -292,13 +334,30 @@ export const SettingsView: React.FC = () => {
                 aria-label="Water unit"
                 value={waterUnit}
                 onChange={(e) => setWaterUnit(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
+                className="w-full min-h-[44px] sm:min-h-9 px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
               >
                 <option value="ml">ml</option>
                 <option value="oz">oz</option>
               </select>
             </div>
           </div>
+
+          <details
+            data-testid="settings-unit-advanced-details"
+            className="rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/40 px-3.5 py-2.5 text-xs"
+          >
+            <summary className="font-semibold text-[#526782] dark:text-[#A8B8CE] cursor-pointer select-none">
+              Advanced details: Unit conversion &amp; currency behavior
+            </summary>
+            <div className="mt-2 space-y-1.5 text-[11px] text-[#526782] dark:text-[#A8B8CE] leading-relaxed">
+              <p>
+                <strong>Currency display ({getCurrencySymbol(currency)} / {currency}):</strong> Updates the symbol and code displayed across your budget, bills, transactions, and savings pots. Existing figures are retained nominally without exchange-rate conversion.
+              </p>
+              <p>
+                <strong>Weight &amp; body units:</strong> Weight readings are stored canonically in kg and automatically converted to your selected unit ({weightUnit}) across charts, history, and draft inputs.
+              </p>
+            </div>
+          </details>
 
           <div className="pt-2 flex items-center justify-end gap-3">
             {savedFeedback && (
@@ -309,7 +368,7 @@ export const SettingsView: React.FC = () => {
             )}
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer shadow-xs"
+              className="min-h-[44px] sm:min-h-9 px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] dark:bg-[#38D0C5] dark:text-[#071A3A] dark:hover:bg-[#2BB5AB] cursor-pointer shadow-xs"
             >
               Save preferences
             </button>
@@ -335,23 +394,29 @@ export const SettingsView: React.FC = () => {
         <div className="flex flex-wrap items-center gap-3">
           <input
             type="text"
+            aria-label="New household member name"
             value={newMemberName}
             onChange={(e) => setNewMemberName(e.target.value)}
             placeholder="Member name (e.g. Sarah, Alex)"
-            className="flex-1 min-w-[180px] px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium focus:outline-none focus:border-[#087F83]"
+            className="flex-1 min-w-[180px] min-h-[44px] sm:min-h-9 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-[#071A3A] dark:text-[#EDF4FF] text-xs font-medium focus:outline-none focus:border-[#087F83]"
           />
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             {['#087F83', '#3B82F6', '#8B5CF6', '#F59E0B', '#F43F5E', '#10B981'].map((c) => (
               <button
                 key={c}
                 type="button"
                 onClick={() => setNewMemberColor(c)}
                 aria-label={`Select color ${c}`}
-                className={`w-6 h-6 rounded-full transition-transform cursor-pointer ${
-                  newMemberColor === c ? 'scale-125 ring-2 ring-offset-2 ring-[#087F83]' : 'hover:scale-110'
-                }`}
-                style={{ backgroundColor: c }}
-              />
+                aria-pressed={newMemberColor === c}
+                className="min-w-[44px] min-h-[44px] sm:min-w-8 sm:min-h-8 p-2 rounded-full flex items-center justify-center cursor-pointer"
+              >
+                <span
+                  className={`w-6 h-6 rounded-full transition-transform ${
+                    newMemberColor === c ? 'scale-125 ring-2 ring-offset-2 ring-[#087F83]' : ''
+                  }`}
+                  style={{ backgroundColor: c }}
+                />
+              </button>
             ))}
           </div>
           <button
@@ -363,7 +428,7 @@ export const SettingsView: React.FC = () => {
               }
             }}
             disabled={!newMemberName.trim()}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] disabled:opacity-50 cursor-pointer shadow-xs transition-colors"
+            className="min-h-[44px] sm:min-h-9 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] dark:bg-[#38D0C5] dark:text-[#071A3A] dark:hover:bg-[#2BB5AB] disabled:opacity-50 cursor-pointer shadow-xs transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Member</span>
@@ -380,7 +445,7 @@ export const SettingsView: React.FC = () => {
             settings.householdMembers.map((m) => (
               <div
                 key={m.id}
-                className="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold"
+                className="flex items-center gap-2 pl-3 pr-1.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold"
               >
                 <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: m.color }} />
                 <span className="text-[#071A3A] dark:text-[#EDF4FF]">{m.name}</span>
@@ -388,9 +453,9 @@ export const SettingsView: React.FC = () => {
                   type="button"
                   onClick={() => removeHouseholdMember(m.id)}
                   aria-label={`Remove household member ${m.name}`}
-                  className="p-1 rounded-md text-slate-400 hover:text-rose-500 cursor-pointer"
+                  className="min-w-[44px] min-h-[44px] sm:min-w-7 sm:min-h-7 p-1.5 rounded-md flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
                 >
-                  <Trash2 className="w-3 h-3" />
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             ))
@@ -400,15 +465,36 @@ export const SettingsView: React.FC = () => {
 
       {/* Tool Customization & Pinned Favorites */}
       <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
-        <div className="flex items-center gap-2 pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
-          <SlidersHorizontal className="w-4 h-4 text-[#087F83]" />
-          <div>
-            <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-              Module Customization & Pinned Favorites
-            </h3>
-            <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
-              Hide tools you don't use to keep navigation calm, and pin your daily favorites to the top.
-            </p>
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="w-4 h-4 text-[#087F83]" />
+            <div>
+              <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                Module Customization & Pinned Favorites
+              </h3>
+              <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
+                Hide tools you don't use to keep navigation calm, and pin your daily favorites to the top.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              data-testid="settings-preset-starter"
+              onClick={() => updateSettings({ enabledTools: [...STARTER_ENABLED_MODULES] })}
+              className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] hover:border-[#087F83] cursor-pointer transition-colors"
+            >
+              Core Starter (5)
+            </button>
+            <button
+              type="button"
+              data-testid="settings-preset-all"
+              onClick={() => updateSettings({ enabledTools: [...DEFAULT_ENABLED_MODULES] })}
+              className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] hover:border-[#087F83] cursor-pointer transition-colors"
+            >
+              All Modules (10)
+            </button>
           </div>
         </div>
 
@@ -437,17 +523,22 @@ export const SettingsView: React.FC = () => {
                     data-testid={`module-pin-${tool.id}`}
                     onClick={() => toggleToolPinned(tool.id)}
                     aria-pressed={isPinned}
-                    className={`p-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
+                    aria-label={
                       isPinned
-                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
-                        : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/50'
+                        ? `Unpin ${tool.name} from favorites`
+                        : `Pin ${tool.name} to favorites`
+                    }
+                    className={`min-w-[44px] min-h-[44px] sm:min-w-8 sm:min-h-8 p-2 rounded-lg flex items-center justify-center text-xs font-semibold cursor-pointer transition-colors ${
+                      isPinned
+                        ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700/70 dark:hover:bg-amber-900/80'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-200/60 dark:hover:bg-slate-700/70 border border-transparent'
                     }`}
                     title={
                       !isEnabled
-                        ? 'Module is currently hidden (enable to show in Favorites)'
+                        ? `Module ${tool.name} is currently hidden (enable to show in Favorites)`
                         : isPinned
-                        ? 'Unpin favorite'
-                        : 'Pin to favorites'
+                        ? `Unpin ${tool.name} from favorites`
+                        : `Pin ${tool.name} to favorites`
                     }
                   >
                     <Pin className="w-3.5 h-3.5" />
@@ -458,10 +549,11 @@ export const SettingsView: React.FC = () => {
                     data-testid={`module-toggle-${tool.id}`}
                     onClick={() => toggleToolEnabled(tool.id)}
                     aria-pressed={isEnabled}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer transition-colors ${
+                    aria-label={`${tool.name}: ${isEnabled ? 'Enabled' : 'Hidden'}`}
+                    className={`min-h-[44px] sm:min-h-8 px-3 py-1.5 rounded-lg flex items-center justify-center text-[11px] font-bold cursor-pointer transition-colors ${
                       isEnabled
-                        ? 'bg-teal-50 text-[#087F83] dark:bg-teal-950/60 dark:text-[#38D0C5]'
-                        : 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400'
+                        ? 'bg-teal-50 text-[#087F83] border border-teal-200 hover:bg-teal-100 dark:bg-teal-950/70 dark:text-[#38D0C5] dark:border-teal-800/70 dark:hover:bg-teal-900/80'
+                        : 'bg-slate-200 text-slate-700 border border-slate-300 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700'
                     }`}
                   >
                     {isEnabled ? 'Enabled' : 'Hidden'}
@@ -500,7 +592,7 @@ export const SettingsView: React.FC = () => {
             return (
               <label
                 key={sec.key}
-                className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 text-xs font-medium cursor-pointer"
+                className="min-h-[44px] flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 text-xs font-medium cursor-pointer"
               >
                 <input
                   type="checkbox"
@@ -546,9 +638,9 @@ export const SettingsView: React.FC = () => {
                 aria-checked={isSelected}
                 aria-label={`${theme.label} mode`}
                 onClick={() => handleThemeChange(theme.id as any)}
-                className={`p-3.5 rounded-xl border flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer transition-all ${
+                className={`min-h-[44px] p-3.5 rounded-xl border flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer transition-all ${
                   isSelected
-                    ? 'border-[#087F83] bg-teal-50 dark:bg-teal-950/40 text-[#087F83] dark:text-[#38D0C5]'
+                    ? 'border-[#087F83] bg-teal-50 dark:bg-teal-950/50 text-[#087F83] dark:text-[#38D0C5]'
                     : 'border-slate-200 dark:border-slate-700 text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
@@ -618,10 +710,11 @@ export const SettingsView: React.FC = () => {
         </div>
 
         <button
+          type="button"
           onClick={() => setActiveModal('download_offline')}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer"
+          className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer transition-colors"
         >
-          <Download className="w-4 h-4 text-[#087F83]" />
+          <Download className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
           <span>Get independent downloadable HTML bundle</span>
         </button>
       </div>
@@ -632,25 +725,25 @@ export const SettingsView: React.FC = () => {
           Data & Backup
         </h3>
         <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
-          Export versioned JSON backups or restore data safely.
+          Export versioned JSON backups, restore data safely, or manage planner resets.
         </p>
 
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
             onClick={() => setActiveModal('backup_restore')}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer"
+            className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer"
           >
-            <Database className="w-4 h-4 text-[#087F83]" />
+            <Database className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
             <span>Backup & Restore Manager</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveModal('setup')}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer"
+            className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer"
           >
-            <Sparkles className="w-4 h-4 text-[#087F83]" />
+            <Sparkles className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
             <span>Re-run Setup Wizard</span>
           </button>
 
@@ -658,7 +751,7 @@ export const SettingsView: React.FC = () => {
             <button
               type="button"
               onClick={removeSampleData}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-300 dark:border-amber-800 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 cursor-pointer"
+              className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-300 dark:border-amber-800 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 cursor-pointer"
             >
               <Trash2 className="w-4 h-4" />
               <span>Remove sample data (keeps your records)</span>
@@ -666,18 +759,33 @@ export const SettingsView: React.FC = () => {
           ) : (
             <button
               type="button"
-              onClick={loadSampleData}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-teal-300 dark:border-teal-800 text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-50 dark:hover:bg-teal-950/40 cursor-pointer"
+              onClick={() => setIsReloadDemoConfirmOpen(true)}
+              className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-teal-300 dark:border-teal-800 text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-50 dark:hover:bg-teal-950/40 cursor-pointer"
             >
               <RotateCcw className="w-4 h-4" />
               <span>Reload Demo / Sample Data</span>
             </button>
           )}
 
+          {preRestoreSnapshot && (
+            <button
+              type="button"
+              onClick={() => rollbackLastRestore()}
+              className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-indigo-300 dark:border-indigo-800 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 cursor-pointer"
+              title={`Restore snapshot saved at ${preRestoreSnapshot.savedAt}`}
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Undo Last Restore / Demo Reload</span>
+            </button>
+          )}
+
           <button
             type="button"
-            onClick={() => setIsResetConfirmOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-rose-300 dark:border-rose-800 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+            onClick={() => {
+              setResetScope('full_erase');
+              setIsResetConfirmOpen(true);
+            }}
+            className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-rose-300 dark:border-rose-800 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
           >
             <RotateCcw className="w-4 h-4" />
             <span>Reset all planner data</span>
@@ -729,12 +837,61 @@ export const SettingsView: React.FC = () => {
         </div>
       </div>
 
-      {/* Full Reset Modal Safeguard (Section 4 & Board 27) */}
+      {/* Reload Demo Confirmation Modal Safeguard (LP-04) */}
+      <Modal
+        isOpen={isReloadDemoConfirmOpen}
+        onClose={() => setIsReloadDemoConfirmOpen(false)}
+        title="Reload Demo / Sample Data?"
+        subtitle="Confirm before replacing your current planner items with demo fixtures."
+      >
+        <div className="space-y-4">
+          <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5">
+            <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+            <div>
+              <span className="font-bold block">Replace Current Entries with Demo Data:</span>
+              <span>
+                You currently have <strong>{totalCurrentRecords}</strong> active records ({tasks.length} tasks, {routines.length} routines, {transactions.length} transactions, {bills.length} bills, {habits.length} habits). Reloading demo data will replace these collections with the sample dataset. An automatic pre-restore recovery snapshot will be saved so you can undo this action.
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+            <button
+              type="button"
+              onClick={handleExportCurrentBackup}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export Current Backup First</span>
+            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsReloadDemoConfirmOpen(false)}
+                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                data-testid="confirm-reload-demo-btn"
+                onClick={handleConfirmReloadDemo}
+                className="px-4 py-2 rounded-xl bg-[#087F83] hover:bg-[#06676A] text-white text-xs font-semibold cursor-pointer"
+              >
+                Confirm &amp; Load Demo Data
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Full Reset / Erase Modal Safeguard (LP-07) */}
       <Modal
         isOpen={isResetConfirmOpen}
         onClose={() => setIsResetConfirmOpen(false)}
-        title="Delete all planner data?"
-        subtitle="This action will permanently delete all your records on this device."
+        title="Reset or Erase Planner Data?"
+        subtitle="Choose whether to clear planner entries only or perform a full device erase."
       >
         <div className="space-y-4">
           <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-200 text-xs flex items-start gap-2.5">
@@ -742,9 +899,51 @@ export const SettingsView: React.FC = () => {
             <div>
               <span className="font-bold block">Destructive Action:</span>
               <span>
-                All tasks, routines, meals, financial ledgers, and logs will be permanently erased. Please export a backup first if you want to keep a copy.
+                {resetScope === 'full_erase'
+                  ? 'Full Device Erase permanently removes all planner collections, profile settings, cloud sessions, and recovery snapshots from this browser.'
+                  : 'Clear Planner Entries removes all tasks, routines, meals, financial ledgers, and health logs while keeping your profile settings and saving a pre-restore recovery snapshot.'}
               </span>
             </div>
+          </div>
+
+          <div role="radiogroup" aria-label="Reset scope" className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={resetScope === 'full_erase'}
+              onClick={() => setResetScope('full_erase')}
+              className={`p-3 rounded-xl border text-left text-xs cursor-pointer ${
+                resetScope === 'full_erase'
+                  ? 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/30'
+                  : 'border-slate-200 dark:border-slate-700'
+              }`}
+            >
+              <div className="font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                Full Device Erase (All Data &amp; Snapshots)
+              </div>
+              <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE] mt-0.5">
+                Clears all personal records, settings, cloud session, and recovery snapshots.
+              </div>
+            </button>
+
+            <button
+              type="button"
+              role="radio"
+              aria-checked={resetScope === 'clear_entries'}
+              onClick={() => setResetScope('clear_entries')}
+              className={`p-3 rounded-xl border text-left text-xs cursor-pointer ${
+                resetScope === 'clear_entries'
+                  ? 'border-[#087F83] bg-teal-50/60 dark:bg-teal-950/30'
+                  : 'border-slate-200 dark:border-slate-700'
+              }`}
+            >
+              <div className="font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                Clear Entries Only (Keep Settings)
+              </div>
+              <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE] mt-0.5">
+                Empties all collections and budget numbers; keeps profile &amp; recovery snapshot.
+              </div>
+            </button>
           </div>
 
           <div>
@@ -784,3 +983,4 @@ export const SettingsView: React.FC = () => {
     </div>
   );
 };
+

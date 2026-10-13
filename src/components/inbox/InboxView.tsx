@@ -18,6 +18,7 @@ export const InboxView: React.FC = () => {
     deleteInboxItem,
     convertInboxToTask,
     currentDate,
+    settings,
   } = usePlanner();
 
   const [inputText, setInputText] = useState('');
@@ -26,7 +27,7 @@ export const InboxView: React.FC = () => {
   // Conversion form state
   const [taskTitle, setTaskTitle] = useState('');
   const [taskCategory, setTaskCategory] = useState('Personal');
-  const [taskAssigned, setTaskAssigned] = useState('Rida');
+  const [taskAssigned, setTaskAssigned] = useState(() => settings.ownerName || 'Me');
   const [taskDueDate, setTaskDueDate] = useState(currentDate);
   const [taskDueTime, setTaskDueTime] = useState('');
   const [taskPriority, setTaskPriority] = useState<Priority>('medium');
@@ -43,7 +44,7 @@ export const InboxView: React.FC = () => {
     setConvertingItem(item);
     setTaskTitle(item.text);
     setTaskCategory('Personal');
-    setTaskAssigned('Rida');
+    setTaskAssigned(settings.ownerName || 'Me');
     setTaskDueDate(currentDate);
     setTaskDueTime('');
     setTaskPriority('medium');

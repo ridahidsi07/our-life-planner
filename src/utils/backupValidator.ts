@@ -985,6 +985,47 @@ export function getPreRestoreSnapshot(
 }
 
 /**
+ * Saves a recoverable pre-action snapshot of current planner data before destructive operations
+ * (such as Reload Demo, Reset All Data, or Setup Wizard overwrite).
+ */
+export function savePreRestoreSnapshot(
+  snapshot: PlannerBackupData,
+  revision: number,
+  reason = 'Automatic pre-action safety snapshot',
+  storage: StorageLike | null = getDefaultStorage()
+): PreRestoreSnapshotInfo | null {
+  try {
+    const clone = JSON.parse(JSON.stringify(snapshot)) as PlannerBackupData;
+    clone.revision = revision;
+    const savedAt = new Date().toISOString();
+    let totalRecords = 0;
+    for (const key of REQUIRED_BACKUP_ARRAY_KEYS) {
+      totalRecords += Array.isArray(clone[key]) ? clone[key].length : 0;
+    }
+    const info: PreRestoreSnapshotInfo = {
+      savedAt,
+      reason,
+      ownerName: clone.settings?.ownerName || 'Owner',
+      totalRecords,
+      snapshot: clone,
+    };
+    if (storage) {
+      storage.setItem(
+        STORAGE_KEY_PRE_RESTORE_SNAPSHOT,
+        JSON.stringify({
+          savedAt: info.savedAt,
+          reason: info.reason,
+          snapshot: info.snapshot,
+        })
+      );
+    }
+    return info;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Atomically validates and restores a backup into storage while retaining a recoverable
  * snapshot of the previous planner state. Rolls back all storage keys if any write fails.
  */

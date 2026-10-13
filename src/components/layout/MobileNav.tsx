@@ -48,11 +48,13 @@ export const MobileNav: React.FC<MobileNavProps> = ({
 
   return (
     <>
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white dark:bg-[#152238] border-t border-[#E2E8F0] dark:border-[#1E2D4A] flex items-center justify-around px-2 z-40 shadow-lg">
+      <nav aria-label="Mobile navigation" className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white dark:bg-[#152238] border-t border-[#E2E8F0] dark:border-[#1E2D4A] flex items-center justify-around px-2 z-40 shadow-lg">
         {/* Today */}
         {showTodayTab && (
           <button
+            type="button"
             data-testid="mobile-nav-today"
+            aria-current={activeView === 'today' ? 'page' : undefined}
             onClick={() => setActiveView('today')}
             className={`flex flex-col items-center justify-center w-16 h-full transition-colors cursor-pointer ${
               activeView === 'today'
@@ -68,7 +70,9 @@ export const MobileNav: React.FC<MobileNavProps> = ({
         {/* Calendar */}
         {showCalendarTab && (
           <button
+            type="button"
             data-testid="mobile-nav-calendar"
+            aria-current={activeView === 'calendar' ? 'page' : undefined}
             onClick={() => setActiveView('calendar')}
             className={`flex flex-col items-center justify-center w-16 h-full transition-colors cursor-pointer ${
               activeView === 'calendar'
@@ -83,8 +87,9 @@ export const MobileNav: React.FC<MobileNavProps> = ({
 
         {/* Quick Add Pill */}
         <button
+          type="button"
           onClick={() => setActiveModal('quick_add')}
-          className="flex items-center justify-center w-12 h-12 rounded-full bg-[#087F83] dark:bg-[#38D0C5] text-white dark:text-[#071A3A] shadow-md hover:scale-105 active:scale-95 transition-all -mt-5 cursor-pointer"
+          className="flex items-center justify-center w-12 h-12 rounded-full bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] shadow-md transition-all -mt-5 cursor-pointer"
           aria-label="Quick add"
         >
           <Plus className="w-6 h-6 stroke-[2.5]" />
@@ -92,6 +97,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
 
         {/* More */}
         <button
+          type="button"
           onClick={handleOpenMore}
           aria-label="All tools and views"
           aria-controls="all-tools-menu"

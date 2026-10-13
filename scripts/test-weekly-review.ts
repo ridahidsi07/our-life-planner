@@ -192,8 +192,15 @@ async function runBrowserReproductionTest(): Promise<BrowserWeeklyReviewReport> 
         if (!dialog) throw new Error('Weekly Review dialog did not open');
 
         // Navigate to the sample week 2026-10-05 .. 2026-10-11 if todayDate is different
-        // In our test environment todayDate is 2026-10-10, which is already in 2026-10-05 to 2026-10-11!
         const rangeEl = dialog.querySelector('[data-testid="weekly-review-date-range"]');
+        const prevWeekBtn = dialog.querySelector('button[aria-label="Review previous week"]');
+        if (!prevWeekBtn) throw new Error('Review previous week button not found');
+        for (let step = 0; step < 10; step++) {
+          const txt = rangeEl ? rangeEl.textContent || '' : '';
+          if (txt.includes('2026-10-05')) break;
+          prevWeekBtn.click();
+          await wait(80);
+        }
         report.dateRangeText = rangeEl ? rangeEl.textContent.trim() : null;
 
         const tasksCountEl = dialog.querySelector('[data-testid="weekly-review-completed-tasks-count"]');
@@ -202,8 +209,6 @@ async function runBrowserReproductionTest(): Promise<BrowserWeeklyReviewReport> 
         report.oct5WeekCompletedWorkoutsText = workoutsCountEl ? workoutsCountEl.textContent.trim() : null;
 
         // Test switching to previous week (2026-09-28 to 2026-10-04)
-        const prevWeekBtn = dialog.querySelector('button[aria-label="Review previous week"]');
-        if (!prevWeekBtn) throw new Error('Review previous week button not found');
         prevWeekBtn.click();
         await wait(100);
 
@@ -211,7 +216,7 @@ async function runBrowserReproductionTest(): Promise<BrowserWeeklyReviewReport> 
         report.prevWeekCompletedTasksText = tasksCountEl ? tasksCountEl.textContent.trim() : null;
         report.prevWeekCompletedWorkoutsText = workoutsCountEl ? workoutsCountEl.textContent.trim() : null;
 
-        // Switch back to current week (2026-10-05 to 2026-10-11)
+        // Switch back to target week (2026-10-05 to 2026-10-11)
         const nextWeekBtn = dialog.querySelector('button[aria-label="Review next week"]');
         if (!nextWeekBtn) throw new Error('Review next week button not found');
         nextWeekBtn.click();
@@ -313,6 +318,17 @@ async function runBrowserReproductionTest(): Promise<BrowserWeeklyReviewReport> 
 
         const dialog = document.querySelector('[role="dialog"][aria-modal="true"]');
         if (!dialog) throw new Error('Weekly Review dialog did not reopen after reload');
+
+        const rangeEl3 = dialog.querySelector('[data-testid="weekly-review-date-range"]');
+        const prevWeekBtn3 = dialog.querySelector('button[aria-label="Review previous week"]');
+        for (let step = 0; step < 10; step++) {
+          const txt = rangeEl3 ? rangeEl3.textContent || '' : '';
+          if (txt.includes('2026-10-05')) break;
+          if (prevWeekBtn3) {
+            prevWeekBtn3.click();
+            await wait(80);
+          }
+        }
 
         const reflectionTextarea = dialog.querySelector('#weekly-review-reflection');
         finalReport.reflectionAfterReload = reflectionTextarea ? reflectionTextarea.value : null;

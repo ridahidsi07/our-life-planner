@@ -132,10 +132,10 @@ export const DebtPayoffView: React.FC = () => {
       <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
         <div>
           <h2 className="text-xl font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-            Debt Payoff & Scenarios
+            Debt Payoff
           </h2>
-          <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
-            Simulate repayment strategies. Scenarios do not alter actual posted balances.
+          <p className="text-xs sm:text-sm text-[#526782] dark:text-[#A8B8CE]">
+            Track balances, compare payoff plans, and see your path to becoming debt-free.
           </p>
         </div>
 
@@ -147,6 +147,32 @@ export const DebtPayoffView: React.FC = () => {
           <span>Add debt</span>
         </button>
       </div>
+
+      {/* First-Use Empty State Hero CTA */}
+      {debts.length === 0 && (
+        <div
+          data-testid="debts-empty-hero"
+          className="bg-teal-50/70 dark:bg-teal-950/30 rounded-2xl p-6 border border-teal-200 dark:border-teal-800/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
+        >
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+              Add your first balance to track
+            </h3>
+            <p className="text-xs sm:text-sm text-[#526782] dark:text-[#A8B8CE] max-w-xl">
+              Enter a loan or card balance to calculate your payoff timeline and test extra monthly payment scenarios.
+            </p>
+          </div>
+          <button
+            type="button"
+            data-testid="debts-empty-cta"
+            onClick={openCreateModal}
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add your first debt</span>
+          </button>
+        </div>
+      )}
 
       {/* Main 2-Column Area: Current Debts (7 cols) & Summary (5 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -238,7 +264,11 @@ export const DebtPayoffView: React.FC = () => {
                   {currencySymbol}{overallMetrics.curSum.toFixed(2)}
                 </div>
                 <div className="text-xs text-[#526782]">
-                  current balance of {currencySymbol}{overallMetrics.origSum.toFixed(2)}
+                  {debts.length === 0 ? (
+                    <span className="text-slate-400 dark:text-slate-500">No debts configured yet</span>
+                  ) : (
+                    `current balance of ${currencySymbol}${overallMetrics.origSum.toFixed(2)}`
+                  )}
                 </div>
               </div>
             </div>
@@ -569,14 +599,22 @@ export const DebtPayoffView: React.FC = () => {
               step="1"
               min="1"
               required
+              aria-invalid={Boolean(validationError)}
               value={debtChosenPay}
-              onChange={(e) => setDebtChosenPay(parseFloat(e.target.value) || 0)}
-              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-mono font-bold"
+              onChange={(e) => {
+                setDebtChosenPay(parseFloat(e.target.value) || 0);
+                if (validationError) setValidationError('');
+              }}
+              className={`w-full px-3 py-2 rounded-xl border ${validationError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-[#E2E8F0] dark:border-[#1E2D4A]'} bg-white dark:bg-[#152238] text-xs font-mono font-bold`}
             />
           </div>
 
           {validationError && (
-            <div className="p-3 rounded-xl bg-rose-50 text-rose-700 text-xs flex items-center gap-2">
+            <div
+              role="alert"
+              data-testid="debt-modal-validation-error"
+              className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 text-xs flex items-center gap-2"
+            >
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{validationError}</span>
             </div>

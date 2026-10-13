@@ -553,3 +553,170 @@ export function convertMlToOz(ml: number): number {
 export function convertOzToMl(oz: number): number {
   return Math.round(oz * 29.5735);
 }
+
+/**
+ * LP-05: Truthful Savings & Debt Summary Selector
+ */
+export interface SavingsAndDebtSummary {
+  hasSavingsPots: boolean;
+  totalSaved: number;
+  totalTarget: number;
+  totalSavingsTarget: number;
+  savingsProgressPct: number;
+  savingsProgressPercent: number;
+  hasDebts: boolean;
+  totalDebtRemaining: number;
+  totalDebtOriginal: number;
+  debtRepaidPct: number;
+  debtRepaidPercent: number;
+}
+
+export function calculateSavingsAndDebtSummary(
+  savingsPots: Array<{ openingBalance: number; targetAmount: number; deposits: Array<{ amount: number }> }>,
+  debts: DebtItem[]
+): SavingsAndDebtSummary {
+  const hasSavingsPots = savingsPots.length > 0;
+  const totalSaved = Math.round(
+    savingsPots.reduce(
+      (sum, pot) =>
+        sum +
+        (Number(pot.openingBalance) || 0) +
+        (Array.isArray(pot.deposits)
+          ? pot.deposits.reduce((dSum, d) => dSum + (Number(d.amount) || 0), 0)
+          : 0),
+      0
+    ) * 100
+  ) / 100;
+  const totalTarget = Math.round(
+    savingsPots.reduce((sum, pot) => sum + (Number(pot.targetAmount) || 0), 0) * 100
+  ) / 100;
+  const savingsProgressPct =
+    totalTarget > 0 ? Math.min(100, Math.round((totalSaved / totalTarget) * 100)) : 0;
+
+  const hasDebts = debts.length > 0;
+  const totalDebtRemaining = Math.round(
+    debts.reduce((sum, d) => sum + Math.max(0, Number(d.currentBalance) || 0), 0) * 100
+  ) / 100;
+  const totalDebtOriginal = Math.round(
+    debts.reduce((sum, d) => sum + Math.max(0, Number(d.originalBalance) || 0), 0) * 100
+  ) / 100;
+  const debtRepaidPct =
+    totalDebtOriginal > 0
+      ? Math.max(
+          0,
+          Math.min(
+            100,
+            Math.round(((totalDebtOriginal - totalDebtRemaining) / totalDebtOriginal) * 100)
+          )
+        )
+      : 0;
+
+  return {
+    hasSavingsPots,
+    totalSaved,
+    totalTarget,
+    totalSavingsTarget: totalTarget,
+    savingsProgressPct,
+    savingsProgressPercent: savingsProgressPct,
+    hasDebts,
+    totalDebtRemaining,
+    totalDebtOriginal,
+    debtRepaidPct,
+    debtRepaidPercent: debtRepaidPct,
+  };
+}
+
+/**
+ * LP-05: Truthful Weight & BMI Selector (no fabricated 72.0 / 72.4 kg or fake dates)
+ */
+export interface WeightMetricsSummary {
+  hasProfile: boolean;
+  hasReading: boolean;
+  hasTrend: boolean;
+  readingsCount: number;
+  latestRecord: { date: string; weightKg: number; recordedHeightCm?: number; note?: string; id?: string; profileId?: string } | null;
+  previousRecord: { date: string; weightKg: number; recordedHeightCm?: number; note?: string; id?: string; profileId?: string } | null;
+  latestWeightKg: number | null;
+  latestDate: string | null;
+  latestDateStr: string | null;
+  prevWeightKg: number | null;
+  previousWeightKg: number | null;
+  priorWeightKg: number | null;
+  prevDate: string | null;
+  weightDiffKg: number | null;
+  weightChangeKg: number | null;
+  currentHeightCm: number | null;
+  bmi: number | null;
+  currentBmi: number | null;
+}
+
+export function computeWeightMetrics(
+  profileRecords: Array<{ date: string; weightKg: number; recordedHeightCm?: number; note?: string; id?: string; profileId?: string }>,
+  activeProfileOrHeight?: { heightCm?: number } | number | null
+): WeightMetricsSummary {
+  const sorted = [...profileRecords].sort((a, b) => a.date.localeCompare(b.date));
+  const readingsCount = sorted.length;
+  const latestRecord = readingsCount >= 1 ? sorted[readingsCount - 1] : null;
+  const prevRecord = readingsCount >= 2 ? sorted[readingsCount - 2] : null;
+
+  const latestWeightKg = latestRecord ? latestRecord.weightKg : null;
+  const prevWeightKg = prevRecord ? prevRecord.weightKg : null;
+  const weightDiffKg =
+    latestWeightKg !== null && prevWeightKg !== null
+      ? Math.round((latestWeightKg - prevWeightKg) * 10) / 10
+      : null;
+
+  const profileHeightCm =
+    typeof activeProfileOrHeight === 'number'
+      ? activeProfileOrHeight
+      : activeProfileOrHeight?.heightCm;
+  const currentHeightCm = latestRecord?.recordedHeightCm ?? profileHeightCm ?? null;
+
+  const bmi =
+    latestWeightKg !== null && currentHeightCm
+      ? calculateBMI(latestWeightKg, currentHeightCm)
+      : null;
+
+  const latestDate = latestRecord ? latestRecord.date : null;
+
+  return {
+    hasProfile: Boolean(activeProfileOrHeight),
+    hasReading: latestRecord !== null,
+    hasTrend: latestRecord !== null && prevRecord !== null,
+    readingsCount,
+    latestRecord,
+    previousRecord: prevRecord,
+    latestWeightKg,
+    latestDate,
+    latestDateStr: latestDate,
+    prevWeightKg,
+    previousWeightKg: prevWeightKg,
+    priorWeightKg: prevWeightKg,
+    prevDate: prevRecord ? prevRecord.date : null,
+    weightDiffKg,
+    weightChangeKg: weightDiffKg,
+    currentHeightCm,
+    bmi,
+    currentBmi: bmi,
+  };
+}
+
+/**
+ * LP-09: Shared completable-item rule.
+ * Only items with completion semantics (tasks, routines, habits, bills, meals, workouts)
+ * count toward daily completion totals; informational calendar events and goals do not.
+ */
+export function isCompletableScheduleItem(item: {
+  onToggle?: unknown;
+  type?: string;
+}): boolean {
+  if (typeof item.onToggle === 'function') {
+    return true;
+  }
+  const nonCompletableTypes = new Set(['Event', 'Birthday', 'Focus time', 'Goal', 'event', 'birthday', 'free_time', 'goal']);
+  if (item.type && nonCompletableTypes.has(item.type)) {
+    return false;
+  }
+  return Boolean(item.onToggle);
+}
+

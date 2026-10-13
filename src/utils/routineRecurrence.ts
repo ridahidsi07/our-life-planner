@@ -140,9 +140,11 @@ export function isRoutineActiveOnDate(
     includeSkipped?: boolean;
   }
 ): boolean {
-  // 1. Paused check
+  // 1. Paused check (suppresses occurrences on or after pausedDate when pausedDate is set)
   if (routine.isPaused && !options?.includePaused) {
-    return false;
+    if (!routine.pausedDate || targetDateStr >= routine.pausedDate) {
+      return false;
+    }
   }
 
   // 2. Start date check (cannot occur before startDate)

@@ -52,7 +52,7 @@ export const RoutinesView: React.FC = () => {
   // Form states
   const [modalTitle, setModalTitle] = useState('');
   const [modalCategory, setModalCategory] = useState('Personal');
-  const [modalAssigned, setModalAssigned] = useState('Rida');
+  const [modalAssigned, setModalAssigned] = useState(() => settings.ownerName || 'Me');
   const [modalPriority, setModalPriority] = useState<Priority>('medium');
   const [modalInterval, setModalInterval] = useState<RoutineInterval>('daily');
   const [modalCustomCount, setModalCustomCount] = useState(1);
@@ -71,7 +71,7 @@ export const RoutinesView: React.FC = () => {
     setEditingRoutine(null);
     setModalTitle('');
     setModalCategory('Personal');
-    setModalAssigned('Rida');
+    setModalAssigned(settings.ownerName || 'Me');
     setModalPriority('medium');
     setModalInterval('daily');
     setModalCustomCount(1);
@@ -235,10 +235,10 @@ export const RoutinesView: React.FC = () => {
       <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
         <div>
           <h2 className="text-xl font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-            Routines & Recurrence
+            Routines
           </h2>
-          <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
-            Precise scheduling: respect start dates, weekdays, custom intervals, leap days, and one-off edits.
+          <p className="text-xs sm:text-sm text-[#526782] dark:text-[#A8B8CE]">
+            Build steady daily, weekly, and seasonal routines that fit your schedule.
           </p>
         </div>
 
@@ -325,8 +325,28 @@ export const RoutinesView: React.FC = () => {
       {activeTab !== 'history' && (
         <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs divide-y divide-slate-100 dark:divide-slate-800">
           {(activeTab === 'active' ? activeRoutines : pausedRoutines).length === 0 ? (
-            <div className="py-12 text-center text-xs text-[#526782]">
-              {activeTab === 'active' ? 'No active routines.' : 'No paused routines.'}
+            <div data-testid="routines-empty-state" className="py-10 text-center space-y-3">
+              <div className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                {activeTab === 'active' ? 'No active routines yet' : 'No paused routines'}
+              </div>
+              <p className="text-xs sm:text-sm text-[#526782] dark:text-[#A8B8CE] max-w-md mx-auto">
+                {activeTab === 'active'
+                  ? 'Add a recurring daily or weekly routine—like morning prep, evening tidy, or weekly review—to keep your days steady.'
+                  : 'Paused routines will appear here whenever you take a break from a recurring schedule.'}
+              </p>
+              {activeTab === 'active' && (
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    data-testid="routines-empty-cta"
+                    onClick={openCreateModal}
+                    className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-semibold cursor-pointer shadow-xs transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Create your first routine</span>
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             (activeTab === 'active' ? activeRoutines : pausedRoutines).map((routine) => {
@@ -351,13 +371,13 @@ export const RoutinesView: React.FC = () => {
                         aria-label={`Mark routine "${routine.title}" as ${isDoneToday ? 'incomplete' : 'complete'}`}
                         onClick={() => toggleRoutineCompletion(routine.id, currentDate)}
                         title={isDoneToday ? 'Completed today (click to undo)' : 'Click to complete for today'}
-                        className={`w-5 h-5 mt-0.5 sm:mt-0 rounded-full flex items-center justify-center cursor-pointer transition-colors shrink-0 ${
+                        className={`w-5 h-5 mt-0.5 sm:mt-0 rounded-full flex items-center justify-center cursor-pointer micro-checkbox shrink-0 ${
                           isDoneToday
                             ? 'bg-[#087F83] text-white'
                             : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
                         }`}
                       >
-                        {isDoneToday && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                        {isDoneToday && <Check className="w-3.5 h-3.5 stroke-[3] motion-check-pop" />}
                       </button>
                     ) : (
                       <div
@@ -659,19 +679,6 @@ export const RoutinesView: React.FC = () => {
               </div>
             </div>
 
-            {/* Leap Day explanation if Feb 29 */}
-            {inspectingRoutine.startDate.endsWith('-02-29') && (
-              <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-xs text-blue-900 dark:text-blue-300 space-y-1">
-                <div className="font-bold flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Leap Date Recurrence Active (Feb 29 anchor)</span>
-                </div>
-                <p className="text-[11px] leading-relaxed">
-                  In leap years (2024, 2028, 2032), this routine occurs on Feb 29. In standard years (2025, 2026, 2027), it cleanly shifts to Feb 28 so occurrences are never dropped.
-                </p>
-              </div>
-            )}
-
             {/* Next 5 Upcoming Occurrences */}
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
               <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF] block">
@@ -698,6 +705,26 @@ export const RoutinesView: React.FC = () => {
               </div>
             </div>
 
+            <details className="rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/40 px-3.5 py-2.5 text-xs">
+              <summary className="font-semibold text-[#526782] dark:text-[#A8B8CE] cursor-pointer select-none">
+                Advanced details: Recurrence rule &amp; leap-year behavior
+              </summary>
+              <div className="mt-2 space-y-1.5 text-[11px] text-[#526782] dark:text-[#A8B8CE] leading-relaxed">
+                <p>
+                  <strong>Active rule:</strong> {formatRecurrenceRule(inspectingRoutine)} (starts {inspectingRoutine.startDate}{inspectingRoutine.endDate ? `, ends ${inspectingRoutine.endDate}` : ''}).
+                </p>
+                {inspectingRoutine.startDate.endsWith('-02-29') ? (
+                  <p>
+                    <strong>Leap Date Recurrence Active (Feb 29 anchor):</strong> In leap years (2024, 2028, 2032), this routine occurs on Feb 29. In standard years (2025, 2026, 2027), it shifts to Feb 28 so occurrences are never dropped.
+                  </p>
+                ) : (
+                  <p>
+                    Completion and skip records are tracked per calendar date without altering future scheduled occurrences.
+                  </p>
+                )}
+              </div>
+            </details>
+
             <div className="flex justify-between items-center pt-2">
               <button
                 type="button"
@@ -709,7 +736,7 @@ export const RoutinesView: React.FC = () => {
                 className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer flex items-center gap-1.5"
               >
                 <Edit2 className="w-3.5 h-3.5" />
-                <span>Edit rule</span>
+                <span>Edit routine</span>
               </button>
 
               <button
@@ -729,7 +756,7 @@ export const RoutinesView: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={editingRoutine ? 'Edit routine' : 'Create routine'}
-        subtitle="Configure schedule cadence, custom intervals, leap days, and scope"
+        subtitle="Set your routine name, schedule, and preferred time"
       >
         <form onSubmit={handleSaveRoutine} className="space-y-4">
           <div>
@@ -955,98 +982,112 @@ export const RoutinesView: React.FC = () => {
             </div>
           </div>
 
-          {/* Optional End Date */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer">
-              <input
-                type="checkbox"
-                checked={modalHasEndDate}
-                onChange={(e) => setModalHasEndDate(e.target.checked)}
-              />
-              <span>Set end date (stop repeating)</span>
-            </label>
-
-            {modalHasEndDate && (
-              <input
-                type="date"
-                aria-label="Routine end date"
-                min={modalStartDate}
-                value={modalEndDate}
-                onChange={(e) => setModalEndDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
-              />
-            )}
-          </div>
-
-          {/* Update scope for editing existing routines */}
-          {editingRoutine && (
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
-                  Update scope
-                </span>
-                <span className="text-[10px] text-slate-400">
-                  Target date: {modalOccurrenceDate}
-                </span>
-              </div>
-
+          <details
+            data-testid="routine-advanced-details"
+            className="rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/40 px-3.5 py-2.5 text-xs"
+          >
+            <summary className="font-semibold text-[#526782] dark:text-[#A8B8CE] cursor-pointer select-none">
+              Advanced details: End date, series scope &amp; recurrence rules
+            </summary>
+            <div className="mt-3 space-y-3">
+              {/* Optional End Date */}
               <div className="space-y-2">
-                <label className="flex items-start gap-2 text-xs cursor-pointer">
+                <label className="flex items-center gap-2 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer">
                   <input
-                    type="radio"
-                    name="scope"
-                    className="mt-0.5"
-                    checked={modalUpdateScope === 'this'}
-                    onChange={() => setModalUpdateScope('this')}
+                    type="checkbox"
+                    checked={modalHasEndDate}
+                    onChange={(e) => setModalHasEndDate(e.target.checked)}
                   />
-                  <div>
-                    <span className="font-semibold text-[#071A3A] dark:text-[#EDF4FF] block">
-                      This occurrence only
-                    </span>
-                    <span className="text-[11px] text-[#526782]">
-                      Customizes only the occurrence on {modalOccurrenceDate}. The rest of the series remains unchanged.
-                    </span>
-                  </div>
+                  <span>Set end date (stop repeating)</span>
                 </label>
 
-                <label className="flex items-start gap-2 text-xs cursor-pointer">
+                {modalHasEndDate && (
                   <input
-                    type="radio"
-                    name="scope"
-                    className="mt-0.5"
-                    checked={modalUpdateScope === 'future'}
-                    onChange={() => setModalUpdateScope('future')}
+                    type="date"
+                    aria-label="Routine end date"
+                    min={modalStartDate}
+                    value={modalEndDate}
+                    onChange={(e) => setModalEndDate(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
                   />
-                  <div>
-                    <span className="font-semibold text-[#071A3A] dark:text-[#EDF4FF] block">
-                      This and future occurrences
-                    </span>
-                    <span className="text-[11px] text-[#526782]">
-                      Applies these changes from {modalOccurrenceDate} onward while preserving past occurrences.
-                    </span>
-                  </div>
-                </label>
+                )}
               </div>
 
-              {modalUpdateScope === 'this' && (
-                <div className="pt-1">
-                  <label
-                    htmlFor="routine-occurrence-date"
-                    className="block text-[10px] font-semibold text-[#526782] mb-1"
-                  >
-                    Occurrence date to modify:
-                  </label>
-                  <input
-                    id="routine-occurrence-date"
-                    type="date"
-                    value={modalOccurrenceDate}
-                    onChange={(e) => setModalOccurrenceDate(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-900"
-                  />
+              {/* Update scope for editing existing routines */}
+              {editingRoutine && (
+                <div className="p-3 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
+                      Update scope
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      Target date: {modalOccurrenceDate}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="flex items-start gap-2 text-xs cursor-pointer">
+                      <input
+                        type="radio"
+                        name="scope"
+                        className="mt-0.5"
+                        checked={modalUpdateScope === 'this'}
+                        onChange={() => setModalUpdateScope('this')}
+                      />
+                      <div>
+                        <span className="font-semibold text-[#071A3A] dark:text-[#EDF4FF] block">
+                          This occurrence only
+                        </span>
+                        <span className="text-[11px] text-[#526782]">
+                          Customizes only the occurrence on {modalOccurrenceDate}. The rest of the series remains unchanged.
+                        </span>
+                      </div>
+                    </label>
+
+                    <label className="flex items-start gap-2 text-xs cursor-pointer">
+                      <input
+                        type="radio"
+                        name="scope"
+                        className="mt-0.5"
+                        checked={modalUpdateScope === 'future'}
+                        onChange={() => setModalUpdateScope('future')}
+                      />
+                      <div>
+                        <span className="font-semibold text-[#071A3A] dark:text-[#EDF4FF] block">
+                          This and future occurrences
+                        </span>
+                        <span className="text-[11px] text-[#526782]">
+                          Applies these changes from {modalOccurrenceDate} onward while preserving past occurrences.
+                        </span>
+                      </div>
+                    </label>
+                  </div>
+
+                  {modalUpdateScope === 'this' && (
+                    <div className="pt-1">
+                      <label
+                        htmlFor="routine-occurrence-date"
+                        className="block text-[10px] font-semibold text-[#526782] mb-1"
+                      >
+                        Occurrence date to modify:
+                      </label>
+                      <input
+                        id="routine-occurrence-date"
+                        type="date"
+                        value={modalOccurrenceDate}
+                        onChange={(e) => setModalOccurrenceDate(e.target.value)}
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-900"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
+
+              <p className="text-[10px] text-[#526782] dark:text-[#A8B8CE]">
+                Schedule summary: <strong>{previewRuleDescription}</strong>. Leap-day anchors (Feb 29) shift to Feb 28 in non-leap years automatically.
+              </p>
             </div>
-          )}
+          </details>
 
           <div className="flex items-center justify-between pt-2">
             <label className="flex items-center gap-2 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer">

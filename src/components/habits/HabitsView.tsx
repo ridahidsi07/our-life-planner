@@ -106,14 +106,14 @@ export const HabitsView: React.FC = () => {
     ? calculateHabitStreak(selectedHabit, currentDate)
     : { currentStreak: 0, bestStreak: 0, isDaily: true };
 
-  // Best overall streak across all habits
+  // Best overall streak and best current streak across all habits
   const overallBestHabit = useMemo(() => {
     let best = 0;
     let habitName = '';
     let isDaily = true;
     habits.forEach((h) => {
       const s = calculateHabitStreak(h, currentDate);
-      if (s.bestStreak > best) {
+      if (s.bestStreak > best || (!habitName && habits.length > 0)) {
         best = s.bestStreak;
         habitName = h.title;
         isDaily = s.isDaily;
@@ -121,6 +121,82 @@ export const HabitsView: React.FC = () => {
     });
     return { best, habitName, isDaily };
   }, [habits, currentDate]);
+
+  const overallCurrentHabit = useMemo(() => {
+    let current = 0;
+    let habitName = '';
+    let isDaily = true;
+    habits.forEach((h) => {
+      const s = calculateHabitStreak(h, currentDate);
+      if (s.currentStreak > current || (!habitName && habits.length > 0)) {
+        current = s.currentStreak;
+        habitName = h.title;
+        isDaily = s.isDaily;
+      }
+    });
+    return { current, habitName, isDaily };
+  }, [habits, currentDate]);
+
+  // Last 28 calendar dates ending at currentDate (oldest -> newest)
+  const last28Dates = useMemo(() => {
+    const [y, m, d] = currentDate.split('-').map(Number);
+    const baseMs = Date.UTC(y || 2026, (m || 1) - 1, d || 1);
+    return Array.from({ length: 28 }, (_, idx) => {
+      const dt = new Date(baseMs - (27 - idx) * 86400000);
+      const yr = dt.getUTCFullYear();
+      const mo = String(dt.getUTCMonth() + 1).padStart(2, '0');
+      const da = String(dt.getUTCDate()).padStart(2, '0');
+      return `${yr}-${mo}-${da}`;
+    });
+  }, [currentDate]);
+
+  // Weekly target card computation
+  const weeklyTargetSummary = useMemo(() => {
+    const weeklyHabits = habits.filter((h) => h.frequencyType === 'weekly');
+    const targetHabit =
+      selectedHabit?.frequencyType === 'weekly'
+        ? selectedHabit
+        : weeklyHabits[0] || null;
+    if (!targetHabit) {
+      return null;
+    }
+    const completedThisWeek = weekDays.filter((w) =>
+      targetHabit.checkedDates.includes(w.iso)
+    ).length;
+    const targetDays = targetHabit.weeklyTargetDays || 3;
+    return {
+      completedThisWeek,
+      targetDays,
+      title: targetHabit.title,
+    };
+  }, [habits, selectedHabit, weekDays]);
+
+  // 28-day insights metrics across all habits
+  const insights28Days = useMemo(() => {
+    const dateSet = new Set(last28Dates);
+    let totalCheckIns = 0;
+    habits.forEach((h) => {
+      h.checkedDates.forEach((d) => {
+        if (dateSet.has(d)) {
+          totalCheckIns += 1;
+        }
+      });
+    });
+    const totalPossible = habits.length * 28;
+    const coveragePct =
+      totalPossible > 0 ? Math.round((totalCheckIns / totalPossible) * 100) : 0;
+    return {
+      totalCheckIns,
+      totalPossible,
+      coveragePct,
+    };
+  }, [habits, last28Dates]);
+
+  const selectedHabitLast28Count = useMemo(() => {
+    if (!selectedHabit) return 0;
+    const checkedSet = new Set(selectedHabit.checkedDates);
+    return last28Dates.filter((d) => checkedSet.has(d)).length;
+  }, [selectedHabit, last28Dates]);
 
   const todayCompletedCount = habits.filter((h) =>
     h.checkedDates.includes(currentDate)
@@ -173,6 +249,32 @@ export const HabitsView: React.FC = () => {
         </div>
       </div>
 
+      {/* First-Use Empty State Hero CTA */}
+      {habits.length === 0 && (
+        <div
+          data-testid="habits-empty-hero"
+          className="bg-teal-50/70 dark:bg-teal-950/30 rounded-2xl p-6 border border-teal-200 dark:border-teal-800/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
+        >
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+              Start your first daily habit
+            </h3>
+            <p className="text-xs sm:text-sm text-[#526782] dark:text-[#A8B8CE] max-w-xl">
+              Pick one simple habit—like reading for 15 minutes, stretching, or drinking water—and check in as you go.
+            </p>
+          </div>
+          <button
+            type="button"
+            data-testid="habits-empty-cta"
+            onClick={openCreateModal}
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Create your first habit</span>
+          </button>
+        </div>
+      )}
+
       {/* Top Metric Cards Row (Board 09) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {/* Today's completion ring */}
@@ -211,7 +313,7 @@ export const HabitsView: React.FC = () => {
             {overallBestHabit.best}-{overallBestHabit.isDaily ? 'day' : 'week'}
           </div>
           <div className="text-[11px] text-[#526782] truncate">
-            {overallBestHabit.habitName}
+            {overallBestHabit.habitName || 'No habits yet'}
           </div>
         </div>
 
@@ -222,10 +324,16 @@ export const HabitsView: React.FC = () => {
             <span className="text-xs font-semibold text-[#526782]">Weekly target</span>
           </div>
           <div className="text-xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF]">
-            0 of 3
+            {weeklyTargetSummary
+              ? `${weeklyTargetSummary.completedThisWeek} of ${weeklyTargetSummary.targetDays}`
+              : 'No weekly habit'}
           </div>
           <div className="text-[11px] text-[#526782] truncate">
-            Get outside (3 days/week)
+            {weeklyTargetSummary
+              ? `${weeklyTargetSummary.title} (${weeklyTargetSummary.targetDays} days/week)`
+              : habits.length > 0
+              ? 'All active habits are daily'
+              : 'No habits added yet'}
           </div>
         </div>
 
@@ -234,17 +342,21 @@ export const HabitsView: React.FC = () => {
           <div className="font-bold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
             Current streaks
           </div>
-          {habits.slice(0, 3).map((h) => {
-            const s = calculateHabitStreak(h, currentDate);
-            return (
-              <div key={h.id} className="flex justify-between items-center text-[#526782]">
-                <span className="truncate pr-2">{h.title}</span>
-                <span className="font-mono font-semibold text-[#071A3A] dark:text-[#EDF4FF] shrink-0">
-                  {s.currentStreak} {s.isDaily ? 'days' : 'weeks'}
-                </span>
-              </div>
-            );
-          })}
+          {habits.length > 0 ? (
+            habits.slice(0, 3).map((h) => {
+              const s = calculateHabitStreak(h, currentDate);
+              return (
+                <div key={h.id} className="flex justify-between items-center text-[#526782]">
+                  <span className="truncate pr-2">{h.title}</span>
+                  <span className="font-mono font-semibold text-[#071A3A] dark:text-[#EDF4FF] shrink-0">
+                    {s.currentStreak} {s.isDaily ? 'days' : 'weeks'}
+                  </span>
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-[#526782]">No habits tracked yet</div>
+          )}
         </div>
       </div>
 
@@ -267,6 +379,11 @@ export const HabitsView: React.FC = () => {
 
               {/* Habit Rows */}
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                {habits.length === 0 && (
+                  <div className="py-8 text-center text-xs text-[#526782]">
+                    No habits created yet. Click &ldquo;New habit&rdquo; above to start tracking.
+                  </div>
+                )}
                 {habits.map((habit) => {
                   const isSelected = selectedHabit?.id === habit.id;
                   const weekChecks = weekDays.filter((w) =>
@@ -321,13 +438,13 @@ export const HabitsView: React.FC = () => {
                                 e.stopPropagation();
                                 toggleHabitCheck(habit.id, w.iso);
                               }}
-                              className={`w-6 h-6 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                              className={`w-6 h-6 rounded-full flex items-center justify-center cursor-pointer micro-checkbox ${
                                 isChecked
                                   ? 'bg-[#087F83] text-white shadow-2xs'
                                   : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
                               }`}
                             >
-                              {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                              {isChecked && <Check className="w-3.5 h-3.5 stroke-[3] motion-check-pop" />}
                             </button>
                           </div>
                         );
@@ -395,7 +512,7 @@ export const HabitsView: React.FC = () => {
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-center">
-                  <div className="text-[11px] text-[#526782]">30-day total</div>
+                  <div className="text-[11px] text-[#526782]">Total check-ins</div>
                   <div className="text-xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] mt-1">
                     {selectedHabit.checkedDates.length} days
                   </div>
@@ -409,15 +526,16 @@ export const HabitsView: React.FC = () => {
                     Last 28 days
                   </span>
                   <span className="text-[#526782] font-mono">
-                    {selectedHabit.checkedDates.length} of 28 days
+                    {selectedHabitLast28Count} of 28 days
                   </span>
                 </div>
                 <div className="flex gap-1 items-end h-10 pt-2">
-                  {Array.from({ length: 28 }).map((_, i) => {
-                    const isFilled = i < Math.min(28, selectedHabit.checkedDates.length);
+                  {last28Dates.map((dateStr) => {
+                    const isFilled = selectedHabit.checkedDates.includes(dateStr);
                     return (
                       <div
-                        key={i}
+                        key={dateStr}
+                        title={`${dateStr}: ${isFilled ? 'Completed' : 'Not completed'}`}
                         className={`flex-1 rounded-xs transition-all ${
                           isFilled
                             ? 'bg-[#8B7CF6] h-7'
@@ -450,33 +568,39 @@ export const HabitsView: React.FC = () => {
             <div className="bg-white dark:bg-[#152238] rounded-2xl p-4 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
               <div className="text-xs text-[#526782]">Total check-ins</div>
               <div className="text-2xl font-bold font-mono text-[#087F83] mt-1">
-                76
+                {insights28Days.totalCheckIns}
               </div>
-              <div className="text-[10px] text-[#526782]">in 28 days</div>
+              <div className="text-[10px] text-[#526782]">in last 28 days</div>
             </div>
 
             <div className="bg-white dark:bg-[#152238] rounded-2xl p-4 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
               <div className="text-xs text-[#526782]">Day coverage</div>
               <div className="text-2xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] mt-1">
-                68%
+                {insights28Days.coveragePct}%
               </div>
-              <div className="text-[10px] text-[#526782]">76 of 112 days</div>
+              <div className="text-[10px] text-[#526782]">
+                {insights28Days.totalCheckIns} of {insights28Days.totalPossible} days
+              </div>
             </div>
 
             <div className="bg-white dark:bg-[#152238] rounded-2xl p-4 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
               <div className="text-xs text-[#526782]">Current streak</div>
               <div className="text-2xl font-bold font-mono text-orange-600 mt-1">
-                7 days
+                {overallCurrentHabit.current} {overallCurrentHabit.isDaily ? 'days' : 'weeks'}
               </div>
-              <div className="text-[10px] text-[#526782]">Read 20 minutes</div>
+              <div className="text-[10px] text-[#526782] truncate">
+                {overallCurrentHabit.habitName || 'No habits tracked'}
+              </div>
             </div>
 
             <div className="bg-white dark:bg-[#152238] rounded-2xl p-4 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
               <div className="text-xs text-[#526782]">Best streak</div>
               <div className="text-2xl font-bold font-mono text-rose-600 mt-1">
-                12 days
+                {overallBestHabit.best} {overallBestHabit.isDaily ? 'days' : 'weeks'}
               </div>
-              <div className="text-[10px] text-[#526782]">Mindful morning</div>
+              <div className="text-[10px] text-[#526782] truncate">
+                {overallBestHabit.habitName || 'No habits tracked'}
+              </div>
             </div>
           </div>
 
@@ -486,21 +610,29 @@ export const HabitsView: React.FC = () => {
               Leaderboard by completion
             </h3>
             <div className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-              {habits.map((h, idx) => (
-                <div key={h.id} className="py-2.5 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="w-5 font-mono font-bold text-[#526782]">
-                      #{idx + 1}
-                    </span>
-                    <span className="font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
-                      {h.title}
-                    </span>
-                  </div>
-                  <span className="font-mono font-bold text-[#087F83] dark:text-[#38D0C5]">
-                    {h.checkedDates.length} check-ins
-                  </span>
+              {habits.length === 0 ? (
+                <div className="py-4 text-center text-[#526782]">
+                  No habits to rank yet.
                 </div>
-              ))}
+              ) : (
+                [...habits]
+                  .sort((a, b) => b.checkedDates.length - a.checkedDates.length)
+                  .map((h, idx) => (
+                    <div key={h.id} className="py-2.5 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="w-5 font-mono font-bold text-[#526782]">
+                          #{idx + 1}
+                        </span>
+                        <span className="font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
+                          {h.title}
+                        </span>
+                      </div>
+                      <span className="font-mono font-bold text-[#087F83] dark:text-[#38D0C5]">
+                        {h.checkedDates.length} check-ins
+                      </span>
+                    </div>
+                  ))
+              )}
             </div>
           </div>
         </div>

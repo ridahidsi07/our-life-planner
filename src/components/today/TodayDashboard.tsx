@@ -29,12 +29,19 @@ import {
   Sun,
   User,
 } from 'lucide-react';
-import { calculateHabitStreak, calculateBMI, convertKgToLb } from '../../utils/calculations';
+import {
+  calculateHabitStreak,
+  convertKgToLb,
+  calculateSavingsAndDebtSummary,
+  computeWeightMetrics,
+} from '../../utils/calculations';
+import { isBirthdayEventOnDate } from '../../utils/recurrence';
 import {
   isRoutineActiveOnDate,
   getRoutineOccurrence,
   formatRecurrenceRule,
 } from '../../utils/routineRecurrence';
+import { isModuleOrToolEnabled } from '../../utils/moduleRegistry';
 
 export const TodayDashboard: React.FC = () => {
   const {
@@ -56,6 +63,8 @@ export const TodayDashboard: React.FC = () => {
     bills,
     markBillPaid,
     unpayBill,
+    savingsPots,
+    debts,
     habits,
     toggleHabitCheck,
     goals,
@@ -138,11 +147,12 @@ export const TodayDashboard: React.FC = () => {
 
   // Find overdue tasks (due before todayDate, incomplete, not archived)
   const overdueTasks = useMemo(() => {
+    if (!isModuleOrToolEnabled('tasks', settings.enabledTools)) return [];
     return tasks.filter((t) => {
       if (t.isArchived || t.status === 'completed' || !t.dueDate) return false;
       return t.dueDate < todayDate;
     });
-  }, [tasks, todayDate]);
+  }, [tasks, todayDate, settings.enabledTools]);
 
   const topOverdueTask = overdueTasks.length > 0 ? overdueTasks[0] : null;
   const overdueDaysLate = useMemo(() => {
@@ -157,86 +167,93 @@ export const TodayDashboard: React.FC = () => {
 
   // Next Up item determination (highest priority pending task or active routine)
   const nextUpItem = useMemo(() => {
-    const priorityWeight: Record<string, number> = { urgent: 5, high: 4, medium: 3, low: 2, lowest: 1 };
-    const candidates = tasks
-      .filter(
-        (t) =>
-          !t.isArchived &&
-          t.status !== 'completed' &&
-          (t.dueDate === currentDate || (isViewingToday && t.dueDate && t.dueDate < todayDate))
-      )
-      .sort((a, b) => (priorityWeight[b.priority] || 3) - (priorityWeight[a.priority] || 3));
+    const isTasksEnabled = isModuleOrToolEnabled('tasks', settings.enabledTools);
+    const isRoutinesEnabled = isModuleOrToolEnabled('routines', settings.enabledTools);
 
-    if (candidates.length > 0) {
-      const top = candidates[0];
-      const member = settings.householdMembers?.find((m) => m.id === top.assignedMemberId);
-      return {
-        id: top.id,
-        title: top.title,
-        type: 'task' as const,
-        priority: top.priority,
-        category: top.category,
-        description: top.description,
-        isAllDay: top.isAllDay || (!top.scheduledStart && !top.dueTime),
-        time: top.scheduledStart || top.dueTime,
-        assignedMember: member,
-        onComplete: () => toggleTaskCompletion(top.id),
-        onRescheduleTomorrow: () => rescheduleTask(top.id, tomorrowDateStr),
-      };
+    if (isTasksEnabled) {
+      const priorityWeight: Record<string, number> = { urgent: 5, high: 4, medium: 3, low: 2, lowest: 1 };
+      const candidates = tasks
+        .filter(
+          (t) =>
+            !t.isArchived &&
+            t.status !== 'completed' &&
+            (t.dueDate === currentDate || (isViewingToday && t.dueDate && t.dueDate < todayDate))
+        )
+        .sort((a, b) => (priorityWeight[b.priority] || 3) - (priorityWeight[a.priority] || 3));
+
+      if (candidates.length > 0) {
+        const top = candidates[0];
+        const member = settings.householdMembers?.find((m) => m.id === top.assignedMemberId);
+        return {
+          id: top.id,
+          title: top.title,
+          type: 'task' as const,
+          priority: top.priority,
+          category: top.category,
+          description: top.description,
+          isAllDay: top.isAllDay || (!top.scheduledStart && !top.dueTime),
+          time: top.scheduledStart || top.dueTime,
+          assignedMember: member,
+          onComplete: () => toggleTaskCompletion(top.id),
+          onRescheduleTomorrow: () => rescheduleTask(top.id, tomorrowDateStr),
+        };
+      }
     }
 
-    const candidateRoutines = routines.filter(
-      (r) =>
-        isRoutineActiveOnDate(r, currentDate) &&
-        !r.completedDates.includes(currentDate) &&
-        !r.skippedDates.includes(currentDate) &&
-        !(r.forgivenDates || []).includes(currentDate)
-    );
-    if (candidateRoutines.length > 0) {
-      const r = candidateRoutines[0];
-      const occ = getRoutineOccurrence(r, currentDate);
-      const member = settings.householdMembers?.find((m) => m.id === r.assignedMemberId);
-      return {
-        id: r.id,
-        title: occ.title,
-        type: 'routine' as const,
-        priority: 'medium' as const,
-        category: r.category,
-        isAllDay: false,
-        time: occ.startTime || '07:30',
-        assignedMember: member,
-        onComplete: () => toggleRoutineCompletion(r.id, currentDate),
-        onRescheduleTomorrow: undefined,
-      };
+    if (isRoutinesEnabled) {
+      const candidateRoutines = routines.filter(
+        (r) =>
+          isRoutineActiveOnDate(r, currentDate) &&
+          !r.completedDates.includes(currentDate) &&
+          !r.skippedDates.includes(currentDate) &&
+          !(r.forgivenDates || []).includes(currentDate)
+      );
+      if (candidateRoutines.length > 0) {
+        const r = candidateRoutines[0];
+        const occ = getRoutineOccurrence(r, currentDate);
+        const member = settings.householdMembers?.find((m) => m.id === r.assignedMemberId);
+        return {
+          id: r.id,
+          title: occ.title,
+          type: 'routine' as const,
+          priority: 'medium' as const,
+          category: r.category,
+          isAllDay: false,
+          time: occ.startTime || '07:30',
+          assignedMember: member,
+          onComplete: () => toggleRoutineCompletion(r.id, currentDate),
+          onRescheduleTomorrow: undefined,
+        };
+      }
     }
 
     return null;
-  }, [tasks, routines, currentDate, isViewingToday, todayDate, tomorrowDateStr, settings.householdMembers]);
+  }, [tasks, routines, currentDate, isViewingToday, todayDate, tomorrowDateStr, settings.householdMembers, settings.enabledTools]);
 
-  // Daily activities for today
+  // Daily activities for today (strictly guarded by enabled tools)
   const todayTasks = useMemo(
-    () => tasks.filter((t) => !t.isArchived && t.dueDate === currentDate),
-    [tasks, currentDate]
+    () => (isModuleOrToolEnabled('tasks', settings.enabledTools) ? tasks.filter((t) => !t.isArchived && t.dueDate === currentDate) : []),
+    [tasks, currentDate, settings.enabledTools]
   );
 
   const todayRoutines = useMemo(
-    () => routines.filter((r) => isRoutineActiveOnDate(r, currentDate)),
-    [routines, currentDate]
+    () => (isModuleOrToolEnabled('routines', settings.enabledTools) ? routines.filter((r) => isRoutineActiveOnDate(r, currentDate)) : []),
+    [routines, currentDate, settings.enabledTools]
   );
 
   const todayBills = useMemo(
-    () => bills.filter((b) => b.dueDate === currentDate),
-    [bills, currentDate]
+    () => (isModuleOrToolEnabled('money', settings.enabledTools) ? bills.filter((b) => b.dueDate === currentDate) : []),
+    [bills, currentDate, settings.enabledTools]
   );
 
   const todayMeals = useMemo(
-    () => plannedMeals.filter((m) => m.date === currentDate),
-    [plannedMeals, currentDate]
+    () => (isModuleOrToolEnabled('food', settings.enabledTools) ? plannedMeals.filter((m) => m.date === currentDate) : []),
+    [plannedMeals, currentDate, settings.enabledTools]
   );
 
   const todayWorkouts = useMemo(
-    () => workouts.filter((w) => w.date === currentDate && !w.isRestDay),
-    [workouts, currentDate]
+    () => (isModuleOrToolEnabled('body', settings.enabledTools) ? workouts.filter((w) => w.date === currentDate && !w.isRestDay) : []),
+    [workouts, currentDate, settings.enabledTools]
   );
 
   // Completion calculation (Denominator: tasks + active routine occurrences + bills + meals + workouts)
@@ -315,120 +332,134 @@ export const TodayDashboard: React.FC = () => {
     const items: ScheduleEntry[] = [];
 
     // 1. Routines active on this date
-    routines
-      .filter((r) => isRoutineActiveOnDate(r, dateStr))
-      .forEach((r) => {
-        const occ = getRoutineOccurrence(r, dateStr);
-        const isCompleted = r.completedDates.includes(dateStr);
-        const isForgiven = (r.forgivenDates || []).includes(dateStr);
-        const assignedMember = settings.householdMembers?.find((m) => m.id === r.assignedMemberId);
-        items.push({
-          id: `routine-${r.id}`,
-          title: occ.title,
-          time: occ.startTime || '07:30',
-          type: 'Routine',
-          badgeBg: 'bg-teal-50 dark:bg-teal-950/60',
-          badgeText: 'text-[#087F83] dark:text-[#38D0C5]',
-          isCompleted,
-          onToggle: () => toggleRoutineCompletion(r.id, dateStr),
-          subtext: formatRecurrenceRule(r),
-          isAllDay: false,
-          routineId: r.id,
-          isForgiven,
-          onForgive: () => forgiveRoutineOccurrence(r.id, dateStr),
-          onUnforgive: () => unforgiveRoutineOccurrence(r.id, dateStr),
-          assignedMember,
+    if (isModuleOrToolEnabled('routines', settings.enabledTools)) {
+      routines
+        .filter((r) => isRoutineActiveOnDate(r, dateStr))
+        .forEach((r) => {
+          const occ = getRoutineOccurrence(r, dateStr);
+          const isCompleted = r.completedDates.includes(dateStr);
+          const isForgiven = (r.forgivenDates || []).includes(dateStr);
+          const assignedMember = settings.householdMembers?.find((m) => m.id === r.assignedMemberId);
+          items.push({
+            id: `routine-${r.id}`,
+            title: occ.title,
+            time: occ.startTime || '07:30',
+            type: 'Routine',
+            badgeBg: 'bg-teal-50 dark:bg-teal-950/60',
+            badgeText: 'text-[#087F83] dark:text-[#38D0C5]',
+            isCompleted,
+            onToggle: () => toggleRoutineCompletion(r.id, dateStr),
+            subtext: formatRecurrenceRule(r),
+            isAllDay: false,
+            routineId: r.id,
+            isForgiven,
+            onForgive: () => forgiveRoutineOccurrence(r.id, dateStr),
+            onUnforgive: () => unforgiveRoutineOccurrence(r.id, dateStr),
+            assignedMember,
+          });
         });
-      });
+    }
 
     // 2. Tasks due on this date (not archived)
-    tasks
-      .filter((t) => !t.isArchived && t.dueDate === dateStr)
-      .forEach((t) => {
-        const isCompleted = t.status === 'completed';
-        const assignedMember = settings.householdMembers?.find((m) => m.id === t.assignedMemberId);
-        const isAllDay = t.isAllDay || (!t.scheduledStart && !t.dueTime);
-        items.push({
-          id: `task-${t.id}`,
-          title: t.title,
-          time: isAllDay ? 'All day' : (t.scheduledStart || t.dueTime || '09:00'),
-          type: 'Task',
-          badgeBg: 'bg-blue-50 dark:bg-blue-950/60',
-          badgeText: 'text-blue-600 dark:text-blue-400',
-          isCompleted,
-          onToggle: () => toggleTaskCompletion(t.id),
-          subtext: t.category,
-          isAllDay,
-          taskId: t.id,
-          assignedMember,
+    if (isModuleOrToolEnabled('tasks', settings.enabledTools)) {
+      tasks
+        .filter((t) => !t.isArchived && t.dueDate === dateStr)
+        .forEach((t) => {
+          const isCompleted = t.status === 'completed';
+          const assignedMember = settings.householdMembers?.find((m) => m.id === t.assignedMemberId);
+          const isAllDay = t.isAllDay || (!t.scheduledStart && !t.dueTime);
+          items.push({
+            id: `task-${t.id}`,
+            title: t.title,
+            time: isAllDay ? 'All day' : (t.scheduledStart || t.dueTime || '09:00'),
+            type: 'Task',
+            badgeBg: 'bg-blue-50 dark:bg-blue-950/60',
+            badgeText: 'text-blue-600 dark:text-blue-400',
+            isCompleted,
+            onToggle: () => toggleTaskCompletion(t.id),
+            subtext: t.category,
+            isAllDay,
+            taskId: t.id,
+            assignedMember,
+          });
         });
-      });
+    }
 
-    // 3. Calendar events on this date
-    calendarEvents.filter((e) => e.date === dateStr).forEach((e) => {
-      items.push({
-        id: `event-${e.id}`,
-        title: e.title,
-        time: e.isAllDay ? 'All day' : `${e.startTime || '10:00'} – ${e.endTime || '11:00'}`,
-        type: e.type === 'free_time' ? 'Focus time' : e.type === 'birthday' ? 'Birthday' : 'Event',
-        badgeBg: 'bg-indigo-50 dark:bg-indigo-950/60',
-        badgeText: 'text-indigo-600 dark:text-indigo-400',
-        isCompleted: false,
-        subtext: e.notes,
-        isAllDay: e.isAllDay,
-      });
-    });
+    // 3. Calendar events on this date (including yearly birthdays — LP-10)
+    if (isModuleOrToolEnabled('calendar', settings.enabledTools)) {
+      calendarEvents
+        .filter((e) => (e.type === 'birthday' ? isBirthdayEventOnDate(e.date, dateStr) : e.date === dateStr))
+        .forEach((e) => {
+          items.push({
+            id: `event-${e.id}`,
+            title: e.title,
+            time: e.isAllDay ? 'All day' : `${e.startTime || '10:00'} – ${e.endTime || '11:00'}`,
+            type: e.type === 'free_time' ? 'Focus time' : e.type === 'birthday' ? 'Birthday' : 'Event',
+            badgeBg: 'bg-indigo-50 dark:bg-indigo-950/60',
+            badgeText: 'text-indigo-600 dark:text-indigo-400',
+            isCompleted: false,
+            subtext: e.notes,
+            isAllDay: e.isAllDay,
+          });
+        });
+    }
 
     // 4. Meals planned on this date
-    plannedMeals.filter((m) => m.date === dateStr).forEach((m) => {
-      const defaultTime = m.mealType === 'breakfast' ? '08:00' : m.mealType === 'lunch' ? '12:30' : '19:30';
-      items.push({
-        id: `meal-${m.id}`,
-        title: m.recipeTitle,
-        time: m.plannedTime || defaultTime,
-        type: m.mealType.charAt(0).toUpperCase() + m.mealType.slice(1),
-        badgeBg: 'bg-amber-50 dark:bg-amber-950/60',
-        badgeText: 'text-amber-700 dark:text-amber-400',
-        isCompleted: m.isConsumed,
-        onToggle: () => toggleMealConsumed(m.id),
-        isAllDay: false,
+    if (isModuleOrToolEnabled('food', settings.enabledTools)) {
+      plannedMeals.filter((m) => m.date === dateStr).forEach((m) => {
+        const defaultTime = m.mealType === 'breakfast' ? '08:00' : m.mealType === 'lunch' ? '12:30' : '19:30';
+        items.push({
+          id: `meal-${m.id}`,
+          title: m.recipeTitle,
+          time: m.plannedTime || defaultTime,
+          type: m.mealType.charAt(0).toUpperCase() + m.mealType.slice(1),
+          badgeBg: 'bg-amber-50 dark:bg-amber-950/60',
+          badgeText: 'text-amber-700 dark:text-amber-400',
+          isCompleted: m.isConsumed,
+          onToggle: () => toggleMealConsumed(m.id),
+          isAllDay: false,
+        });
       });
-    });
+    }
 
     // 5. Workouts on this date
-    workouts.filter((w) => w.date === dateStr && !w.isRestDay).forEach((w) => {
-      items.push({
-        id: `workout-${w.id}`,
-        title: w.title,
-        time: w.startTime || '15:00',
-        type: 'Workout',
-        badgeBg: 'bg-teal-50 dark:bg-teal-950/60',
-        badgeText: 'text-[#087F83] dark:text-[#38D0C5]',
-        isCompleted: w.isCompleted,
-        onToggle: () => updateWorkoutSession(w.id, { isCompleted: !w.isCompleted }),
-        subtext: `${w.durationMinutes} min`,
-        isAllDay: false,
+    if (isModuleOrToolEnabled('body', settings.enabledTools)) {
+      workouts.filter((w) => w.date === dateStr && !w.isRestDay).forEach((w) => {
+        items.push({
+          id: `workout-${w.id}`,
+          title: w.title,
+          time: w.startTime || '15:00',
+          type: 'Workout',
+          badgeBg: 'bg-teal-50 dark:bg-teal-950/60',
+          badgeText: 'text-[#087F83] dark:text-[#38D0C5]',
+          isCompleted: w.isCompleted,
+          onToggle: () => updateWorkoutSession(w.id, { isCompleted: !w.isCompleted }),
+          subtext: `${w.durationMinutes} min`,
+          isAllDay: false,
+        });
       });
-    });
+    }
 
     // 6. Bills due on this date
-    bills.filter((b) => b.dueDate === dateStr).forEach((b) => {
-      items.push({
-        id: `bill-${b.id}`,
-        title: b.title,
-        time: '18:00',
-        type: 'Bill',
-        badgeBg: 'bg-rose-50 dark:bg-rose-950/60',
-        badgeText: 'text-rose-600 dark:text-rose-400',
-        isCompleted: b.isPaid,
-        onToggle: () => {
-          if (b.isPaid) unpayBill(b.id);
-          else markBillPaid(b.id, b.plannedAmount, dateStr);
-        },
-        subtext: `${currencySymbol}${b.plannedAmount} · ${b.isPaid ? 'Paid' : 'Due today'}`,
-        isAllDay: false,
+    if (isModuleOrToolEnabled('money', settings.enabledTools)) {
+      bills.filter((b) => b.dueDate === dateStr).forEach((b) => {
+        items.push({
+          id: `bill-${b.id}`,
+          title: b.title,
+          time: '18:00',
+          type: 'Bill',
+          badgeBg: 'bg-rose-50 dark:bg-rose-950/60',
+          badgeText: 'text-rose-600 dark:text-rose-400',
+          isCompleted: b.isPaid,
+          onToggle: () => {
+            if (b.isPaid) unpayBill(b.id);
+            else markBillPaid(b.id, b.plannedAmount, dateStr);
+          },
+          subtext: `${currencySymbol}${b.plannedAmount} · ${b.isPaid ? 'Paid' : 'Due today'}`,
+          isAllDay: false,
+        });
       });
-    });
+    }
 
     // Sort chronologically
     return items.sort((a, b) => a.time.localeCompare(b.time));
@@ -436,7 +467,7 @@ export const TodayDashboard: React.FC = () => {
 
   const todayScheduleItems = useMemo(
     () => getScheduleItemsForDate(currentDate),
-    [currentDate, tasks, routines, calendarEvents, plannedMeals, workouts, bills, settings.householdMembers]
+    [currentDate, tasks, routines, calendarEvents, plannedMeals, workouts, bills, settings.householdMembers, settings.enabledTools]
   );
 
   const allDayScheduleItems = useMemo(
@@ -451,7 +482,7 @@ export const TodayDashboard: React.FC = () => {
 
   const tomorrowScheduleItems = useMemo(
     () => getScheduleItemsForDate(tomorrowDateStr),
-    [tomorrowDateStr, tasks, routines, calendarEvents, plannedMeals, workouts, bills, settings.householdMembers]
+    [tomorrowDateStr, tasks, routines, calendarEvents, plannedMeals, workouts, bills, settings.householdMembers, settings.enabledTools]
   );
 
   // Water tracking for today
@@ -486,35 +517,78 @@ export const TodayDashboard: React.FC = () => {
 
   const nextGoalStep = primaryGoal?.steps.find((s) => !s.isCompleted);
 
-  // Selected weight profile & record
+  // Dynamic Savings & Debt Summary (LP-05)
+  const savingsAndDebtSummary = useMemo(
+    () => calculateSavingsAndDebtSummary(savingsPots, debts),
+    [savingsPots, debts]
+  );
+
+  // Selected weight profile & record without fabricated 72.0 / 72.4 kg fallbacks (LP-05)
   const selectedProfile =
     weightProfiles.find((p) => p.id === selectedProfileId) || weightProfiles[0];
-  const profileRecords = weightRecords
-    .filter((r) => r.profileId === selectedProfile?.id)
-    .sort((a, b) => b.date.localeCompare(a.date));
-  const latestWeight = profileRecords.length > 0 ? profileRecords[0].weightKg : 72.0;
-  const priorWeight = profileRecords.length > 1 ? profileRecords[1].weightKg : 72.4;
+  const profileRecords = useMemo(
+    () =>
+      selectedProfile
+        ? weightRecords
+            .filter((r) => r.profileId === selectedProfile.id)
+            .sort((a, b) => b.date.localeCompare(a.date))
+        : [],
+    [weightRecords, selectedProfile]
+  );
+  const weightMetrics = useMemo(
+    () => computeWeightMetrics(profileRecords, selectedProfile),
+    [profileRecords, selectedProfile]
+  );
   const currentWeightUnit = settings.weightUnit || 'kg';
   const displayedLatestWeight =
-    currentWeightUnit === 'lb' ? convertKgToLb(latestWeight) : latestWeight;
+    weightMetrics.latestWeightKg !== null
+      ? currentWeightUnit === 'lb'
+        ? convertKgToLb(weightMetrics.latestWeightKg)
+        : weightMetrics.latestWeightKg
+      : null;
   const displayedPriorWeight =
-    currentWeightUnit === 'lb' ? convertKgToLb(priorWeight) : priorWeight;
-  const weightDiff = Math.round((displayedLatestWeight - displayedPriorWeight) * 10) / 10;
+    weightMetrics.priorWeightKg !== null
+      ? currentWeightUnit === 'lb'
+        ? convertKgToLb(weightMetrics.priorWeightKg)
+        : weightMetrics.priorWeightKg
+      : null;
+  const weightDiff =
+    displayedLatestWeight !== null && displayedPriorWeight !== null
+      ? Math.round((displayedLatestWeight - displayedPriorWeight) * 10) / 10
+      : null;
+
+  const isHabitsVisible =
+    isModuleOrToolEnabled('habits', settings.enabledTools) &&
+    settings.todayVisibleSections?.habits !== false;
+  const isWaterVisible = isModuleOrToolEnabled('water', settings.enabledTools);
+  const isMoneyVisible =
+    !isCalmMode &&
+    isModuleOrToolEnabled('money', settings.enabledTools) &&
+    settings.todayVisibleSections?.finance !== false;
+  const isGoalsVisible =
+    isModuleOrToolEnabled('goals', settings.enabledTools) && Boolean(primaryGoal);
+  const isHealthVisible =
+    !isCalmMode &&
+    isModuleOrToolEnabled('body', settings.enabledTools) &&
+    settings.todayVisibleSections?.health !== false;
+  const hasRightWidgets =
+    isHabitsVisible || isWaterVisible || isMoneyVisible || isGoalsVisible || isHealthVisible;
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-3 sm:p-4 md:p-8 max-w-7xl mx-auto space-y-3 sm:space-y-4 md:space-y-6">
       {/* Historical Date Notice Banner */}
       {!isViewingToday && (
-        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-2xl p-3.5 px-4 flex items-center justify-between shadow-2xs animate-in fade-in text-xs">
-          <div className="flex items-center gap-2.5 text-amber-900 dark:text-amber-200">
+        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-2xl p-2.5 sm:p-3.5 px-3 sm:px-4 flex items-center justify-between shadow-2xs animate-in fade-in text-xs">
+          <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 min-w-0">
             <Calendar className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span>
+            <span className="truncate">
               Viewing schedule for <strong>{formattedCurrentDate}</strong> · Today is {formattedTodayDate}.
             </span>
           </div>
           <button
+            type="button"
             onClick={goToToday}
-            className="px-3 py-1.5 rounded-xl bg-[#087F83] text-white font-semibold hover:bg-[#06676A] transition-colors cursor-pointer shrink-0"
+            className="min-h-[44px] sm:min-h-9 px-3.5 py-2 rounded-xl bg-[#087F83] text-white font-semibold hover:bg-[#06676A] dark:bg-[#38D0C5] dark:text-[#071A3A] dark:hover:bg-[#2BB5AB] transition-colors cursor-pointer shrink-0 text-xs"
           >
             Jump to Today
           </button>
@@ -522,22 +596,22 @@ export const TodayDashboard: React.FC = () => {
       )}
 
       {/* Quick Action Toolbar & Calm Toggle */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setActiveModal('focus_mode')}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold hover:bg-teal-100 transition-colors cursor-pointer border border-teal-200 dark:border-teal-900/60 shadow-2xs"
+            className="btn-tonal min-h-[44px] sm:min-h-9 px-3.5 py-2 text-xs font-semibold"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Single-Task Focus</span>
+            <span>Focus Mode</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveModal('weekly_review')}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer border border-slate-200 dark:border-slate-700 shadow-2xs"
+            className="btn-secondary min-h-[44px] sm:min-h-9 px-3.5 py-2 text-xs font-semibold"
           >
-            <Calendar className="w-3.5 h-3.5" />
+            <Calendar className="w-3.5 h-3.5 text-[#526782] dark:text-[#A8B8CE]" />
             <span>Weekly Review</span>
           </button>
         </div>
@@ -546,10 +620,16 @@ export const TodayDashboard: React.FC = () => {
           type="button"
           onClick={() => setIsCalmMode(!isCalmMode)}
           aria-pressed={isCalmMode}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer border ${
+          title="Calm View simplifies your dashboard by temporarily hiding financial balances and health metrics."
+          aria-label={
             isCalmMode
-              ? 'bg-[#087F83] text-white border-[#087F83]'
-              : 'bg-white dark:bg-[#152238] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+              ? 'Disable Calm View (shows financial and health widgets)'
+              : 'Enable Calm View (hides financial and health widgets for a reduced-stimulation view)'
+          }
+          className={`min-h-[44px] sm:min-h-9 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer border ${
+            isCalmMode
+              ? 'btn-primary'
+              : 'btn-secondary'
           }`}
         >
           {isCalmMode ? <Sun className="w-3.5 h-3.5" /> : <SlidersHorizontal className="w-3.5 h-3.5" />}
@@ -559,27 +639,28 @@ export const TodayDashboard: React.FC = () => {
 
       {/* 1. Overdue Action Center */}
       {overdueTasks.length > 0 && (
-        <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-2xl p-4 shadow-2xs animate-in fade-in space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
-                <AlertCircle className="w-4 h-4" />
+        <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-2xl p-3 sm:p-4 shadow-2xs animate-in fade-in space-y-2 sm:space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-3.5 h-3.5" />
               </div>
               <span className="font-bold text-xs text-[#071A3A] dark:text-[#EDF4FF]">
                 {overdueTasks.length} Overdue Action{overdueTasks.length > 1 ? 's' : ''} Need Rescheduling
               </span>
             </div>
             <button
+              type="button"
               onClick={() => setActiveView('tasks')}
-              className="text-xs font-semibold text-rose-700 dark:text-rose-300 hover:underline flex items-center gap-1 cursor-pointer"
+              className="min-h-[44px] sm:min-h-8 px-2 text-xs font-semibold text-rose-700 dark:text-rose-300 hover:underline flex items-center gap-1 cursor-pointer shrink-0"
             >
               <span>View all in tasks</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="space-y-2">
-            {overdueTasks.slice(0, 2).map((t) => {
+          <div className="space-y-1.5 sm:space-y-2">
+            {overdueTasks.slice(0, 2).map((t, idx) => {
               const dueParts = (t.dueDate || '').split('-');
               const due = new Date(parseInt(dueParts[0]), parseInt(dueParts[1]) - 1, parseInt(dueParts[2]));
               const todayParts = todayDate.split('-');
@@ -589,29 +670,31 @@ export const TodayDashboard: React.FC = () => {
               return (
                 <div
                   key={t.id}
-                  className="bg-white/80 dark:bg-[#152238]/80 p-3 rounded-xl border border-rose-100 dark:border-rose-900/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
+                  className={`bg-white/80 dark:bg-[#152238]/80 p-2.5 sm:p-3 rounded-xl border border-rose-100 dark:border-rose-900/40 flex items-center justify-between gap-2.5 ${
+                    idx > 0 ? 'hidden sm:flex' : 'flex'
+                  }`}
                 >
-                  <div className="truncate">
-                    <span className="font-semibold text-xs text-[#071A3A] dark:text-[#EDF4FF] mr-2">
+                  <div className="min-w-0 flex-1 truncate">
+                    <span className="font-semibold text-xs text-[#071A3A] dark:text-[#EDF4FF] mr-1.5 truncate">
                       {t.title}
                     </span>
-                    <span className="text-[11px] text-rose-600 dark:text-rose-400 font-medium">
-                      ({daysLate}d late · {t.category})
+                    <span className="text-[10px] sm:text-[11px] text-rose-600 dark:text-rose-400 font-medium whitespace-nowrap">
+                      ({daysLate}d late{t.category ? ` · ${t.category}` : ''})
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                     <button
                       type="button"
                       onClick={() => rescheduleTask(t.id, todayDate)}
-                      className="px-2.5 py-1 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] text-[11px] font-semibold hover:bg-teal-100 cursor-pointer transition-colors"
+                      className="min-h-[44px] sm:min-h-8 px-3 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] text-[11px] font-semibold hover:bg-teal-100 dark:hover:bg-teal-900/70 cursor-pointer transition-colors"
                     >
                       Reschedule Today
                     </button>
                     <button
                       type="button"
                       onClick={() => rescheduleTask(t.id, tomorrowDateStr)}
-                      className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-[11px] font-semibold hover:bg-blue-100 cursor-pointer transition-colors"
+                      className="hidden sm:inline-flex min-h-[44px] sm:min-h-8 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-[11px] font-semibold hover:bg-blue-100 dark:hover:bg-blue-900/70 cursor-pointer transition-colors"
                     >
                       Tomorrow
                     </button>
@@ -619,7 +702,7 @@ export const TodayDashboard: React.FC = () => {
                       type="button"
                       onClick={() => archiveTask(t.id)}
                       aria-label={`Archive task ${t.title}`}
-                      className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                      className="min-w-[44px] min-h-[44px] sm:min-w-8 sm:min-h-8 p-2 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
                       title="Archive task"
                     >
                       <Archive className="w-3.5 h-3.5" />
@@ -638,10 +721,10 @@ export const TodayDashboard: React.FC = () => {
       </div>
 
       {/* 2. Week Strip & Daily Progress Meter */}
-      <div className="bg-white dark:bg-[#152238] rounded-2xl p-4 md:p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] flex flex-col md:flex-row items-center justify-between gap-4 md:gap-5 shadow-2xs">
+      <div className="card-surface px-3 py-3 sm:p-4 md:p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 md:gap-5">
         {/* Week navigation & days */}
-        <div className="flex flex-col md:flex-row md:items-center gap-3 w-full md:w-auto">
-          <div className="flex items-center justify-between md:justify-start gap-3">
+        <div className="flex flex-col md:flex-row md:items-center gap-2.5 sm:gap-3 w-full md:w-auto min-w-0">
+          <div className="flex items-center justify-between md:justify-start gap-2">
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF] whitespace-nowrap">
                 This week
@@ -651,47 +734,59 @@ export const TodayDashboard: React.FC = () => {
                   type="button"
                   onClick={goToToday}
                   aria-label="Jump to real today"
-                  className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-100 cursor-pointer"
+                  className="min-h-[44px] sm:min-h-7 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-100 dark:hover:bg-teal-900/70 cursor-pointer flex items-center"
                 >
                   Today
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-1 text-[#526782] dark:text-[#A8B8CE]">
-              <button
-                onClick={() => {
-                  const parts = currentDate.split('-');
-                  const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-                  d.setDate(d.getDate() - 7);
-                  const year = d.getFullYear();
-                  const month = String(d.getMonth() + 1).padStart(2, '0');
-                  const dateNum = String(d.getDate()).padStart(2, '0');
-                  setCurrentDate(`${year}-${month}-${dateNum}`);
-                }}
-                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-                aria-label="Previous week"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => {
-                  const parts = currentDate.split('-');
-                  const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-                  d.setDate(d.getDate() + 7);
-                  const year = d.getFullYear();
-                  const month = String(d.getMonth() + 1).padStart(2, '0');
-                  const dateNum = String(d.getDate()).padStart(2, '0');
-                  setCurrentDate(`${year}-${month}-${dateNum}`);
-                }}
-                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-                aria-label="Next week"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+
+            <div className="flex items-center gap-2">
+              {/* Inlined progress on mobile */}
+              <div className="md:hidden flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-50 dark:bg-teal-950/60 border border-teal-200/60 dark:border-teal-800/40 text-[11px] font-semibold text-[#087F83] dark:text-[#38D0C5]">
+                <CheckCircle2 className="w-3 h-3" />
+                <span>{completedCount}/{totalCompletable}</span>
+                <span className="text-[10px] text-[#526782] dark:text-[#A8B8CE]">({completionPercentage}%)</span>
+              </div>
+
+              <div className="flex items-center gap-1 text-[#526782] dark:text-[#A8B8CE]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const parts = currentDate.split('-');
+                    const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                    d.setDate(d.getDate() - 7);
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const dateNum = String(d.getDate()).padStart(2, '0');
+                    setCurrentDate(`${year}-${month}-${dateNum}`);
+                  }}
+                  className="min-w-[44px] min-h-[44px] sm:min-w-8 sm:min-h-8 p-2 rounded-lg flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  aria-label="Previous week"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const parts = currentDate.split('-');
+                    const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                    d.setDate(d.getDate() + 7);
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const dateNum = String(d.getDate()).padStart(2, '0');
+                    setCurrentDate(`${year}-${month}-${dateNum}`);
+                  }}
+                  className="min-w-[44px] min-h-[44px] sm:min-w-8 sm:min-h-8 p-2 rounded-lg flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  aria-label="Next week"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-1 w-full md:flex md:items-center md:gap-2 md:w-auto py-0.5">
+          <div className="flex items-center justify-between gap-0.5 sm:gap-1.5 overflow-x-auto no-scrollbar w-full md:w-auto py-0.5">
             {weekDays.map((w) => (
               <button
                 key={w.dateStr}
@@ -700,7 +795,7 @@ export const TodayDashboard: React.FC = () => {
                 aria-current={w.isRealToday ? 'date' : undefined}
                 aria-label={`${w.name} ${w.dayNum}${w.isRealToday ? ', Today' : ''}${w.isSelected ? ', Selected' : ''}`}
                 onClick={() => setCurrentDate(w.dateStr)}
-                className={`relative flex flex-col items-center justify-center w-full md:w-10 min-w-0 px-0.5 py-1.5 rounded-xl text-xs transition-colors cursor-pointer ${
+                className={`relative flex flex-col items-center justify-center flex-1 md:flex-none md:w-11 min-w-[44px] min-h-[44px] shrink-0 px-0.5 py-1.5 rounded-xl text-xs transition-colors cursor-pointer ${
                   w.isSelected
                     ? 'bg-[#087F83] text-white font-bold shadow-xs'
                     : 'text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -720,8 +815,8 @@ export const TodayDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Completion Ring */}
-        <div className="flex items-center gap-4 shrink-0 w-full md:w-auto pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-800">
+        {/* Completion Ring on desktop */}
+        <div className="hidden md:flex items-center gap-4 shrink-0 w-full md:w-auto pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-800">
           <RingProgress
             progress={completionPercentage}
             size={56}
@@ -744,12 +839,12 @@ export const TodayDashboard: React.FC = () => {
       </div>
 
       {/* 3. Main Dashboard 2-Column Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Your Day (Timeline) + Tomorrow Preview (7 cols) */}
-        <div className="lg:col-span-7 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+        {/* Left Column: Your Day (Timeline) + Tomorrow Preview (7 cols or 12 cols) */}
+        <div className={`${hasRightWidgets ? 'lg:col-span-7' : 'lg:col-span-12'} space-y-4 sm:space-y-6`}>
           {/* Hero Next Up Card */}
           {nextUpItem && (
-            <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border-l-4 border-l-[#087F83] border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs animate-in fade-in">
+            <div className="card-surface p-4 sm:p-5 border-l-4 border-l-[#087F83] dark:border-l-[#38D0C5] animate-in fade-in">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#087F83] dark:text-[#38D0C5]">
                   <Zap className="w-3.5 h-3.5 fill-current" />
@@ -771,43 +866,43 @@ export const TodayDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="text-base md:text-lg font-bold text-[#071A3A] dark:text-[#EDF4FF] mb-3">
+              <div data-testid="today-next-up-title" className="text-base md:text-lg font-bold text-[#071A3A] dark:text-[#EDF4FF] mb-2 sm:mb-3">
                 {nextUpItem.title}
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex flex-wrap items-center gap-2 pt-2 sm:pt-2.5 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={nextUpItem.onComplete}
-                  className="px-3.5 py-1.5 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                  className="btn-primary min-h-[44px] sm:min-h-9 px-3.5 py-2 text-xs font-semibold micro-tap"
                 >
-                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  <Check className="w-3.5 h-3.5 stroke-[3] motion-check-pop" />
                   <span>Mark Complete</span>
                 </button>
                 {nextUpItem.onRescheduleTomorrow && (
                   <button
                     type="button"
                     onClick={nextUpItem.onRescheduleTomorrow}
-                    className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-1.5 cursor-pointer transition-colors"
+                    className="btn-secondary min-h-[44px] sm:min-h-9 px-3.5 py-2 text-xs font-semibold"
                   >
-                    <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                    <Calendar className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                     <span>Tomorrow</span>
                   </button>
                 )}
                 <button
                   type="button"
                   onClick={() => setActiveModal('focus_mode')}
-                  className="px-3 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold hover:bg-teal-100 flex items-center gap-1.5 cursor-pointer transition-colors"
+                  className="btn-tonal min-h-[44px] sm:min-h-9 px-3.5 py-2 text-xs font-semibold"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Focus View</span>
+                  <span>Focus Mode</span>
                 </button>
               </div>
             </div>
           )}
 
           {/* Your Day Card */}
-          <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
+          <div className="card-surface p-5 md:p-6">
             <div className="flex items-center justify-between pb-4 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-[#071A3A] dark:text-[#EDF4FF]">
@@ -818,8 +913,9 @@ export const TodayDashboard: React.FC = () => {
                 </span>
               </div>
               <button
+                type="button"
                 onClick={() => setActiveView('calendar')}
-                className="text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline flex items-center gap-1 cursor-pointer"
+                className="min-h-[44px] sm:min-h-8 px-2 text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <span>View calendar</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -827,17 +923,28 @@ export const TodayDashboard: React.FC = () => {
             </div>
 
             {todayScheduleItems.length === 0 ? (
-              <div className="py-10 text-center space-y-2">
-                <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
-                  No commitments scheduled for {formattedCurrentDate}.
+              <div data-testid="today-empty-state" className="py-10 px-4 text-center space-y-3">
+                <div className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                  Nothing scheduled for {formattedCurrentDate} yet
+                </div>
+                <p className="text-xs sm:text-sm text-[#526782] dark:text-[#A8B8CE] max-w-md mx-auto">
+                  Start with one clear priority for today—add a task, schedule an event, or capture a quick note.
                 </p>
-                <button
-                  onClick={() => setActiveModal('quick_add')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold hover:bg-teal-100 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add to this day</span>
-                </button>
+                <div className="pt-1 space-y-2">
+                  <button
+                    type="button"
+                    data-testid="today-empty-cta"
+                    onClick={() => setActiveModal('quick_add')}
+                    className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-semibold cursor-pointer shadow-xs transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add your first item for today</span>
+                  </button>
+                  <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#526782] dark:text-[#A8B8CE]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span>Private &amp; saved locally on this device</span>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="space-y-4 pt-3">
@@ -853,30 +960,34 @@ export const TodayDashboard: React.FC = () => {
                           key={item.id}
                           className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between"
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
                             {item.onToggle ? (
                               <button
                                 type="button"
                                 role="checkbox"
                                 aria-checked={item.isCompleted}
                                 onClick={item.onToggle}
-                                className={`w-5 h-5 rounded-md flex items-center justify-center cursor-pointer transition-colors ${
-                                  item.isCompleted
-                                    ? 'bg-[#087F83] text-white'
-                                    : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
-                                }`}
+                                className="min-w-[44px] min-h-[44px] sm:min-w-8 sm:min-h-8 -my-1.5 -ml-1.5 p-2 rounded-lg flex items-center justify-center cursor-pointer micro-checkbox"
                                 aria-label={`Mark ${item.title} as ${item.isCompleted ? 'incomplete' : 'complete'}`}
                               >
-                                {item.isCompleted && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                <span
+                                  className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
+                                    item.isCompleted
+                                      ? 'bg-[#087F83] text-white'
+                                      : 'border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#152238] hover:border-[#087F83]'
+                                  }`}
+                                >
+                                  {item.isCompleted && <Check className="w-3.5 h-3.5 stroke-[3] motion-check-pop" />}
+                                </span>
                               </button>
                             ) : (
                               <div className="w-2 h-2 rounded-full bg-[#087F83] shrink-0 ml-1.5 mr-1.5" />
                             )}
                             <div>
                               <span
-                                className={`text-xs font-semibold transition-colors ${
+                                className={`text-xs font-semibold transition-all duration-150 ${
                                   item.isCompleted
-                                    ? 'line-through text-[#526782] dark:text-[#7A8FA6]'
+                                    ? 'line-through text-[#526782] dark:text-[#A8B8CE]'
                                     : 'text-[#071A3A] dark:text-[#EDF4FF]'
                                 }`}
                               >
@@ -917,8 +1028,8 @@ export const TodayDashboard: React.FC = () => {
                       </span>
                     )}
                     {timedScheduleItems.map((item) => (
-                      <div key={item.id} className="py-3 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                      <div key={item.id} className="py-2.5 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
                           <span className="text-xs font-mono text-[#526782] dark:text-[#A8B8CE] w-14 shrink-0">
                             {item.time}
                           </span>
@@ -928,23 +1039,27 @@ export const TodayDashboard: React.FC = () => {
                               role="checkbox"
                               aria-checked={item.isCompleted}
                               onClick={item.onToggle}
-                              className={`w-5 h-5 rounded-md flex items-center justify-center cursor-pointer transition-colors ${
-                                item.isCompleted
-                                  ? 'bg-[#087F83] text-white'
-                                  : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
-                              }`}
+                              className="min-w-[44px] min-h-[44px] sm:min-w-8 sm:min-h-8 -my-1.5 p-2 rounded-lg flex items-center justify-center cursor-pointer micro-checkbox"
                               aria-label={`Mark ${item.title} as ${item.isCompleted ? 'incomplete' : 'complete'}`}
                             >
-                              {item.isCompleted && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                              <span
+                                className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
+                                  item.isCompleted
+                                    ? 'bg-[#087F83] text-white'
+                                    : 'border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#152238] hover:border-[#087F83]'
+                                }`}
+                              >
+                                {item.isCompleted && <Check className="w-3.5 h-3.5 stroke-[3] motion-check-pop" />}
+                              </span>
                             </button>
                           ) : (
                             <div className="w-2.5 h-2.5 rounded-full bg-[#087F83] shrink-0 ml-1 mr-1" />
                           )}
                           <div>
                             <span
-                              className={`text-sm font-semibold transition-colors ${
+                              className={`text-sm font-semibold transition-all duration-150 ${
                                 item.isCompleted
-                                  ? 'line-through text-[#526782] dark:text-[#7A8FA6]'
+                                  ? 'line-through text-[#526782] dark:text-[#A8B8CE]'
                                   : 'text-[#071A3A] dark:text-[#EDF4FF]'
                               }`}
                             >
@@ -958,7 +1073,7 @@ export const TodayDashboard: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 shrink-0">
                           {item.assignedMember && (
                             <span
                               className="px-1.5 py-0.5 rounded text-[10px] font-medium text-white flex items-center gap-1"
@@ -976,7 +1091,7 @@ export const TodayDashboard: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={item.onUnforgive}
-                                className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                                className="min-h-[44px] sm:min-h-7 px-2 text-[10px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
                                 title="Undo rest day"
                               >
                                 Undo
@@ -986,7 +1101,8 @@ export const TodayDashboard: React.FC = () => {
                             <button
                               type="button"
                               onClick={item.onForgive}
-                              className="px-2 py-0.5 rounded-md text-[10px] font-medium border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                              aria-label={`Mark ${item.title} as rest day`}
+                              className="min-h-[44px] sm:min-h-7 px-2.5 py-1 rounded-md text-[10px] font-medium border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex items-center"
                               title="Mark as rest day without breaking routine streak"
                             >
                               Rest day
@@ -1006,7 +1122,7 @@ export const TodayDashboard: React.FC = () => {
           </div>
 
           {/* Tomorrow Preview Strip */}
-          <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
+          <div className="card-surface p-5">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
@@ -1017,22 +1133,24 @@ export const TodayDashboard: React.FC = () => {
                 </span>
               </div>
               <button
+                type="button"
                 onClick={() => setCurrentDate(tomorrowDateStr)}
-                className="text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline cursor-pointer"
+                className="min-h-[44px] sm:min-h-8 px-2 flex items-center text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline cursor-pointer"
               >
                 Open tomorrow
               </button>
             </div>
 
             {tomorrowScheduleItems.length === 0 ? (
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs text-[#526782] flex items-center justify-between">
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs text-[#526782] dark:text-[#A8B8CE] flex items-center justify-between">
                 <span>Nothing scheduled yet for tomorrow.</span>
                 <button
+                  type="button"
                   onClick={() => {
                     setCurrentDate(tomorrowDateStr);
                     setActiveModal('quick_add');
                   }}
-                  className="font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline cursor-pointer"
+                  className="min-h-[44px] sm:min-h-8 px-2 font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline cursor-pointer"
                 >
                   + Add task
                 </button>
@@ -1062,324 +1180,364 @@ export const TodayDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Daily Rhythm, Water, Money, Goals, Health (5 cols) */}
-        <div className="lg:col-span-5 space-y-6">
-          {/* Daily Rhythm (Habits) */}
-          {settings.todayVisibleSections?.habits !== false && (
-            <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
-              <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A] mb-3">
-                <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-2">
-                  <Flame className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
-                  <span>Daily rhythm</span>
-                </h3>
-                <span className="text-xs text-[#526782] dark:text-[#A8B8CE] font-mono">
-                  {habits.filter((h) => h.checkedDates.includes(currentDate)).length} of {habits.length}
-                </span>
-              </div>
+        {/* Right Column: Daily Rhythm, Water, Money, Goals, Health */}
+        {hasRightWidgets && (
+          <div className="lg:col-span-5 space-y-4 sm:space-y-6">
+            {/* Daily Rhythm (Habits) */}
+            {isHabitsVisible && (
+              <div className="card-surface p-5">
+                <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A] mb-3">
+                  <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-2">
+                    <Flame className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+                    <span>Daily rhythm</span>
+                  </h3>
+                  <span className="text-xs text-[#526782] dark:text-[#A8B8CE] font-mono">
+                    {habits.filter((h) => h.checkedDates.includes(currentDate)).length} of {habits.length}
+                  </span>
+                </div>
 
-              <div className="space-y-2.5">
-                {habits.map((habit) => {
-                  const isChecked = habit.checkedDates.includes(currentDate);
-                  const streakData = calculateHabitStreak(habit, currentDate);
-                  return (
-                    <div
-                      key={habit.id}
-                      className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <button
-                          type="button"
-                          role="checkbox"
-                          aria-checked={isChecked}
-                          aria-label={`Mark habit "${habit.title}" as ${isChecked ? 'incomplete' : 'complete'}`}
-                          onClick={() => toggleHabitCheck(habit.id, currentDate)}
-                          className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
+                <div className="space-y-1.5">
+                  {habits.map((habit) => {
+                    const isChecked = habit.checkedDates.includes(currentDate);
+                    const streakData = calculateHabitStreak(habit, currentDate);
+                    return (
+                      <div
+                        key={habit.id}
+                        className="flex items-center justify-between p-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            role="checkbox"
+                            aria-checked={isChecked}
+                            aria-label={`Mark habit "${habit.title}" as ${isChecked ? 'incomplete' : 'complete'}`}
+                            onClick={() => toggleHabitCheck(habit.id, currentDate)}
+                            className="min-w-[44px] min-h-[44px] sm:min-w-8 sm:min-h-8 -my-1 -ml-1 p-2 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+                          >
+                            <span
+                              className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
+                                isChecked
+                                  ? 'bg-[#087F83] text-white'
+                                  : 'border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#152238] hover:border-[#087F83]'
+                              }`}
+                            >
+                              {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                            </span>
+                          </button>
+                          <span className={`text-xs font-semibold ${
                             isChecked
-                              ? 'bg-[#087F83] text-white'
-                              : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
-                          }`}
-                        >
-                          {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                        </button>
-                        <span className={`text-xs font-semibold ${
-                          isChecked
-                            ? 'line-through text-[#526782] dark:text-[#A8B8CE]'
-                            : 'text-[#071A3A] dark:text-[#EDF4FF]'
-                        }`}>
-                          {habit.title}
+                              ? 'line-through text-[#526782] dark:text-[#A8B8CE]'
+                              : 'text-[#071A3A] dark:text-[#EDF4FF]'
+                          }`}>
+                            {habit.title}
+                          </span>
+                        </div>
+                        <span className="text-[11px] font-mono text-[#526782] dark:text-[#A8B8CE]">
+                          {streakData.currentStreak}-day streak
                         </span>
                       </div>
-                      <span className="text-[11px] font-mono text-[#526782] dark:text-[#A8B8CE]">
-                        {streakData.currentStreak}-day streak
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Water Tracker Card */}
-          <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-2">
-                <Droplet className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
-                <span>Water</span>
-              </h3>
-              <span className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
-                {latestWaterTime ? `Last drink ${latestWaterTime}` : 'No drinks logged yet'}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-5 my-2">
-              <RingProgress
-                progress={waterProgress}
-                size={74}
-                strokeWidth={7}
-                color="#087F83"
-              >
-                <div className="text-center">
-                  <span className="text-[11px] font-bold text-[#071A3A] dark:text-[#EDF4FF] leading-none block">
-                    {(totalWaterConsumed / 1000).toFixed(2)} L
-                  </span>
-                  <span className="text-[9px] text-[#526782] dark:text-[#A8B8CE] leading-none">
-                    of {(currentWaterTarget / 1000).toFixed(0)} L
-                  </span>
-                </div>
-              </RingProgress>
-
-              <div>
-                <div className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-                  {waterRemaining} ml
-                </div>
-                <div className="text-xs text-[#526782] dark:text-[#A8B8CE]">
-                  to reach daily target
+                    );
+                  })}
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Quick buttons */}
-            <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => addWaterLog(250)}
-                className="flex-1 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold cursor-pointer transition-colors"
-              >
-                +250 ml
-              </button>
-              <button
-                type="button"
-                onClick={() => addWaterLog(500)}
-                className="flex-1 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold cursor-pointer transition-colors"
-              >
-                +500 ml
-              </button>
-              <button
-                type="button"
-                onClick={() => addWaterLog(750)}
-                className="flex-1 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold cursor-pointer transition-colors"
-              >
-                +750 ml
-              </button>
-              <button
-                type="button"
-                onClick={undoLastWaterLog}
-                aria-label="Undo last water log"
-                className="py-1.5 px-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] text-xs font-medium cursor-pointer"
-                title="Undo last log"
-              >
-                Undo
-              </button>
-            </div>
-          </div>
-
-          {/* Money Summary Card */}
-          {!isCalmMode && settings.todayVisibleSections?.finance !== false && (
-            <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
-              <div className="flex items-center justify-between pb-2 border-b border-[#E2E8F0] dark:border-[#1E2D4A] mb-3">
-                <div>
-                  <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-                    Money
+            {/* Water Tracker Card */}
+            {isWaterVisible && (
+              <div className="card-surface p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-2">
+                    <Droplet className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+                    <span>Water</span>
                   </h3>
                   <span className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
-                    Left to spend
+                    {latestWaterTime ? `Last drink ${latestWaterTime}` : 'No drinks logged yet'}
                   </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveView('budget')}
-                  className="text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  <span>View budget</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
 
-              <div className="flex items-baseline justify-between mb-4">
-                <span className="text-2xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF]">
-                  {currencySymbol}{cashFlow.leftToSpend.toFixed(0)}
-                </span>
-                <span className="text-xs font-mono text-[#526782] dark:text-[#A8B8CE]">
-                  of {currencySymbol}{cashFlow.actualBalance.toFixed(0)} balance
-                </span>
-              </div>
-
-              <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-                <div>
-                  <div className="flex justify-between font-mono mb-1">
-                    <span className="text-[#526782] dark:text-[#A8B8CE]">Savings</span>
-                    <span className="font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
-                      {currencySymbol}600 / {currencySymbol}1,100 (55%)
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                    <div className="bg-[#087F83] h-full rounded-full" style={{ width: '55%' }} />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between font-mono mb-1">
-                    <span className="text-[#526782] dark:text-[#A8B8CE]">Debt remaining</span>
-                    <span className="font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
-                      {currencySymbol}1,000 (25% repaid)
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                    <div className="bg-[#38D0C5] h-full rounded-full" style={{ width: '25%' }} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Goal Progress Card */}
-          {primaryGoal && (
-            <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-                  Goal progress
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => setActiveView('goals')}
-                  aria-label="View goals"
-                  className="text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <RingProgress
-                  progress={goalProgress}
-                  size={56}
-                  strokeWidth={5}
-                  color="#8B7CF6"
-                >
-                  <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-                    {goalProgress}%
-                  </span>
-                </RingProgress>
-
-                <div className="flex-1 truncate">
-                  <div className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF] truncate">
-                    {primaryGoal.title}
-                  </div>
-                  <div className="text-xs text-[#526782] dark:text-[#A8B8CE]">
-                    {primaryGoal.steps.filter((s) => s.isCompleted).length} of{' '}
-                    {primaryGoal.steps.length} steps complete
-                  </div>
-                  {nextGoalStep && (
-                    <div className="text-[11px] text-[#8B7CF6] font-medium truncate mt-0.5">
-                      Next: {nextGoalStep.title}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Health Summary (Workout & Weight) */}
-          {!isCalmMode && settings.todayVisibleSections?.health !== false && (
-            <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
-              <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-                Your health
-              </h3>
-
-              {/* Workout scheduled */}
-              <div
-                role="button"
-                tabIndex={0}
-                aria-label="View workouts"
-                onClick={() => setActiveView('workouts')}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setActiveView('workouts');
-                  }
-                }}
-                className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-[#087F83] transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-teal-100 dark:bg-teal-900/40 text-[#087F83] flex items-center justify-center">
-                    <Dumbbell className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
-                      {todayWorkouts.length > 0 ? todayWorkouts[0].title : 'Rest day'}
-                    </div>
-                    <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE]">
-                      {todayWorkouts.length > 0
-                        ? `at ${todayWorkouts[0].startTime || '15:00'} · ${todayWorkouts[0].durationMinutes} min`
-                        : 'Recovery & rest'}
-                    </div>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-[#526782] dark:text-[#A8B8CE]" />
-              </div>
-
-              {/* Weight card */}
-              <div
-                role="button"
-                tabIndex={0}
-                aria-label="View weight history"
-                onClick={() => setActiveView('weight')}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setActiveView('weight');
-                  }
-                }}
-                className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-[#087F83] transition-colors"
-              >
-                <div>
-                  <div className="text-base font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF]">
-                    {displayedLatestWeight} {currentWeightUnit}
-                  </div>
-                  <div
-                    className={`text-[10px] font-medium flex items-center gap-0.5 ${
-                      weightDiff < 0
-                        ? 'text-[#10B981]'
-                        : weightDiff > 0
-                        ? 'text-amber-600'
-                        : 'text-[#526782] dark:text-[#A8B8CE]'
-                    }`}
+                <div className="flex items-center gap-5 my-2">
+                  <RingProgress
+                    progress={waterProgress}
+                    size={74}
+                    strokeWidth={7}
+                    color="#087F83"
                   >
-                    {weightDiff < 0 ? (
-                      <TrendingDown className="w-3 h-3" />
-                    ) : (
-                      <TrendingUp className="w-3 h-3" />
-                    )}
-                    <span>
-                      {weightDiff > 0 ? `+${weightDiff}` : weightDiff} {currentWeightUnit} since last reading
-                    </span>
+                    <div className="text-center">
+                      <span className="text-[11px] font-bold text-[#071A3A] dark:text-[#EDF4FF] leading-none block">
+                        {(totalWaterConsumed / 1000).toFixed(2)} L
+                      </span>
+                      <span className="text-[9px] text-[#526782] dark:text-[#A8B8CE] leading-none">
+                        of {(currentWaterTarget / 1000).toFixed(0)} L
+                      </span>
+                    </div>
+                  </RingProgress>
+
+                  <div>
+                    <div className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                      {waterRemaining} ml
+                    </div>
+                    <div className="text-xs text-[#526782] dark:text-[#A8B8CE]">
+                      to reach daily target
+                    </div>
                   </div>
                 </div>
-                <ArrowRight className="w-4 h-4 text-[#526782] dark:text-[#A8B8CE]" />
+
+                {/* Quick buttons */}
+                <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    aria-label="Log 250 ml of water"
+                    onClick={() => addWaterLog(250)}
+                    className="flex-1 min-h-[44px] py-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900/70 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold cursor-pointer transition-colors"
+                  >
+                    +250 ml
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Log 500 ml of water"
+                    onClick={() => addWaterLog(500)}
+                    className="flex-1 min-h-[44px] py-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900/70 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold cursor-pointer transition-colors"
+                  >
+                    +500 ml
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Log 750 ml of water"
+                    onClick={() => addWaterLog(750)}
+                    className="flex-1 min-h-[44px] py-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900/70 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold cursor-pointer transition-colors"
+                  >
+                    +750 ml
+                  </button>
+                  <button
+                    type="button"
+                    onClick={undoLastWaterLog}
+                    aria-label="Undo last water log"
+                    className="min-w-[44px] min-h-[44px] py-2 px-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] text-xs font-medium cursor-pointer"
+                    title="Undo last log"
+                  >
+                    Undo
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+
+            {/* Money Summary Card */}
+            {isMoneyVisible && (
+              <div className="card-surface p-5">
+                <div className="flex items-center justify-between pb-2 border-b border-[#E2E8F0] dark:border-[#1E2D4A] mb-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                      Money
+                    </h3>
+                    <span className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
+                      Left to spend
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setActiveView('budget')}
+                    className="min-h-[44px] sm:min-h-8 px-2 text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>View budget</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="flex items-baseline justify-between mb-4">
+                  <span className="text-2xl font-bold tabular-nums text-[#071A3A] dark:text-[#EDF4FF]">
+                    {currencySymbol}{cashFlow.leftToSpend.toFixed(0)}
+                  </span>
+                  <span className="text-xs tabular-nums text-[#526782] dark:text-[#A8B8CE]">
+                    of {currencySymbol}{cashFlow.actualBalance.toFixed(0)} balance
+                  </span>
+                </div>
+
+                <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+                  <div>
+                    <div className="flex justify-between tabular-nums mb-1">
+                      <span className="text-[#526782] dark:text-[#A8B8CE]">Savings</span>
+                      <span className="font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
+                        {savingsAndDebtSummary.hasSavingsPots
+                          ? `${currencySymbol}${savingsAndDebtSummary.totalSaved.toLocaleString()} / ${currencySymbol}${savingsAndDebtSummary.totalSavingsTarget.toLocaleString()} (${savingsAndDebtSummary.savingsProgressPercent}%)`
+                          : 'No savings pots yet'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="bg-[#087F83] h-full rounded-full transition-all"
+                        style={{ width: `${savingsAndDebtSummary.savingsProgressPercent}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between tabular-nums mb-1">
+                      <span className="text-[#526782] dark:text-[#A8B8CE]">Debt remaining</span>
+                      <span className="font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
+                        {savingsAndDebtSummary.hasDebts
+                          ? `${currencySymbol}${savingsAndDebtSummary.totalDebtRemaining.toLocaleString()} (${savingsAndDebtSummary.debtRepaidPercent}% repaid)`
+                          : 'No debts tracked'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="bg-[#38D0C5] h-full rounded-full transition-all"
+                        style={{ width: `${savingsAndDebtSummary.debtRepaidPercent}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Goal Progress Card */}
+            {isGoalsVisible && primaryGoal && (
+              <div className="card-surface p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                    Goal progress
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setActiveView('goals')}
+                    aria-label="View goals"
+                    className="min-w-[44px] min-h-[44px] sm:min-w-8 sm:min-h-8 p-2 rounded-lg flex items-center justify-center text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  >
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <RingProgress
+                    progress={goalProgress}
+                    size={56}
+                    strokeWidth={5}
+                    color="#8B7CF6"
+                  >
+                    <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                      {goalProgress}%
+                    </span>
+                  </RingProgress>
+
+                  <div className="flex-1 truncate">
+                    <div className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF] truncate">
+                      {primaryGoal.title}
+                    </div>
+                    <div className="text-xs text-[#526782] dark:text-[#A8B8CE]">
+                      {primaryGoal.steps.filter((s) => s.isCompleted).length} of{' '}
+                      {primaryGoal.steps.length} steps complete
+                    </div>
+                    {nextGoalStep && (
+                      <div className="text-[11px] text-[#8B7CF6] font-medium truncate mt-0.5">
+                        Next: {nextGoalStep.title}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Health Summary (Workout & Weight) */}
+            {isHealthVisible && (
+              <div className="card-surface p-5 space-y-4">
+                <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                  Your health
+                </h3>
+
+                {/* Workout scheduled */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  aria-label="View workouts"
+                  onClick={() => setActiveView('workouts')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setActiveView('workouts');
+                    }
+                  }}
+                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-[#087F83] transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-teal-100 dark:bg-teal-900/40 text-[#087F83] flex items-center justify-center">
+                      <Dumbbell className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
+                        {todayWorkouts.length > 0 ? todayWorkouts[0].title : 'Rest day'}
+                      </div>
+                      <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE]">
+                        {todayWorkouts.length > 0
+                          ? `at ${todayWorkouts[0].startTime || '15:00'} · ${todayWorkouts[0].durationMinutes} min`
+                          : 'Recovery & rest'}
+                      </div>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-[#526782] dark:text-[#A8B8CE]" />
+                </div>
+
+                {/* Weight card */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  aria-label="View weight history"
+                  onClick={() => setActiveView('weight')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setActiveView('weight');
+                    }
+                  }}
+                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-[#087F83] transition-colors"
+                >
+                  <div>
+                    {displayedLatestWeight === null ? (
+                      <>
+                        <div className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                          No weight logged yet
+                        </div>
+                        <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE]">
+                          Tap to add a profile and log your first reading
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-base font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF]">
+                          {displayedLatestWeight} {currentWeightUnit}
+                        </div>
+                        {weightDiff !== null ? (
+                          <div
+                            className={`text-[10px] font-medium flex items-center gap-0.5 ${
+                              weightDiff < 0
+                                ? 'text-[#10B981]'
+                                : weightDiff > 0
+                                ? 'text-amber-600'
+                                : 'text-[#526782] dark:text-[#A8B8CE]'
+                            }`}
+                          >
+                            {weightDiff < 0 ? (
+                              <TrendingDown className="w-3 h-3" />
+                            ) : (
+                              <TrendingUp className="w-3 h-3" />
+                            )}
+                            <span>
+                              {weightDiff > 0 ? `+${weightDiff}` : weightDiff} {currentWeightUnit} since last reading
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE]">
+                            First reading logged ({weightMetrics.latestDateStr})
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-[#526782] dark:text-[#A8B8CE]" />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

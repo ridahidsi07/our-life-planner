@@ -57,7 +57,7 @@ export const INITIAL_SETTINGS: UserSettings = {
     'food',
     'body',
   ],
-  pinnedTools: ['today', 'tasks', 'routines', 'calendar'],
+  pinnedTools: [],
   todayVisibleSections: {
     finance: true,
     health: true,
@@ -70,6 +70,97 @@ export const INITIAL_SETTINGS: UserSettings = {
   ],
   locale: 'en-US',
 };
+
+export const DEMO_SETTINGS: UserSettings = INITIAL_SETTINGS;
+
+export function detectBrowserTimeZone(): string {
+  try {
+    const resolved = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (resolved && typeof resolved === 'string' && resolved.trim().length > 0) {
+      return resolved.trim();
+    }
+  } catch {
+    // Fallback below
+  }
+  return 'UTC';
+}
+
+export const EMPTY_SETTINGS: UserSettings = {
+  ownerName: 'Me',
+  email: '',
+  edition: 'online',
+  weekStartsOn: 'Monday',
+  timeZone: detectBrowserTimeZone(),
+  currency: 'USD',
+  currencySymbol: '$',
+  weightUnit: 'kg',
+  heightUnit: 'cm',
+  waterUnit: 'ml',
+  theme: 'light',
+  isSampleDataActive: false,
+  hasCompletedSetup: false,
+  lastBackupDate: undefined,
+  budgetOpeningBalance: 0,
+  budgetPlannedIncome: 0,
+  budgetPlannedSavings: 0,
+  budgetCategoryLimits: {},
+  budgetPeriodType: 'monthly',
+  enabledTools: [
+    'today',
+    'tasks',
+    'calendar',
+    'routines',
+    'habits',
+    'goals',
+    'inbox',
+    'money',
+    'food',
+    'body',
+  ],
+  pinnedTools: [],
+  todayVisibleSections: {
+    finance: true,
+    health: true,
+    meals: true,
+    habits: true,
+  },
+  householdMembers: [],
+  locale: 'en-US',
+};
+
+export function createEmptySettings(overrides?: Partial<UserSettings>): UserSettings {
+  const ownerName =
+    overrides?.ownerName !== undefined && overrides.ownerName.trim().length > 0
+      ? overrides.ownerName.trim()
+      : EMPTY_SETTINGS.ownerName;
+
+  const defaultHouseholdMembers =
+    overrides?.householdMembers !== undefined
+      ? overrides.householdMembers
+      : ownerName && ownerName !== 'Me'
+      ? [{ id: 'mem-owner', name: ownerName, color: '#087F83' }]
+      : [];
+
+  return {
+    ...EMPTY_SETTINGS,
+    timeZone: overrides?.timeZone || detectBrowserTimeZone(),
+    budgetCategoryLimits: overrides?.budgetCategoryLimits
+      ? { ...overrides.budgetCategoryLimits }
+      : {},
+    enabledTools: overrides?.enabledTools
+      ? [...overrides.enabledTools]
+      : [...(EMPTY_SETTINGS.enabledTools || [])],
+    pinnedTools: overrides?.pinnedTools
+      ? [...overrides.pinnedTools]
+      : [...(EMPTY_SETTINGS.pinnedTools || [])],
+    todayVisibleSections: overrides?.todayVisibleSections
+      ? { ...overrides.todayVisibleSections }
+      : { ...EMPTY_SETTINGS.todayVisibleSections! },
+    ...overrides,
+    ownerName,
+    householdMembers: defaultHouseholdMembers,
+  };
+}
 
 export const SAMPLE_TASKS: TaskItem[] = [
   {

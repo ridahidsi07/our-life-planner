@@ -3,6 +3,7 @@ import { usePlanner } from '../../context/PlannerContext';
 import { getCurrencySymbol } from '../../utils/formatters';
 import { RingProgress } from '../ui/RingProgress';
 import { Modal } from '../ui/Modal';
+import { FilterEmptyState } from '../ui/FilterEmptyState';
 import {
   Wallet,
   Plus,
@@ -466,6 +467,42 @@ export const BudgetBillsView: React.FC = () => {
         </div>
       </div>
 
+      {/* First-Use Empty State Hero CTA */}
+      {transactions.length === 0 && bills.length === 0 && (
+        <div
+          data-testid="budget-empty-hero"
+          className="bg-white dark:bg-[#152238] rounded-2xl p-6 border-2 border-dashed border-[#087F83]/35 dark:border-[#38D0C5]/35 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+        >
+          <div className="space-y-1">
+            <h2 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+              No budget transactions or recurring bills yet
+            </h2>
+            <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
+              Record your first spending transaction or configure your monthly budget plan to start tracking cash flow.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <button
+              type="button"
+              data-testid="budget-empty-cta"
+              onClick={openAddTransaction}
+              className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-bold shadow-xs transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add your first transaction</span>
+            </button>
+            <button
+              type="button"
+              onClick={openBudgetPlanModal}
+              className="min-h-[44px] inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] text-xs font-semibold transition-colors cursor-pointer"
+            >
+              <Sliders className="w-3.5 h-3.5 text-[#087F83] dark:text-[#38D0C5]" />
+              <span>Set up budget plan</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Top 4 Key Metric Cards (Board 10) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {/* Left to spend */}
@@ -477,7 +514,11 @@ export const BudgetBillsView: React.FC = () => {
             {currencySymbol}{cashFlow.leftToSpend.toFixed(0)}
           </div>
           <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE] mt-1.5 leading-snug">
-            {currencySymbol}{cashFlow.actualBalance.toFixed(0)} balance − {currencySymbol}{cashFlow.unpaidBills.toFixed(0)} bills − {currencySymbol}{cashFlow.plannedSavingsDue.toFixed(0)} savings
+            {transactions.length === 0 && bills.length === 0 && (settings.budgetPlannedIncome ?? 0) === 0 ? (
+              <span className="text-slate-400 dark:text-slate-500">Unconfigured budget · Add income or plan limits</span>
+            ) : (
+              `${currencySymbol}${cashFlow.actualBalance.toFixed(0)} balance − ${currencySymbol}${cashFlow.unpaidBills.toFixed(0)} bills − ${currencySymbol}${cashFlow.plannedSavingsDue.toFixed(0)} savings`
+            )}
           </div>
         </div>
 
@@ -490,7 +531,11 @@ export const BudgetBillsView: React.FC = () => {
             {currencySymbol}{cashFlow.actualBalance.toFixed(0)}
           </div>
           <div className="text-[11px] text-[#526782] mt-1.5">
-            Posted spending ledger
+            {transactions.length === 0 && (settings.budgetOpeningBalance ?? 0) === 0 ? (
+              <span className="text-slate-400 dark:text-slate-500">No transactions or opening balance logged</span>
+            ) : (
+              'Posted spending ledger'
+            )}
           </div>
         </div>
 
@@ -715,6 +760,31 @@ export const BudgetBillsView: React.FC = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Accessible tabular alternative to category spending chart */}
+                <table data-testid="budget-accessible-chart-table" className="sr-only">
+                  <caption>Spending and budget allocations by category</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Category</th>
+                      <th scope="col">Budget Limit</th>
+                      <th scope="col">Amount Spent</th>
+                      <th scope="col">Remaining</th>
+                      <th scope="col">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {categoryRows.map((cat) => (
+                      <tr key={cat.name}>
+                        <td>{cat.name}</td>
+                        <td>{currencySymbol}{cat.limit}</td>
+                        <td>{currencySymbol}{cat.spent}</td>
+                        <td>{currencySymbol}{cat.remaining}</td>
+                        <td>{cat.isOver ? 'Over budget' : 'Within budget'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
 
               {/* Unallocated Budget Card (fully dynamic) */}
@@ -793,9 +863,18 @@ export const BudgetBillsView: React.FC = () => {
 
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {displayedTransactions.length === 0 ? (
-              <div className="py-8 text-center text-xs text-[#526782]">
-                No transactions recorded for this period.
-              </div>
+              transactions.length > 0 && txPeriodFilter === 'active' ? (
+                <FilterEmptyState
+                  title="No transactions for this budget period"
+                  description="You have transactions recorded in other periods. Switch to 'All time' to view all transactions."
+                  clearLabel="View all transactions"
+                  onClearFilters={() => setTxPeriodFilter('all')}
+                />
+              ) : (
+                <div className="py-8 text-center text-xs text-[#526782] dark:text-[#A8B8CE]">
+                  No transactions recorded yet.
+                </div>
+              )
             ) : (
               displayedTransactions.map((tx) => (
                 <div

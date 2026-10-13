@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
 import { getWeekDaysForDate, getWeekStartDate } from '../../utils/formatters';
 import { Modal } from '../ui/Modal';
+import { FilterEmptyState } from '../ui/FilterEmptyState';
 import {
   Utensils,
   Plus,
@@ -105,6 +106,22 @@ export const MealsView: React.FC = () => {
     { name: 'Stock', amount: 400, unit: 'ml' },
   ]);
 
+  // Recipe library search and filter
+  const [recipeSearch, setRecipeSearch] = useState('');
+  const [recipeCategoryFilter, setRecipeCategoryFilter] = useState('All');
+
+  const filteredRecipes = useMemo(() => {
+    return recipes.filter((r) => {
+      if (recipeSearch && !r.title.toLowerCase().includes(recipeSearch.toLowerCase())) {
+        return false;
+      }
+      if (recipeCategoryFilter !== 'All' && r.category !== recipeCategoryFilter) {
+        return false;
+      }
+      return true;
+    });
+  }, [recipes, recipeSearch, recipeCategoryFilter]);
+
   const selectedMeal =
     plannedMeals.find((m) => m.id === selectedMealId) || (plannedMeals.length > 0 ? plannedMeals[0] : null);
 
@@ -197,23 +214,27 @@ export const MealsView: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-[#526782]">
+          <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-[#526782] dark:text-[#A8B8CE]">
             <button
+              type="button"
               onClick={() => setActiveTab('weekly_plan')}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+              aria-pressed={activeTab === 'weekly_plan'}
+              className={`min-h-[44px] sm:min-h-9 px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'weekly_plan'
                   ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
-                  : ''
+                  : 'hover:text-[#071A3A] dark:hover:text-[#EDF4FF]'
               }`}
             >
               Weekly plan
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('food_library')}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+              aria-pressed={activeTab === 'food_library'}
+              className={`min-h-[44px] sm:min-h-9 px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'food_library'
                   ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
-                  : ''
+                  : 'hover:text-[#071A3A] dark:hover:text-[#EDF4FF]'
               }`}
             >
               Food library ({recipes.length})
@@ -222,16 +243,18 @@ export const MealsView: React.FC = () => {
 
           {activeTab === 'weekly_plan' ? (
             <button
+              type="button"
               onClick={() => openPlanMealModalFor(currentDate, 'dinner')}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+              className="min-h-[44px] flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Plan meal</span>
             </button>
           ) : (
             <button
+              type="button"
               onClick={openCreateRecipe}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+              className="min-h-[44px] flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>New recipe</span>
@@ -254,14 +277,14 @@ export const MealsView: React.FC = () => {
                       type="button"
                       onClick={() => setWeekOffset((prev) => prev - 1)}
                       aria-label="Previous week"
-                      className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer transition-colors"
+                      className="min-w-[44px] min-h-[44px] sm:min-w-9 sm:min-h-9 p-2 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer transition-colors"
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
                     <button
                       type="button"
                       onClick={() => setWeekOffset(0)}
-                      className="px-3 py-1 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer transition-colors"
+                      className="min-h-[44px] sm:min-h-9 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer transition-colors"
                     >
                       {weekOffset === 0 ? 'This week' : 'Jump to this week'}
                     </button>
@@ -269,7 +292,7 @@ export const MealsView: React.FC = () => {
                       type="button"
                       onClick={() => setWeekOffset((prev) => prev + 1)}
                       aria-label="Next week"
-                      className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer transition-colors"
+                      className="min-w-[44px] min-h-[44px] sm:min-w-9 sm:min-h-9 p-2 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer transition-colors"
                     >
                       <ChevronRight className="w-4 h-4" />
                     </button>
@@ -280,12 +303,12 @@ export const MealsView: React.FC = () => {
                 </div>
 
                 {/* Day Header Row */}
-                <div className="grid grid-cols-8 pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A] text-xs font-bold text-center text-[#526782]">
+                <div className="grid grid-cols-8 pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A] text-xs font-bold text-center text-[#526782] dark:text-[#A8B8CE]">
                   <div className="col-span-1 text-left">Meal</div>
                   {weekDays.map((w) => (
                     <div key={w.dateStr} className="col-span-1">
                       <div>{w.name}</div>
-                      <div className="text-[10px] opacity-70">{w.num} {w.monthName}</div>
+                      <div className="text-[10px] opacity-80">{w.num} {w.monthName}</div>
                     </div>
                   ))}
                 </div>
@@ -311,11 +334,21 @@ export const MealsView: React.FC = () => {
                         <div key={w.dateStr} className="col-span-1 px-1">
                           {meal ? (
                             <div
+                              role="button"
+                              tabIndex={0}
+                              aria-pressed={isSelected}
+                              aria-label={`${meal.recipeTitle} for ${mType} on ${w.name}, ${w.num} ${w.monthName} (${w.dateStr})`}
                               onClick={() => setSelectedMealId(meal.id)}
-                              className={`p-2 rounded-xl border text-left cursor-pointer transition-all ${
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  setSelectedMealId(meal.id);
+                                }
+                              }}
+                              className={`min-h-[44px] p-2 rounded-xl border text-left cursor-pointer transition-all ${
                                 isSelected
-                                  ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20'
-                                  : 'border-slate-200 dark:border-slate-700 hover:border-[#087F83] bg-slate-50 dark:bg-slate-800/60'
+                                  ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/30'
+                                  : 'border-slate-200 dark:border-slate-700 hover:border-[#087F83] dark:hover:border-[#38D0C5] bg-slate-50 dark:bg-slate-800/60'
                               }`}
                             >
                               <div className="font-semibold text-[11px] text-[#071A3A] dark:text-[#EDF4FF] truncate">
@@ -332,8 +365,10 @@ export const MealsView: React.FC = () => {
                             </div>
                           ) : (
                             <button
+                              type="button"
+                              aria-label={`Add ${mType} for ${w.name}, ${w.num} ${w.monthName} (${w.dateStr})`}
                               onClick={() => openPlanMealModalFor(w.dateStr, mType)}
-                              className="w-full py-2.5 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-slate-400 hover:text-[#087F83] hover:border-[#087F83] text-[10px] font-medium flex items-center justify-center transition-colors cursor-pointer"
+                              className="w-full min-h-[44px] py-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-[#526782] dark:text-[#A8B8CE] hover:text-[#087F83] dark:hover:text-[#38D0C5] hover:border-[#087F83] dark:hover:border-[#38D0C5] hover:bg-teal-50/40 dark:hover:bg-teal-950/30 text-[10px] font-medium flex items-center justify-center transition-colors cursor-pointer"
                             >
                               + Add
                             </button>
@@ -355,7 +390,7 @@ export const MealsView: React.FC = () => {
                       <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
                         {selectedMeal.recipeTitle}
                       </h3>
-                      <p className="text-xs text-[#526782] mt-0.5">
+                      <p className="text-xs text-[#526782] dark:text-[#A8B8CE] mt-0.5">
                         Planned for {selectedMeal.date} at {selectedMeal.plannedTime || '19:00'}
                       </p>
                     </div>
@@ -363,7 +398,7 @@ export const MealsView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => deletePlannedMeal(selectedMeal.id)}
-                      className="p-1.5 rounded-lg hover:bg-rose-100 text-rose-600 cursor-pointer"
+                      className="min-w-[44px] min-h-[44px] sm:min-w-9 sm:min-h-9 p-2 rounded-lg flex items-center justify-center hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 dark:text-rose-400 cursor-pointer transition-colors"
                       title="Remove planned meal"
                       aria-label={`Remove planned meal "${selectedMeal.recipeTitle}"`}
                     >
@@ -375,7 +410,7 @@ export const MealsView: React.FC = () => {
                     <span className="px-2.5 py-1 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] font-semibold">
                       {selectedMeal.plannedServings} servings
                     </span>
-                    <span className="text-[#526782]">
+                    <span className="text-[#526782] dark:text-[#A8B8CE]">
                       Base recipe: {selectedMeal.baseServings} servings
                     </span>
                   </div>
@@ -410,7 +445,7 @@ export const MealsView: React.FC = () => {
                               <span className="text-[#071A3A] dark:text-[#EDF4FF]">
                                 {ing.name}
                               </span>
-                              <span className="font-mono font-semibold text-[#526782]">
+                              <span className="font-mono font-semibold text-[#526782] dark:text-[#A8B8CE]">
                                 {scaledAmount} {ing.unit}
                               </span>
                             </div>
@@ -423,11 +458,13 @@ export const MealsView: React.FC = () => {
                   {/* Action Buttons */}
                   <div className="space-y-2 pt-2">
                     <button
+                      type="button"
+                      aria-pressed={Boolean(selectedMeal.isConsumed)}
                       onClick={() => toggleMealConsumed(selectedMeal.id)}
-                      className={`w-full py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors ${
+                      className={`w-full min-h-[44px] py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors ${
                         selectedMeal.isConsumed
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          : 'bg-[#087F83] text-white hover:bg-[#06676A]'
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950/70 dark:text-emerald-200 dark:border-emerald-800 dark:hover:bg-emerald-900/80'
+                          : 'bg-[#087F83] text-white hover:bg-[#06676A] dark:bg-[#38D0C5] dark:text-[#071A3A] dark:hover:bg-[#2BB5AB]'
                       }`}
                     >
                       <Check className="w-4 h-4" />
@@ -436,7 +473,7 @@ export const MealsView: React.FC = () => {
                   </div>
                 </>
               ) : (
-                <div className="py-12 text-center text-xs text-[#526782]">
+                <div className="py-12 text-center text-xs text-[#526782] dark:text-[#A8B8CE]">
                   Select a planned meal to view ingredients and details.
                 </div>
               )}
@@ -461,22 +498,23 @@ export const MealsView: React.FC = () => {
           {/* Generate Grocery List Action Banner (Board 13) */}
           <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-[#087F83] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] flex items-center justify-center">
                 <ShoppingCart className="w-5 h-5" />
               </div>
               <div>
                 <h4 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
                   Generate your grocery list for this week
                 </h4>
-                <p className="text-xs text-[#526782]">
+                <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
                   Combine scaled ingredients from all planned meals into a grouped shopping list.
                 </p>
               </div>
             </div>
 
             <button
+              type="button"
               onClick={handleGenerateGroceries}
-              className="px-5 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs shadow-xs cursor-pointer whitespace-nowrap"
+              className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs shadow-xs cursor-pointer whitespace-nowrap"
             >
               Generate grocery list
             </button>
@@ -486,8 +524,52 @@ export const MealsView: React.FC = () => {
 
       {/* Food Library Tab (Board 23) */}
       {activeTab === 'food_library' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {recipes.map((recipe) => (
+        <div className="space-y-4">
+          {recipes.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="relative flex-1 sm:max-w-xs">
+                <Search className="w-4 h-4 absolute left-3 top-2.5 text-[#526782]" />
+                <input
+                  type="text"
+                  aria-label="Search recipes"
+                  placeholder="Search recipes…"
+                  value={recipeSearch}
+                  onChange={(e) => setRecipeSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs text-[#071A3A] dark:text-[#EDF4FF]"
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                {['All', 'Vegetarian', 'Main dish', 'Quick', 'Baking', 'Salad'].map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setRecipeCategoryFilter(c)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors whitespace-nowrap ${
+                      recipeCategoryFilter === c
+                        ? 'bg-[#087F83] text-white shadow-2xs font-semibold'
+                        : 'bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {recipes.length > 0 && filteredRecipes.length === 0 ? (
+            <FilterEmptyState
+              title="No recipes match your search"
+              description="None of your saved recipes match the active search query or category filter."
+              onClearFilters={() => {
+                setRecipeSearch('');
+                setRecipeCategoryFilter('All');
+              }}
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {filteredRecipes.map((recipe) => (
             <div
               key={recipe.id}
               className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-3"
@@ -516,7 +598,7 @@ export const MealsView: React.FC = () => {
                       setRecIngredients([...recipe.ingredients]);
                       setIsRecipeModalOpen(true);
                     }}
-                    className="p-1 rounded-md text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                    className="min-w-[44px] min-h-[44px] sm:min-w-8 sm:min-h-8 p-1.5 rounded-md flex items-center justify-center text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                     aria-label={`Edit recipe "${recipe.title}"`}
                   >
                     <Edit2 className="w-3.5 h-3.5" />
@@ -524,7 +606,7 @@ export const MealsView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => deleteRecipe(recipe.id)}
-                    className="p-1 rounded-md text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+                    className="min-w-[44px] min-h-[44px] sm:min-w-8 sm:min-h-8 p-1.5 rounded-md flex items-center justify-center text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
                     aria-label={`Delete recipe "${recipe.title}"`}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -532,7 +614,7 @@ export const MealsView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 text-xs text-[#526782]">
+              <div className="flex items-center gap-4 text-xs text-[#526782] dark:text-[#A8B8CE]">
                 <span>{recipe.baseServings} servings</span>
                 <span>{recipe.prepTimeMinutes + recipe.cookTimeMinutes} mins</span>
               </div>
@@ -543,7 +625,7 @@ export const MealsView: React.FC = () => {
                   Ingredients ({recipe.ingredients.length}):
                 </span>
                 {recipe.ingredients.map((ing, i) => (
-                  <div key={i} className="flex justify-between text-[#526782]">
+                  <div key={i} className="flex justify-between text-[#526782] dark:text-[#A8B8CE]">
                     <span>{ing.name}</span>
                     <span className="font-mono">
                       {ing.amount} {ing.unit}
@@ -552,7 +634,9 @@ export const MealsView: React.FC = () => {
                 ))}
               </div>
             </div>
-          ))}
+              ))}
+            </div>
+          )}
         </div>
       )}
 

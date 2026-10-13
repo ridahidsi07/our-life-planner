@@ -126,11 +126,13 @@ export function useDialogAccessibility(
           if (document.activeElement === first || !dialogRef.current.contains(document.activeElement)) {
             e.preventDefault();
             last.focus();
+            last.scrollIntoView({ block: 'nearest' });
           }
         } else {
           if (document.activeElement === last || !dialogRef.current.contains(document.activeElement)) {
             e.preventDefault();
             first.focus();
+            first.scrollIntoView({ block: 'nearest' });
           }
         }
       }
@@ -168,7 +170,7 @@ export const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs motion-backdrop-enter">
       <div
         className="fixed inset-0"
         onClick={onClose}
@@ -182,10 +184,10 @@ export const Modal: React.FC<ModalProps> = ({
         aria-describedby={subtitle ? subtitleId : undefined}
         aria-label={!title ? (ariaLabel || 'Dialog') : undefined}
         tabIndex={-1}
-        className={`relative w-full ${maxWidth} bg-white dark:bg-[#152238] rounded-2xl shadow-xl border border-[#E2E8F0] dark:border-[#1E2D4A] overflow-hidden max-h-[92vh] flex flex-col z-10 outline-none`}
+        className={`relative w-full ${maxWidth} bg-white dark:bg-[#152238] rounded-2xl shadow-xl border border-[#E2E8F0] dark:border-[#1E2D4A] overflow-hidden max-h-[92vh] flex flex-col z-10 outline-none motion-modal-enter`}
       >
         {(title || subtitle) && (
-          <div className="flex items-center justify-between px-6 py-4.5 border-b border-[#E2E8F0] dark:border-[#1E2D4A] shrink-0">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[#E2E8F0] dark:border-[#1E2D4A] shrink-0">
             <div>
               {title && (
                 <h3
@@ -207,7 +209,7 @@ export const Modal: React.FC<ModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-[#526782] hover:text-[#071A3A] dark:text-[#A8B8CE] dark:hover:text-[#EDF4FF] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="min-w-[44px] min-h-[44px] p-2.5 rounded-xl flex items-center justify-center text-[#526782] hover:text-[#071A3A] dark:text-[#A8B8CE] dark:hover:text-[#EDF4FF] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               aria-label={`Close ${title || 'dialog'}`}
             >
               <X className="w-5 h-5" />

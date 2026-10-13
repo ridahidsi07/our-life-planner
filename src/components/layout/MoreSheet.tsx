@@ -144,7 +144,7 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
             type="button"
             onClick={onClose}
             aria-label="Close menu"
-            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
+            className="min-w-[44px] min-h-[44px] p-2.5 rounded-full flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -153,7 +153,7 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
         {/* Search */}
         <div className="px-5 pt-3 pb-1">
           <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-3 text-[#526782] dark:text-[#A8B8CE]" />
+            <Search className="w-4 h-4 absolute left-3 top-3.5 text-[#526782] dark:text-[#A8B8CE]" />
             <input
               ref={searchInputRef}
               type="text"
@@ -161,7 +161,7 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
               placeholder="Search tools…"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#087F83] text-[#071A3A] dark:text-[#EDF4FF]"
+              className="w-full min-h-[44px] pl-9 pr-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#087F83] text-[#071A3A] dark:text-[#EDF4FF]"
             />
           </div>
         </div>
@@ -183,7 +183,7 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                       type="button"
                       data-testid={`moresheet-favorite-${item.id}`}
                       onClick={() => handleSelect(item.id)}
-                      className="flex items-center gap-3 p-2.5 rounded-xl text-left bg-teal-50/50 dark:bg-teal-950/30 border border-teal-100 dark:border-teal-900/50 hover:bg-[#E0F2F1] dark:hover:bg-[#163642] transition-colors cursor-pointer group"
+                      className="min-h-[48px] flex items-center gap-3 p-2.5 rounded-xl text-left bg-teal-50/50 dark:bg-teal-950/30 border border-teal-100 dark:border-teal-900/50 hover:bg-[#E0F2F1] dark:hover:bg-[#163642] transition-colors cursor-pointer group"
                     >
                       <div className="w-9 h-9 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center text-[#087F83] dark:text-[#38D0C5] shrink-0 shadow-2xs">
                         <Icon className="w-5 h-5" />
@@ -217,7 +217,7 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                       type="button"
                       data-testid={`moresheet-tool-${item.id}`}
                       onClick={() => handleSelect(item.id)}
-                      className="flex items-center gap-3 p-2.5 rounded-xl text-left bg-slate-50 dark:bg-slate-800/60 hover:bg-[#E0F2F1] dark:hover:bg-[#163642] transition-colors cursor-pointer group"
+                      className="min-h-[48px] flex items-center gap-3 p-2.5 rounded-xl text-left bg-slate-50 dark:bg-slate-800/60 hover:bg-[#E0F2F1] dark:hover:bg-[#163642] transition-colors cursor-pointer group"
                     >
                       <div className="w-9 h-9 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center text-[#087F83] dark:text-[#38D0C5] shrink-0 shadow-2xs">
                         <Icon className="w-5 h-5" />
@@ -245,7 +245,7 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                 setActiveModal('account');
                 onClose();
               }}
-              className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
+              className="w-full min-h-[44px] flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
             >
               <User className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
               <span>Profile & Local Storage</span>
@@ -256,7 +256,7 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                 setActiveView('settings');
                 onClose();
               }}
-              className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
+              className="w-full min-h-[44px] flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
             >
               <Settings className="w-4 h-4 text-[#526782] dark:text-[#A8B8CE]" />
               <span>Settings & Preferences</span>
@@ -267,7 +267,7 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                 setActiveModal('guide');
                 onClose();
               }}
-              className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
+              className="w-full min-h-[44px] flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
             >
               <HelpCircle className="w-4 h-4 text-[#526782] dark:text-[#A8B8CE]" />
               <span>User Guide</span>
@@ -278,7 +278,7 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                 setActiveModal('support');
                 onClose();
               }}
-              className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
+              className="w-full min-h-[44px] flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
             >
               <Mail className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
               <span>Customer Support Desk</span>
@@ -289,7 +289,7 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                 setActiveModal('backup_restore');
                 onClose();
               }}
-              className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
+              className="w-full min-h-[44px] flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
             >
               <Database className="w-4 h-4 text-[#526782] dark:text-[#A8B8CE]" />
               <span>Backup & Restore</span>

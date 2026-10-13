@@ -13,9 +13,14 @@ import {
   Eye,
   Repeat,
   X,
+  Edit2,
+  Trash2,
+  RotateCcw,
 } from 'lucide-react';
 import { RingProgress } from '../ui/RingProgress';
 import { Modal } from '../ui/Modal';
+import { ContextualDetailPanel } from '../ui/ContextualDetailPanel';
+import { FilterEmptyState } from '../ui/FilterEmptyState';
 import {
   isRoutineActiveOnDate,
   getRoutineOccurrence,
@@ -23,6 +28,9 @@ import {
   getUpcomingRoutineOccurrences,
 } from '../../utils/routineRecurrence';
 import { getWeekDaysForDate } from '../../utils/formatters';
+import { isCompletableScheduleItem } from '../../utils/calculations';
+import { isBirthdayEventOnDate, shiftCalendarDate } from '../../utils/recurrence';
+import { CalendarEvent, RepeatInterval } from '../../types/planner';
 
 export const CalendarView: React.FC = () => {
   const {
@@ -44,6 +52,9 @@ export const CalendarView: React.FC = () => {
     updateWorkoutSession,
     calendarEvents,
     addCalendarEvent,
+    updateCalendarEvent,
+    deleteCalendarEvent,
+    restoreCalendarEvent,
     addTask,
     addBill,
     exportCalendarIcs,
@@ -52,6 +63,8 @@ export const CalendarView: React.FC = () => {
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('week');
   const [selectedDate, setSelectedDate] = useState<string>(currentDate);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingCalendarEvent, setEditingCalendarEvent] = useState<CalendarEvent | null>(null);
+  const [lastDeletedEvent, setLastDeletedEvent] = useState<CalendarEvent | null>(null);
   const [previewRoutineId, setPreviewRoutineId] = useState<string | null>(null);
 
   // Keep selectedDate synchronized when currentDate changes from outside
@@ -74,7 +87,7 @@ export const CalendarView: React.FC = () => {
     setFilters((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // Add entry modal form state
+  // Add / Edit entry modal form state
   const [entryType, setEntryType] = useState<
     'free_time' | 'task' | 'bill' | 'birthday' | 'event'
   >('free_time');
@@ -84,45 +97,89 @@ export const CalendarView: React.FC = () => {
   const [entryStartTime, setEntryStartTime] = useState('10:00');
   const [entryEndTime, setEntryEndTime] = useState('11:00');
   const [entryNotes, setEntryNotes] = useState('');
+  const [billPlannedAmount, setBillPlannedAmount] = useState('');
+  const [billCategory, setBillCategory] = useState('Utilities');
+  const [billRepeatInterval, setBillRepeatInterval] = useState<RepeatInterval>('none');
   const [timeError, setTimeError] = useState('');
 
-  // Validate end time after start time
+  const openAddEntryModal = (dateForEntry: string) => {
+    setEditingCalendarEvent(null);
+    setEntryType('free_time');
+    setEntryTitle('');
+    setEntryDate(dateForEntry);
+    setIsAllDay(false);
+    setEntryStartTime('10:00');
+    setEntryEndTime('11:00');
+    setEntryNotes('');
+    setBillPlannedAmount('');
+    setBillCategory('Utilities');
+    setBillRepeatInterval('none');
+    setTimeError('');
+    setIsAddModalOpen(true);
+  };
+
+  const openEditEventModal = (ev: CalendarEvent) => {
+    setEditingCalendarEvent(ev);
+    setEntryType(ev.type);
+    setEntryTitle(ev.title);
+    setEntryDate(ev.date);
+    setIsAllDay(Boolean(ev.isAllDay));
+    setEntryStartTime(ev.startTime || '10:00');
+    setEntryEndTime(ev.endTime || '11:00');
+    setEntryNotes(ev.notes || '');
+    setTimeError('');
+    setIsAddModalOpen(true);
+  };
+
+  const handleDeleteCalendarEvent = (ev: CalendarEvent) => {
+    setLastDeletedEvent(ev);
+    deleteCalendarEvent(ev.id);
+  };
+
+  const handleUndoDeleteCalendarEvent = () => {
+    if (!lastDeletedEvent) return;
+    restoreCalendarEvent(lastDeletedEvent);
+    setLastDeletedEvent(null);
+  };
+
+  // Validate end time after start time and explicit bill amount
   const handleSaveEntry = (e: React.FormEvent) => {
     e.preventDefault();
     if (!entryTitle.trim()) return;
 
-    if (!isAllDay && entryStartTime && entryEndTime) {
+    if (entryType !== 'bill' && !isAllDay && entryStartTime && entryEndTime) {
       if (entryEndTime <= entryStartTime) {
         setTimeError('End time must be after start time.');
         return;
       }
     }
+
+    if (!editingCalendarEvent && entryType === 'bill') {
+      const parsedAmount = parseFloat(billPlannedAmount);
+      if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        setTimeError('Please enter a valid bill amount greater than 0.');
+        return;
+      }
+      setTimeError('');
+      addBill({
+        title: entryTitle.trim(),
+        category: billCategory || 'Personal',
+        plannedAmount: Math.round(parsedAmount * 100) / 100,
+        dueDate: entryDate,
+        repeatInterval: billRepeatInterval !== 'none' ? billRepeatInterval : undefined,
+      });
+      setIsAddModalOpen(false);
+      setEntryTitle('');
+      setEntryNotes('');
+      setBillPlannedAmount('');
+      return;
+    }
+
     setTimeError('');
 
-    if (entryType === 'task') {
-      addTask({
-        title: entryTitle,
-        description: entryNotes || undefined,
-        category: 'Personal',
-        assignedTo: 'Rida',
-        dueDate: entryDate,
-        dueTime: isAllDay ? undefined : entryStartTime,
-        scheduledStart: isAllDay ? undefined : entryStartTime,
-        scheduledEnd: isAllDay ? undefined : entryEndTime,
-        isAllDay,
-        priority: 'medium',
-        status: 'not_started',
-      });
-    } else if (entryType === 'bill') {
-      addBill({
-        title: entryTitle,
-        category: 'Personal',
-        plannedAmount: 50,
-        dueDate: entryDate,
-      });
-    } else {
-      addCalendarEvent({
-        title: entryTitle,
+    if (editingCalendarEvent) {
+      updateCalendarEvent(editingCalendarEvent.id, {
+        title: entryTitle.trim(),
         date: entryDate,
         startTime: isAllDay ? undefined : entryStartTime,
         endTime: isAllDay ? undefined : entryEndTime,
@@ -133,11 +190,41 @@ export const CalendarView: React.FC = () => {
             : entryType === 'free_time'
             ? 'free_time'
             : 'event',
-        notes: entryNotes,
+        notes: entryNotes || undefined,
+      });
+    } else if (entryType === 'task') {
+      addTask({
+        title: entryTitle.trim(),
+        description: entryNotes || undefined,
+        category: 'Personal',
+        assignedTo: settings.ownerName || 'Me',
+        dueDate: entryDate,
+        dueTime: isAllDay ? undefined : entryStartTime,
+        scheduledStart: isAllDay ? undefined : entryStartTime,
+        scheduledEnd: isAllDay ? undefined : entryEndTime,
+        isAllDay,
+        priority: 'medium',
+        status: 'not_started',
+      });
+    } else {
+      addCalendarEvent({
+        title: entryTitle.trim(),
+        date: entryDate,
+        startTime: isAllDay ? undefined : entryStartTime,
+        endTime: isAllDay ? undefined : entryEndTime,
+        isAllDay,
+        type:
+          entryType === 'birthday'
+            ? 'birthday'
+            : entryType === 'free_time'
+            ? 'free_time'
+            : 'event',
+        notes: entryNotes || undefined,
       });
     }
 
     setIsAddModalOpen(false);
+    setEditingCalendarEvent(null);
     setEntryTitle('');
     setEntryNotes('');
   };
@@ -195,7 +282,14 @@ export const CalendarView: React.FC = () => {
       const timedList: Array<{ id: string; start: number; end: number }> = [];
 
       calendarEvents
-        .filter((e) => e.date === w.dateStr && !e.isAllDay && e.startTime)
+        .filter(
+          (e) =>
+            (e.type === 'birthday'
+              ? isBirthdayEventOnDate(e.date, w.dateStr)
+              : e.date === w.dateStr) &&
+            !e.isAllDay &&
+            e.startTime
+        )
         .forEach((e) => {
           const [sh, sm] = (e.startTime || '00:00').split(':').map(Number);
           const [eh, em] = (e.endTime || '00:00').split(':').map(Number);
@@ -245,12 +339,13 @@ export const CalendarView: React.FC = () => {
       onToggle?: () => void;
       subtitle?: string;
       routineId?: string;
+      calendarEvent?: CalendarEvent;
     }> = [];
 
-    // Tasks
+    // Tasks (exclude archived tasks - LP-08)
     if (filters.tasks) {
       tasks
-        .filter((t) => t.dueDate === selectedDate)
+        .filter((t) => !t.isArchived && t.dueDate === selectedDate)
         .forEach((t) => {
           list.push({
             id: t.id,
@@ -302,6 +397,7 @@ export const CalendarView: React.FC = () => {
             isCompleted: b.isPaid,
             badgeColor: 'bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300',
             onToggle: () => (b.isPaid ? unpayBill(b.id) : markBillPaid(b.id, b.plannedAmount, selectedDate)),
+            subtitle: `${settings.currencySymbol}${b.plannedAmount.toFixed(2)}`,
           });
         });
     }
@@ -356,17 +452,23 @@ export const CalendarView: React.FC = () => {
         });
     }
 
-    // Events
+    // Events (including yearly recurring birthdays - LP-10)
     if (filters.events) {
       calendarEvents
-        .filter((e) => e.date === selectedDate)
+        .filter((e) =>
+          e.type === 'birthday'
+            ? isBirthdayEventOnDate(e.date, selectedDate)
+            : e.date === selectedDate
+        )
         .forEach((e) => {
           list.push({
             id: e.id,
             title: e.title,
             type: e.type === 'birthday' ? 'Birthday' : e.type === 'free_time' ? 'Focus time' : 'Event',
-            time: e.isAllDay ? 'All day' : `${e.startTime} - ${e.endTime}`,
+            time: e.type === 'birthday' || e.isAllDay ? 'All day' : `${e.startTime} - ${e.endTime}`,
             badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300',
+            subtitle: e.type === 'birthday' ? 'Yearly birthday' : e.notes,
+            calendarEvent: e,
           });
         });
     }
@@ -383,10 +485,16 @@ export const CalendarView: React.FC = () => {
     plannedMeals,
     workouts,
     calendarEvents,
+    settings.currencySymbol,
   ]);
 
-  const selectedDayCompleted = selectedDayItems.filter((i) => i.isCompleted).length;
-  const selectedDayTotal = selectedDayItems.length;
+  // LP-09: Only count completable items in the completion denominator
+  const completableDayItems = useMemo(
+    () => selectedDayItems.filter((i) => isCompletableScheduleItem(i)),
+    [selectedDayItems]
+  );
+  const selectedDayCompleted = completableDayItems.filter((i) => i.isCompleted).length;
+  const selectedDayTotal = completableDayItems.length;
   const selectedDayPct =
     selectedDayTotal > 0
       ? Math.round((selectedDayCompleted / selectedDayTotal) * 100)
@@ -491,18 +599,14 @@ export const CalendarView: React.FC = () => {
             ))}
           </div>
 
-          {/* Navigation Controls */}
+          {/* Navigation Controls (Pure Calendar Date Stepping - LP-12) */}
           <div className="flex items-center gap-1">
             <button
               type="button"
               aria-label={`Previous ${viewMode}`}
               title={`Previous ${viewMode}`}
               onClick={() => {
-                const d = new Date(selectedDate);
-                if (viewMode === 'month') d.setMonth(d.getMonth() - 1);
-                else if (viewMode === 'week') d.setDate(d.getDate() - 7);
-                else d.setDate(d.getDate() - 1);
-                setSelectedDate(d.toISOString().split('T')[0]);
+                setSelectedDate(shiftCalendarDate(selectedDate, viewMode, -1));
               }}
               className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
             >
@@ -524,11 +628,7 @@ export const CalendarView: React.FC = () => {
               aria-label={`Next ${viewMode}`}
               title={`Next ${viewMode}`}
               onClick={() => {
-                const d = new Date(selectedDate);
-                if (viewMode === 'month') d.setMonth(d.getMonth() + 1);
-                else if (viewMode === 'week') d.setDate(d.getDate() + 7);
-                else d.setDate(d.getDate() + 1);
-                setSelectedDate(d.toISOString().split('T')[0]);
+                setSelectedDate(shiftCalendarDate(selectedDate, viewMode, 1));
               }}
               className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
             >
@@ -550,10 +650,7 @@ export const CalendarView: React.FC = () => {
           {/* Add Entry Button */}
           <button
             type="button"
-            onClick={() => {
-              setEntryDate(selectedDate);
-              setIsAddModalOpen(true);
-            }}
+            onClick={() => openAddEntryModal(selectedDate)}
             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
@@ -561,6 +658,36 @@ export const CalendarView: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Undo Delete Calendar Event Banner (LP-10) */}
+      {lastDeletedEvent && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="p-3.5 rounded-2xl bg-slate-900 dark:bg-slate-800 text-white flex items-center justify-between gap-4 shadow-md border border-slate-700"
+        >
+          <div className="text-xs">
+            Deleted calendar event <span className="font-bold">&ldquo;{lastDeletedEvent.title}&rdquo;</span>.
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleUndoDeleteCalendarEvent}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#38D0C5] text-[#071A3A] text-xs font-bold hover:bg-[#2BB5AB] transition-colors cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Undo delete</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setLastDeletedEvent(null)}
+              className="px-2 py-1 rounded-lg text-slate-300 hover:text-white text-xs cursor-pointer"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Filter Chips Bar */}
       <div className="flex flex-wrap items-center gap-2">
@@ -644,10 +771,14 @@ export const CalendarView: React.FC = () => {
                   }
 
                   const cellEventsCount = [
-                    tasks.some((t) => t.dueDate === cell.dateStr),
+                    tasks.some((t) => !t.isArchived && t.dueDate === cell.dateStr),
                     bills.some((b) => b.dueDate === cell.dateStr),
                     workouts.some((w) => w.date === cell.dateStr && !w.isRestDay),
-                    calendarEvents.some((e) => e.date === cell.dateStr),
+                    calendarEvents.some((e) =>
+                      e.type === 'birthday'
+                        ? isBirthdayEventOnDate(e.date, cell.dateStr)
+                        : e.date === cell.dateStr
+                    ),
                     filters.routines && routines.some((r) => isRoutineActiveOnDate(r, cell.dateStr)),
                   ].filter(Boolean).length;
 
@@ -690,7 +821,7 @@ export const CalendarView: React.FC = () => {
 
                       {/* Small dots preview for events */}
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {tasks.some((t) => t.dueDate === cell.dateStr) && (
+                        {tasks.some((t) => !t.isArchived && t.dueDate === cell.dateStr) && (
                           <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                         )}
                         {bills.some((b) => b.dueDate === cell.dateStr) && (
@@ -699,7 +830,11 @@ export const CalendarView: React.FC = () => {
                         {workouts.some((w) => w.date === cell.dateStr && !w.isRestDay) && (
                           <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
                         )}
-                        {calendarEvents.some((e) => e.date === cell.dateStr) && (
+                        {calendarEvents.some((e) =>
+                          e.type === 'birthday'
+                            ? isBirthdayEventOnDate(e.date, cell.dateStr)
+                            : e.date === cell.dateStr
+                        ) && (
                           <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
                         )}
                         {filters.routines &&
@@ -796,6 +931,28 @@ export const CalendarView: React.FC = () => {
                               <Repeat className="w-3.5 h-3.5" />
                             </button>
                           )}
+                          {item.calendarEvent && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => openEditEventModal(item.calendarEvent!)}
+                                title="Edit event"
+                                aria-label={`Edit event "${item.title}"`}
+                                className="p-1 rounded text-[#526782] hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteCalendarEvent(item.calendarEvent!)}
+                                title="Delete event"
+                                aria-label={`Delete event "${item.title}"`}
+                                className="p-1 rounded text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
                           <span className={`px-2 py-0.5 rounded-md text-[10px] font-normal uppercase tracking-wider ${item.badgeColor}`}>
                             {item.type}
                           </span>
@@ -877,6 +1034,28 @@ export const CalendarView: React.FC = () => {
                           <Repeat className="w-3.5 h-3.5" />
                         </button>
                       )}
+                      {item.calendarEvent && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => openEditEventModal(item.calendarEvent!)}
+                            title="Edit event"
+                            aria-label={`Edit event "${item.title}"`}
+                            className="p-1 rounded text-[#526782] hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCalendarEvent(item.calendarEvent!)}
+                            title="Delete event"
+                            aria-label={`Delete event "${item.title}"`}
+                            className="p-1 rounded text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </>
+                      )}
                       <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${item.badgeColor}`}>
                         {item.type}
                       </span>
@@ -919,9 +1098,28 @@ export const CalendarView: React.FC = () => {
           {/* List of items */}
           <div className="space-y-2 max-h-[460px] overflow-y-auto">
             {selectedDayItems.length === 0 ? (
-              <div className="p-6 text-center text-xs text-[#526782] dark:text-[#A8B8CE]">
-                No items scheduled for this day.
-              </div>
+              Object.values(filters).some((v) => !v) ? (
+                <FilterEmptyState
+                  title="No items match your active filters"
+                  description="One or more calendar filter categories are currently hidden. Reset filters to see all events and tasks."
+                  clearLabel="Enable all filters"
+                  onClearFilters={() =>
+                    setFilters({
+                      tasks: true,
+                      routines: true,
+                      bills: true,
+                      goals: true,
+                      meals: true,
+                      workouts: true,
+                      events: true,
+                    })
+                  }
+                />
+              ) : (
+                <div className="p-6 text-center text-xs text-[#526782] dark:text-[#A8B8CE]">
+                  No items scheduled for this day.
+                </div>
+              )
             ) : (
               selectedDayItems.map((item) => (
                 <div
@@ -936,18 +1134,18 @@ export const CalendarView: React.FC = () => {
                         aria-checked={item.isCompleted}
                         aria-label={`Mark "${item.title}" as ${item.isCompleted ? 'incomplete' : 'complete'}`}
                         onClick={item.onToggle}
-                        className={`w-4 h-4 rounded-md shrink-0 flex items-center justify-center cursor-pointer ${
+                        className={`w-4 h-4 rounded-md shrink-0 flex items-center justify-center cursor-pointer micro-checkbox ${
                           item.isCompleted
                             ? 'bg-[#087F83] text-white'
                             : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
                         }`}
                       >
-                        {item.isCompleted && <Check className="w-3 h-3 stroke-[3]" />}
+                        {item.isCompleted && <Check className="w-3 h-3 stroke-[3] motion-check-pop" />}
                       </button>
                     )}
                     <div className="truncate">
                       <div className="flex items-center gap-1.5 truncate">
-                        <span className={`text-xs font-semibold truncate ${item.isCompleted ? 'line-through text-[#526782] dark:text-[#94A3B8]' : 'text-[#071A3A] dark:text-[#EDF4FF]'}`}>
+                        <span className={`text-xs font-semibold truncate transition-all duration-150 ${item.isCompleted ? 'line-through text-[#526782] dark:text-[#94A3B8]' : 'text-[#071A3A] dark:text-[#EDF4FF]'}`}>
                           {item.title}
                         </span>
                         {conflictsSet.has(item.id) && (
@@ -980,6 +1178,28 @@ export const CalendarView: React.FC = () => {
                         <Repeat className="w-3.5 h-3.5" />
                       </button>
                     )}
+                    {item.calendarEvent && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => openEditEventModal(item.calendarEvent!)}
+                          title="Edit event"
+                          aria-label={`Edit event "${item.title}"`}
+                          className="p-1 rounded text-[#526782] hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCalendarEvent(item.calendarEvent!)}
+                          title="Delete event"
+                          aria-label={`Delete event "${item.title}"`}
+                          className="p-1 rounded text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </>
+                    )}
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium shrink-0 ${item.badgeColor}`}>
                       {item.type}
                     </span>
@@ -990,10 +1210,7 @@ export const CalendarView: React.FC = () => {
           </div>
 
           <button
-            onClick={() => {
-              setEntryDate(selectedDate);
-              setIsAddModalOpen(true);
-            }}
+            onClick={() => openAddEntryModal(selectedDate)}
             className="w-full py-2.5 rounded-xl border border-dashed border-[#087F83] text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold flex items-center justify-center gap-2 hover:bg-teal-50 dark:hover:bg-teal-950/40 transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
@@ -1002,14 +1219,22 @@ export const CalendarView: React.FC = () => {
         </div>
       </div>
 
-      {/* Add Entry Modal */}
-      <Modal
+      {/* Add / Edit Entry Contextual Detail Panel */}
+      <ContextualDetailPanel
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        title="Add calendar entry"
-        subtitle="Schedule a task, bill, event or free time block"
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setEditingCalendarEvent(null);
+        }}
+        title={editingCalendarEvent ? 'Edit calendar event' : 'Add calendar entry'}
+        subtitle={
+          editingCalendarEvent
+            ? 'Update your scheduled event, birthday, or focus block'
+            : 'Schedule a task, bill, event or free time block'
+        }
+        dataTestId="calendar-entry-panel"
       >
-        <form onSubmit={handleSaveEntry} className="space-y-4">
+        <form onSubmit={handleSaveEntry} noValidate className="space-y-4">
           <div>
             <label
               htmlFor="calendar-entry-type"
@@ -1024,9 +1249,9 @@ export const CalendarView: React.FC = () => {
               className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium focus:ring-2 focus:ring-[#087F83]"
             >
               <option value="free_time">Free time / Focus block</option>
-              <option value="task">Task</option>
-              <option value="bill">Bill</option>
-              <option value="birthday">Birthday</option>
+              {!editingCalendarEvent && <option value="task">Task</option>}
+              {!editingCalendarEvent && <option value="bill">Bill</option>}
+              <option value="birthday">Birthday (Repeats yearly)</option>
               <option value="event">Event</option>
             </select>
           </div>
@@ -1044,10 +1269,87 @@ export const CalendarView: React.FC = () => {
               required
               value={entryTitle}
               onChange={(e) => setEntryTitle(e.target.value)}
-              placeholder="e.g. Focus time, Doctor appointment"
+              placeholder={
+                entryType === 'bill'
+                  ? 'e.g. Electricity bill, Internet'
+                  : entryType === 'birthday'
+                  ? 'e.g. Sam Birthday'
+                  : 'e.g. Focus time, Doctor appointment'
+              }
               className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs focus:ring-2 focus:ring-[#087F83]"
             />
           </div>
+
+          {/* Explicit Bill Details when entryType === 'bill' (LP-11) */}
+          {!editingCalendarEvent && entryType === 'bill' && (
+            <div className="p-3.5 rounded-xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800/60 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label
+                    htmlFor="calendar-bill-amount"
+                    className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                  >
+                    Planned amount ({settings.currencySymbol}) *
+                  </label>
+                  <input
+                    id="calendar-bill-amount"
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    required
+                    aria-invalid={Boolean(timeError)}
+                    value={billPlannedAmount}
+                    onChange={(e) => {
+                      setBillPlannedAmount(e.target.value);
+                      if (timeError) setTimeError('');
+                    }}
+                    placeholder="e.g. 85.00"
+                    className={`w-full px-3 py-2 rounded-xl border ${timeError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-[#E2E8F0] dark:border-[#1E2D4A]'} bg-white dark:bg-[#152238] text-xs font-mono`}
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="calendar-bill-category"
+                    className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                  >
+                    Bill category
+                  </label>
+                  <select
+                    id="calendar-bill-category"
+                    value={billCategory}
+                    onChange={(e) => setBillCategory(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
+                  >
+                    <option value="Utilities">Utilities</option>
+                    <option value="Housing">Housing</option>
+                    <option value="Subscriptions">Subscriptions</option>
+                    <option value="Household">Household</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label
+                  htmlFor="calendar-bill-repeat"
+                  className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+                >
+                  Repeat schedule
+                </label>
+                <select
+                  id="calendar-bill-repeat"
+                  value={billRepeatInterval}
+                  onChange={(e) => setBillRepeatInterval(e.target.value as RepeatInterval)}
+                  className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
+                >
+                  <option value="none">One-time bill</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -1055,7 +1357,7 @@ export const CalendarView: React.FC = () => {
                 htmlFor="calendar-entry-date"
                 className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
               >
-                Date
+                {entryType === 'bill' ? 'Due date' : 'Date'}
               </label>
               <input
                 id="calendar-entry-date"
@@ -1066,20 +1368,22 @@ export const CalendarView: React.FC = () => {
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
               />
             </div>
-            <div className="flex items-center pt-5">
-              <label className="flex items-center gap-2 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isAllDay}
-                  onChange={(e) => setIsAllDay(e.target.checked)}
-                  className="rounded text-[#087F83] focus:ring-[#087F83]"
-                />
-                <span>All-day event</span>
-              </label>
-            </div>
+            {entryType !== 'bill' && entryType !== 'birthday' && (
+              <div className="flex items-center pt-5">
+                <label className="flex items-center gap-2 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isAllDay}
+                    onChange={(e) => setIsAllDay(e.target.checked)}
+                    className="rounded text-[#087F83] focus:ring-[#087F83]"
+                  />
+                  <span>All-day event</span>
+                </label>
+              </div>
+            )}
           </div>
 
-          {!isAllDay && (
+          {entryType !== 'bill' && entryType !== 'birthday' && !isAllDay && (
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label
@@ -1091,9 +1395,13 @@ export const CalendarView: React.FC = () => {
                 <input
                   id="calendar-entry-start-time"
                   type="time"
+                  aria-invalid={Boolean(timeError)}
                   value={entryStartTime}
-                  onChange={(e) => setEntryStartTime(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
+                  onChange={(e) => {
+                    setEntryStartTime(e.target.value);
+                    if (timeError) setTimeError('');
+                  }}
+                  className={`w-full px-3 py-2 rounded-xl border ${timeError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-[#E2E8F0] dark:border-[#1E2D4A]'} bg-white dark:bg-[#152238] text-xs`}
                 />
               </div>
               <div>
@@ -1106,52 +1414,69 @@ export const CalendarView: React.FC = () => {
                 <input
                   id="calendar-entry-end-time"
                   type="time"
+                  aria-invalid={Boolean(timeError)}
                   value={entryEndTime}
-                  onChange={(e) => setEntryEndTime(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
+                  onChange={(e) => {
+                    setEntryEndTime(e.target.value);
+                    if (timeError) setTimeError('');
+                  }}
+                  className={`w-full px-3 py-2 rounded-xl border ${timeError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-[#E2E8F0] dark:border-[#1E2D4A]'} bg-white dark:bg-[#152238] text-xs`}
                 />
               </div>
             </div>
           )}
 
           {timeError && (
-            <p className="text-xs text-rose-600 font-medium">{timeError}</p>
+            <div
+              role="alert"
+              data-testid="calendar-entry-time-error"
+              className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 text-xs flex items-center gap-2"
+            >
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{timeError}</span>
+            </div>
           )}
 
-          <div>
-            <label
-              htmlFor="calendar-entry-notes"
-              className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
-            >
-              Notes (optional)
-            </label>
-            <textarea
-              id="calendar-entry-notes"
-              rows={2}
-              value={entryNotes}
-              onChange={(e) => setEntryNotes(e.target.value)}
-              placeholder="Add details…"
-              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
-            />
-          </div>
+          {entryType !== 'bill' && (
+            <div>
+              <label
+                htmlFor="calendar-entry-notes"
+                className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] mb-1"
+              >
+                Notes (optional)
+              </label>
+              <textarea
+                id="calendar-entry-notes"
+                rows={2}
+                value={entryNotes}
+                onChange={(e) => setEntryNotes(e.target.value)}
+                placeholder="Add details…"
+                className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
+              />
+            </div>
+          )}
 
           <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
-              onClick={() => setIsAddModalOpen(false)}
+              onClick={() => {
+                setIsAddModalOpen(false);
+                setEditingCalendarEvent(null);
+              }}
               className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-[#526782] hover:bg-slate-50"
             >
               Cancel
             </button>
             <button
               type="submit"
+              data-testid="calendar-entry-submit-btn"
               className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
             >
-              Save entry
+              {editingCalendarEvent ? 'Save changes' : 'Save entry'}
             </button>
           </div>
         </form>
-      </Modal>
+      </ContextualDetailPanel>
 
       {/* Recurring Rule Preview Modal */}
       {previewRoutineId && (() => {

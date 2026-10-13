@@ -54,8 +54,10 @@ if (!jsScriptRegex.test(html)) {
 }
 html = html.replace(jsScriptRegex, () => '');
 
-// 3. Strip external manifest/icon links from single-file offline bundle and mark standalone mode
+// 3. Strip external manifest/icon and font links from single-file offline bundle and mark standalone mode
 html = html.replace(/<link\b[^>]*rel=["'](?:manifest|icon|apple-touch-icon)["'][^>]*>\s*/gi, () => '');
+html = html.replace(/<link\b[^>]*href=["'][^"']*fonts\.(?:googleapis|gstatic)\.com[^"']*["'][^>]*>\s*/gi, () => '');
+html = html.replace(/<link\b[^>]*rel=["']preconnect["'][^>]*>\s*/gi, () => '');
 const bootstrapPlaceholder = `<script>window.__OLP_STANDALONE_FILE__ = true;</script>\n  <script id="embedded-planner-bootstrap-data" type="application/json">\n<!--BOOTSTRAP_DATA_PLACEHOLDER-->\n</script>`;
 html = html.replace(/<\/head>/i, () => `  ${bootstrapPlaceholder}\n  </head>`);
 

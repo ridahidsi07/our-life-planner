@@ -77,10 +77,20 @@ async function runBrowserGroceryTest(): Promise<BrowserGroceryReport> {
   // Seed data with two planned meals in the current week:
   // Meal 1: Rice 200 g (2 servings / 2 base)
   // Meal 2: Rice 1 cup (2 servings / 2 base)
+  const now = new Date();
+  const day = now.getDay();
+  const diffToMon = now.getDate() - day + (day === 0 ? -6 : 1);
+  const monDate = new Date(now.getFullYear(), now.getMonth(), diffToMon);
+  const tueDate = new Date(now.getFullYear(), now.getMonth(), diffToMon + 1);
+  const fmt = (dt: Date) =>
+    `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+  const seedDay1 = fmt(monDate);
+  const seedDay2 = fmt(tueDate);
+
   const seedMeals: PlannedMeal[] = [
     {
       id: 'pm-repro-1',
-      date: '2026-10-05',
+      date: seedDay1,
       mealType: 'lunch',
       plannedTime: '12:30',
       recipeTitle: 'Teriyaki Rice Bowl',
@@ -94,7 +104,7 @@ async function runBrowserGroceryTest(): Promise<BrowserGroceryReport> {
     },
     {
       id: 'pm-repro-2',
-      date: '2026-10-06',
+      date: seedDay2,
       mealType: 'dinner',
       plannedTime: '19:00',
       recipeTitle: 'Veggie Pilaf',

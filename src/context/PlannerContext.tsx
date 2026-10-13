@@ -3,7 +3,9 @@ import {
   BillItem,
   BrainDumpItem,
   CalendarEvent,
+  CloudSyncState,
   ConflictItem,
+  CorruptDataQuarantine,
   DailyHydrationTarget,
   DebtItem,
   EditionType,
@@ -31,8 +33,12 @@ import {
   WeeklyReviewEntry,
 } from '../types/planner';
 import { getDayBefore } from '../utils/routineRecurrence';
+import { getRealTodayDate as getCanonicalTodayDate } from '../utils/recurrence';
 import {
   INITIAL_SETTINGS,
+  DEMO_SETTINGS,
+  EMPTY_SETTINGS,
+  createEmptySettings,
   SAMPLE_BILLS,
   SAMPLE_BRAIN_DUMP,
   SAMPLE_CALENDAR_EVENTS,
@@ -73,15 +79,30 @@ import {
   reconcilePlannerData,
   TabSyncManager,
   fastDeepEqual,
+  applyConflictResolutionToData,
+  atomicWritePlannerStorage,
+  quarantineCorruptStorage,
+  getQuarantinedCorruptData,
+  clearQuarantinedCorruptData,
+  eraseAllAppStorageKeys,
 } from '../utils/storageCoordinator';
 import {
   validateBackupData,
   atomicRestoreBackup,
   rollbackPreRestoreSnapshot,
   getPreRestoreSnapshot,
+  savePreRestoreSnapshot,
+  STORAGE_KEY_PRE_RESTORE_SNAPSHOT,
   PreRestoreSnapshotInfo,
   BackupValidationResult,
 } from '../utils/backupValidator';
+import {
+  getStoredCloudSyncState,
+  syncPlannerWithCloud,
+  syncWithCloud,
+  clearCloudSession,
+  CloudSyncResult,
+} from '../utils/cloudSyncClient';
 import {
   buildStandaloneFallbackHtml,
   BOOTSTRAP_PLACEHOLDER_TOKEN,
@@ -110,9 +131,19 @@ interface PlannerContextType {
   setActiveModal: (modal: string | null) => void;
   savingState: SavingState;
   setSavingState: (state: SavingState) => void;
+  lastSaveError: string | null;
+  retrySave: () => Promise<boolean>;
+  exportUnsavedSnapshot: () => void;
+  corruptStartupQuarantine: CorruptDataQuarantine | null;
+  exportCorruptQuarantine: () => void;
+  dismissCorruptQuarantine: () => void;
   conflictItem: ConflictItem | null;
+  conflictQueue: ConflictItem[];
   setConflictItem: (conflict: ConflictItem | null) => void;
   resolveConflict: (chosenVersion: 'local' | 'online') => void;
+  cloudSyncState: CloudSyncState;
+  setCloudSyncState: React.Dispatch<React.SetStateAction<CloudSyncState>>;
+  syncWithCloudNow: (migrationMode?: 'merge' | 'use_cloud' | 'overwrite_cloud') => Promise<CloudSyncResult>;
 
   // Data Collections
   tasks: TaskItem[];
@@ -158,6 +189,7 @@ interface PlannerContextType {
   addTask: (task: Omit<TaskItem, 'id' | 'createdAt'>) => string;
   updateTask: (id: string, updates: Partial<TaskItem>) => void;
   deleteTask: (id: string) => void;
+  restoreDeletedTask: (task: TaskItem) => void;
   toggleTaskCompletion: (id: string) => void;
   archiveTask: (id: string) => void;
   unarchiveTask: (id: string) => void;
@@ -259,7 +291,9 @@ interface PlannerContextType {
 
   // Calendar Event Actions
   addCalendarEvent: (event: Omit<CalendarEvent, 'id'>) => void;
+  updateCalendarEvent: (id: string, updates: Partial<CalendarEvent>) => void;
   deleteCalendarEvent: (id: string) => void;
+  restoreCalendarEvent: (event: CalendarEvent) => void;
 
   // Weekly Review Actions
   saveWeeklyReview: (entry: Omit<WeeklyReviewEntry, 'id' | 'updatedAt'> & { id?: string }) => WeeklyReviewEntry;
@@ -277,6 +311,8 @@ interface PlannerContextType {
   // Global Operations
   removeSampleData: () => void;
   resetAllData: () => void;
+  startEmptyPlanner: (customSettings?: Partial<UserSettings>) => void;
+  eraseAllPlannerData: () => void;
   loadSampleData: () => void;
   exportBackup: () => PlannerBackupData;
   validateBackup: (input: unknown) => BackupValidationResult;
@@ -288,25 +324,8 @@ interface PlannerContextType {
 
 const PlannerContext = createContext<PlannerContextType | undefined>(undefined);
 
-export const getRealTodayDate = (timeZone?: string): string => {
-  try {
-    if (timeZone) {
-      const formatter = new Intl.DateTimeFormat('en-CA', {
-        timeZone,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      });
-      return formatter.format(new Date());
-    }
-  } catch (e) {
-    console.warn('Invalid timeZone:', timeZone, e);
-  }
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+export const getRealTodayDate = (timeZone?: string, now?: Date): string => {
+  return getCanonicalTodayDate(timeZone, now);
 };
 
 export const applyThemeToDocument = (theme: 'light' | 'dark' | 'system') => {
@@ -354,7 +373,8 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed && typeof parsed === 'object') {
-          const merged: UserSettings = { ...INITIAL_SETTINGS, ...parsed };
+          const baseDefaults = parsed.isSampleDataActive === false ? EMPTY_SETTINGS : INITIAL_SETTINGS;
+          const merged: UserSettings = { ...baseDefaults, ...parsed };
           if (merged.currency) {
             merged.currencySymbol = getCurrencySymbol(merged.currency);
           }
@@ -368,6 +388,7 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     return {
       ...INITIAL_SETTINGS,
+      hasCompletedSetup: false,
       enabledTools: migrateEnabledTools(INITIAL_SETTINGS.enabledTools),
       pinnedTools: migratePinnedTools(INITIAL_SETTINGS.pinnedTools),
     };
@@ -379,7 +400,25 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [activeView, setActiveView] = useState<string>('today');
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [savingState, setSavingState] = useState<SavingState>('saved_local');
-  const [conflictItem, setConflictItem] = useState<ConflictItem | null>(null);
+  const [lastSaveError, setLastSaveError] = useState<string | null>(null);
+  const [corruptStartupQuarantine, setCorruptStartupQuarantine] = useState<CorruptDataQuarantine | null>(() =>
+    getQuarantinedCorruptData()
+  );
+  const [conflictQueue, setConflictQueue] = useState<ConflictItem[]>([]);
+  const conflictItem = conflictQueue.length > 0 ? conflictQueue[0] : null;
+  const setConflictItem = useCallback((conflict: ConflictItem | null) => {
+    if (!conflict) {
+      setConflictQueue((prev) => prev.slice(1));
+    } else {
+      setConflictQueue((prev) => {
+        const filtered = prev.filter(
+          (c) => !(c.id === conflict.id && c.entityType === conflict.entityType)
+        );
+        return [conflict, ...filtered];
+      });
+    }
+  }, []);
+  const [cloudSyncState, setCloudSyncState] = useState<CloudSyncState>(() => getStoredCloudSyncState());
   const [preRestoreSnapshot, setPreRestoreSnapshot] = useState<PreRestoreSnapshotInfo | null>(() =>
     getPreRestoreSnapshot()
   );
@@ -560,16 +599,36 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, []);
 
+  const enqueueConflicts = useCallback((incoming: ConflictItem[]) => {
+    if (!incoming || incoming.length === 0) return;
+    setConflictQueue((prev) => {
+      const next = [...prev];
+      for (const item of incoming) {
+        const existingIdx = next.findIndex(
+          (c) => c.id === item.id && c.entityType === item.entityType
+        );
+        if (existingIdx >= 0) {
+          next[existingIdx] = item;
+        } else {
+          next.push(item);
+        }
+      }
+      return next;
+    });
+    setSavingState('needs_choice');
+  }, []);
+
   // Coordinated transactional save to localStorage
   const triggerSave = useCallback(
-    async (customSettings?: UserSettings) => {
+    async (customSettings?: UserSettings): Promise<boolean> => {
       if (isApplyingExternalSyncRef.current) {
-        // Change was applied from an external tab sync; do not write echo back to storage
+        // Change was applied from an external tab sync or intentional silent reset; do not write echo back
         isApplyingExternalSyncRef.current = false;
-        return;
+        return true;
       }
 
       setSavingState('saving');
+      let saveSucceeded = false;
 
       try {
         await withStorageLock(async () => {
@@ -588,7 +647,8 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 const result = reconcilePlannerData(
                   baseSnapshotRef.current,
                   currentLocalSnapshot,
-                  parsedStored
+                  parsedStored,
+                  'tab'
                 );
                 dataToSave = result.mergedData;
                 conflicts = result.conflicts;
@@ -609,37 +669,100 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
           dataToSave.revision = nextRevision;
           dataToSave.exportedAt = new Date().toISOString();
 
-          // Transactional atomic write to localStorage
-          localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(dataToSave));
-          localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(dataToSave.settings));
-          localStorage.setItem(STORAGE_KEY_REVISION, String(nextRevision));
+          // Transactional atomic write with readback verification and rollback on failure (LP-02)
+          const writeResult = atomicWritePlannerStorage(dataToSave, nextRevision);
+          if (!writeResult.success) {
+            throw new Error(writeResult.error || 'Atomic write to localStorage failed');
+          }
 
           // Update tracking references
           currentRevisionRef.current = nextRevision;
           baseSnapshotRef.current = dataToSave;
+          setLastSaveError(null);
+          saveSucceeded = true;
 
           // Broadcast to all other open tabs
           syncManagerRef.current?.broadcast(nextRevision, dataToSave);
 
           if (conflicts.length > 0) {
-            setConflictItem(conflicts[0]);
-            setSavingState('needs_choice');
+            enqueueConflicts(conflicts);
           } else {
-            setSavingState('saved_local');
+            setConflictQueue((prevQueue) => {
+              if (prevQueue.length > 0) {
+                setSavingState('needs_choice');
+              } else {
+                setSavingState('saved_local');
+              }
+              return prevQueue;
+            });
           }
         });
+        return saveSucceeded;
       } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         console.error('Coordinated save failed:', err);
+        setLastSaveError(message);
         setSavingState('could_not_save');
+        return false;
       }
     },
-    [createDataSnapshot, applyStateFromBackup]
+    [createDataSnapshot, applyStateFromBackup, enqueueConflicts]
   );
+
+  // Genuine retry save action for SavingIndicator (LP-02)
+  const retrySave = useCallback(async (): Promise<boolean> => {
+    return triggerSave();
+  }, [triggerSave]);
+
+  // Download unsaved in-memory planner snapshot when localStorage write fails (LP-02)
+  const exportUnsavedSnapshot = useCallback(() => {
+    try {
+      const snapshot = createDataSnapshot();
+      const json = JSON.stringify(snapshot, null, 2);
+      const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `our-life-planner-unsaved-recovery-${currentDate}.json`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Failed to export unsaved snapshot:', e);
+    }
+  }, [createDataSnapshot, currentDate]);
+
+  // Export quarantined corrupt startup data so user never loses raw bytes (LP-02)
+  const exportCorruptQuarantine = useCallback(() => {
+    const q = corruptStartupQuarantine || getQuarantinedCorruptData();
+    if (!q) return;
+    try {
+      const json = JSON.stringify(q, null, 2);
+      const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `our-life-planner-corrupt-quarantine-${currentDate}.json`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Failed to export corrupt quarantine:', e);
+    }
+  }, [corruptStartupQuarantine, currentDate]);
+
+  const dismissCorruptQuarantine = useCallback(() => {
+    clearQuarantinedCorruptData();
+    setCorruptStartupQuarantine(null);
+  }, []);
 
   // Load from local storage or standalone bootstrap on mount
   useEffect(() => {
     try {
       setPreRestoreSnapshot(getPreRestoreSnapshot());
+      setCorruptStartupQuarantine(getQuarantinedCorruptData());
 
       // 1. Check for standalone embedded bootstrap data
       const bootstrapEl = document.getElementById('embedded-planner-bootstrap-data');
@@ -676,14 +799,56 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // 2. Load from localStorage
       const storedData = localStorage.getItem(STORAGE_KEY_DATA);
       const storedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
+      const storedRevisionRaw = localStorage.getItem(STORAGE_KEY_REVISION);
 
       if (!storedSettings && !storedData) {
         // First visit: open setup wizard
         setActiveModal('setup');
       }
 
+      // Verify storedSettings if present without storedData
+      if (storedSettings) {
+        try {
+          const parsedStg = JSON.parse(storedSettings);
+          if (!parsedStg || typeof parsedStg !== 'object' || Array.isArray(parsedStg)) {
+            const q = quarantineCorruptStorage({
+              rawData: storedData,
+              rawSettings: storedSettings,
+              rawRevision: storedRevisionRaw,
+              reason: 'Stored settings JSON is not a valid object.',
+            });
+            setCorruptStartupQuarantine(q);
+          }
+        } catch (stgErr) {
+          const q = quarantineCorruptStorage({
+            rawData: storedData,
+            rawSettings: storedSettings,
+            rawRevision: storedRevisionRaw,
+            reason: `Stored settings JSON parse error: ${stgErr instanceof Error ? stgErr.message : String(stgErr)}`,
+          });
+          setCorruptStartupQuarantine(q);
+        }
+      }
+
       if (storedData) {
-        const parsed = JSON.parse(storedData);
+        let parsed: unknown;
+        try {
+          parsed = JSON.parse(storedData);
+        } catch (parseErr) {
+          console.warn('Stored planner data is malformed JSON; quarantining before fallback:', parseErr);
+          const q = quarantineCorruptStorage({
+            rawData: storedData,
+            rawSettings: storedSettings,
+            rawRevision: storedRevisionRaw,
+            reason: `Malformed JSON in stored planner data: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`,
+          });
+          setCorruptStartupQuarantine(q);
+          // Prevent immediate auto-save from overwriting the corrupt data until user acts
+          isApplyingExternalSyncRef.current = true;
+          baseSnapshotRef.current = createDataSnapshot();
+          return;
+        }
+
         const validation = validateBackupData(parsed);
         if (validation.isValid && validation.data) {
           const rev = validation.data.revision || getStoredRevision();
@@ -691,7 +856,16 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
           baseSnapshotRef.current = validation.data;
           applyStateFromBackup(validation.data);
         } else {
-          console.warn('Stored planner data failed schema validation; falling back safely:', validation.errors);
+          console.warn('Stored planner data failed schema validation; quarantining before fallback:', validation.errors);
+          const q = quarantineCorruptStorage({
+            rawData: storedData,
+            rawSettings: storedSettings,
+            rawRevision: storedRevisionRaw,
+            reason: 'Stored planner data failed schema validation.',
+            validationErrors: validation.errors,
+          });
+          setCorruptStartupQuarantine(q);
+          isApplyingExternalSyncRef.current = true;
           baseSnapshotRef.current = createDataSnapshot();
         }
       } else {
@@ -730,7 +904,8 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const result = reconcilePlannerData(
           baseSnapshotRef.current || localSnapshot,
           localSnapshot,
-          msg.data
+          msg.data,
+          'tab'
         );
         isApplyingExternalSyncRef.current = true;
         applyStateFromBackup(result.mergedData);
@@ -738,8 +913,7 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         baseSnapshotRef.current = msg.data;
 
         if (result.conflicts.length > 0) {
-          setConflictItem(result.conflicts[0]);
-          setSavingState('needs_choice');
+          enqueueConflicts(result.conflicts);
         } else {
           // Trigger save of merged state so our edits are committed
           triggerSave();
@@ -750,7 +924,7 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => {
       manager.destroy();
     };
-  }, [createDataSnapshot, applyStateFromBackup, triggerSave]);
+  }, [createDataSnapshot, applyStateFromBackup, triggerSave, enqueueConflicts]);
 
   // Watch for data mutations and auto-save
   const [isInitialized, setIsInitialized] = useState(false);
@@ -816,20 +990,91 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   };
 
-  // Resolve conflict
+  // Resolve conflict across all 19 collections and durably persist (LP-03)
   const resolveConflict = (chosenVersion: 'local' | 'online') => {
-    if (!conflictItem) return;
-    if (chosenVersion === 'online') {
-      // Apply online version
-      if (conflictItem.entityType === 'task') {
-        setTasks((prev) =>
-          prev.map((t) => (t.id === conflictItem.id ? conflictItem.onlineVersion : t))
-        );
-      }
+    const activeConflict = conflictQueue[0];
+    if (!activeConflict) return;
+
+    const currentSnapshot = createDataSnapshot();
+    const resolvedSnapshot = applyConflictResolutionToData(
+      currentSnapshot,
+      activeConflict,
+      chosenVersion
+    );
+
+    const storedRevision = getStoredRevision();
+    const nextRevision = Math.max(storedRevision, currentRevisionRef.current) + 1;
+    resolvedSnapshot.revision = nextRevision;
+    resolvedSnapshot.exportedAt = new Date().toISOString();
+
+    isApplyingExternalSyncRef.current = true;
+    applyStateFromBackup(resolvedSnapshot);
+
+    const remainingQueue = conflictQueue.slice(1);
+    setConflictQueue(remainingQueue);
+
+    const writeResult = atomicWritePlannerStorage(resolvedSnapshot, nextRevision);
+    if (writeResult.success) {
+      currentRevisionRef.current = nextRevision;
+      baseSnapshotRef.current = resolvedSnapshot;
+      setLastSaveError(null);
+      syncManagerRef.current?.broadcast(nextRevision, resolvedSnapshot);
+      setSavingState(remainingQueue.length > 0 ? 'needs_choice' : 'saved_local');
+    } else {
+      setLastSaveError(writeResult.error || 'Failed to save conflict resolution');
+      setSavingState('could_not_save');
     }
-    setConflictItem(null);
-    setSavingState('saved_local');
   };
+
+  // Online Account Cloud Sync action (LP-01)
+  const syncWithCloudNow = useCallback(
+    async (migrationMode?: 'merge' | 'use_cloud' | 'overwrite_cloud'): Promise<CloudSyncResult> => {
+      setSavingState('saving');
+      const localSnapshot = createDataSnapshot();
+      const res = await syncWithCloud({
+        localSnapshot,
+        baseSnapshot: baseSnapshotRef.current,
+        migrationMode,
+      });
+      setCloudSyncState(getStoredCloudSyncState());
+
+      if (res.success && res.mergedData) {
+        const storedRevision = getStoredRevision();
+        const nextRevision = Math.max(
+          storedRevision,
+          currentRevisionRef.current,
+          res.serverRevision || 0
+        ) + 1;
+        const hydrated: PlannerBackupData = {
+          ...res.mergedData,
+          revision: nextRevision,
+          exportedAt: new Date().toISOString(),
+        };
+
+        isApplyingExternalSyncRef.current = true;
+        applyStateFromBackup(hydrated);
+
+        const writeResult = atomicWritePlannerStorage(hydrated, nextRevision);
+        if (writeResult.success) {
+          currentRevisionRef.current = nextRevision;
+          baseSnapshotRef.current = hydrated;
+          setLastSaveError(null);
+          syncManagerRef.current?.broadcast(nextRevision, hydrated);
+        }
+
+        if (res.conflicts && res.conflicts.length > 0) {
+          enqueueConflicts(res.conflicts);
+        } else {
+          setSavingState('saved_cloud');
+        }
+      } else {
+        setSavingState('saved_local');
+      }
+
+      return res;
+    },
+    [createDataSnapshot, applyStateFromBackup, enqueueConflicts]
+  );
 
   // Budget period range computation
   const defaultPeriodRange = useMemo(() => {
@@ -896,7 +1141,20 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const deleteTask = (id: string) => {
-    setTasks((prev) => prev.filter((t) => t.id !== id));
+    setTasks((prev) => {
+      const next = prev.filter((t) => t.id !== id);
+      tasksRef.current = next;
+      return next;
+    });
+  };
+
+  const restoreDeletedTask = (task: TaskItem) => {
+    setTasks((prev) => {
+      if (prev.some((t) => t.id === task.id)) return prev;
+      const next = [task, ...prev];
+      tasksRef.current = next;
+      return next;
+    });
   };
 
   const toggleTaskCompletion = (id: string) => {
@@ -1086,6 +1344,7 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const toggleRoutinePause = (id: string) => {
+    const pauseDateStr = getRealTodayDate(settingsRef.current.timeZone);
     setRoutines((prev) =>
       prev.map((r) => {
         if (r.id !== id) return r;
@@ -1093,7 +1352,7 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return {
           ...r,
           isPaused: willBePaused,
-          pausedDate: willBePaused ? new Date().toISOString().split('T')[0] : undefined,
+          pausedDate: willBePaused ? pauseDateStr : undefined,
         };
       })
     );
@@ -1907,11 +2166,36 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ...event,
       id: `ce-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
     };
-    setCalendarEvents((prev) => [...prev, newEv]);
+    setCalendarEvents((prev) => {
+      const next = [...prev, newEv];
+      calendarEventsRef.current = next;
+      return next;
+    });
+  };
+
+  const updateCalendarEvent = (id: string, updates: Partial<CalendarEvent>) => {
+    setCalendarEvents((prev) => {
+      const next = prev.map((e) => (e.id === id ? { ...e, ...updates } : e));
+      calendarEventsRef.current = next;
+      return next;
+    });
   };
 
   const deleteCalendarEvent = (id: string) => {
-    setCalendarEvents((prev) => prev.filter((e) => e.id !== id));
+    setCalendarEvents((prev) => {
+      const next = prev.filter((e) => e.id !== id);
+      calendarEventsRef.current = next;
+      return next;
+    });
+  };
+
+  const restoreCalendarEvent = (event: CalendarEvent) => {
+    setCalendarEvents((prev) => {
+      if (prev.some((e) => e.id === event.id)) return prev;
+      const next = [...prev, event];
+      calendarEventsRef.current = next;
+      return next;
+    });
   };
 
   // Weekly Review Actions
@@ -2007,6 +2291,29 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     URL.revokeObjectURL(url);
   };
 
+  const clearAllCollectionsInMemory = () => {
+    setTasks([]); tasksRef.current = [];
+    setRoutines([]); routinesRef.current = [];
+    setGoals([]); goalsRef.current = [];
+    setHabits([]); habitsRef.current = [];
+    setInbox([]); inboxRef.current = [];
+    setTransactions([]); transactionsRef.current = [];
+    setBills([]); billsRef.current = [];
+    setSavingsPots([]); savingsPotsRef.current = [];
+    setDebts([]); debtsRef.current = [];
+    setRecipes([]); recipesRef.current = [];
+    setPlannedMeals([]); plannedMealsRef.current = [];
+    setGroceries([]); groceriesRef.current = [];
+    setWorkouts([]); workoutsRef.current = [];
+    setWeightProfiles([]); weightProfilesRef.current = [];
+    setSelectedProfileId('');
+    setWeightRecords([]); weightRecordsRef.current = [];
+    setHydrationEntries([]); hydrationEntriesRef.current = [];
+    setHydrationTargets([]); hydrationTargetsRef.current = [];
+    setCalendarEvents([]); calendarEventsRef.current = [];
+    setWeeklyReviews([]); weeklyReviewsRef.current = [];
+  };
+
   // Global operations
   const removeSampleData = () => {
     setTasks((prev) => prev.filter((i) => !i.isSample));
@@ -2026,50 +2333,123 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setHydrationEntries((prev) => prev.filter((i) => !i.isSample));
     setCalendarEvents((prev) => prev.filter((i) => !i.isSample));
     setWeeklyReviews((prev) => prev.filter((i) => !i.isSample));
-    updateSettings({ isSampleDataActive: false });
+    updateSettings({
+      isSampleDataActive: false,
+      budgetOpeningBalance: 0,
+      budgetPlannedIncome: 0,
+      budgetPlannedSavings: 0,
+      budgetCategoryLimits: {},
+    });
   };
 
+  // Clears planner entries while keeping settings/profile & creating a recovery snapshot (LP-06 / LP-07)
   const resetAllData = () => {
-    setTasks([]);
-    setRoutines([]);
-    setGoals([]);
-    setHabits([]);
-    setInbox([]);
-    setTransactions([]);
-    setBills([]);
-    setSavingsPots([]);
-    setDebts([]);
-    setRecipes([]);
-    setPlannedMeals([]);
-    setGroceries([]);
-    setWorkouts([]);
-    setWeightRecords([]);
-    setHydrationEntries([]);
-    setCalendarEvents([]);
-    setWeeklyReviews([]);
-    updateSettings({ isSampleDataActive: false });
+    const snap = savePreRestoreSnapshot(createDataSnapshot(), currentRevisionRef.current);
+    if (snap) setPreRestoreSnapshot(snap);
+    clearAllCollectionsInMemory();
+    updateSettings({
+      isSampleDataActive: false,
+      budgetOpeningBalance: 0,
+      budgetPlannedIncome: 0,
+      budgetPlannedSavings: 0,
+      budgetCategoryLimits: {},
+    });
+  };
+
+  // Starts a clean empty planner without demo budget or weight fixtures (LP-06)
+  const startEmptyPlanner = (customSettings?: Partial<UserSettings>) => {
+    const currentSnap = createDataSnapshot();
+    const hasAnyRecords =
+      currentSnap.tasks.length > 0 ||
+      currentSnap.routines.length > 0 ||
+      currentSnap.goals.length > 0 ||
+      currentSnap.habits.length > 0 ||
+      currentSnap.transactions.length > 0 ||
+      currentSnap.bills.length > 0 ||
+      currentSnap.calendarEvents.length > 0;
+
+    if (hasAnyRecords) {
+      const snap = savePreRestoreSnapshot(currentSnap, currentRevisionRef.current);
+      if (snap) setPreRestoreSnapshot(snap);
+    }
+
+    clearAllCollectionsInMemory();
+    const cleanSettings = createEmptySettings({
+      ...customSettings,
+      isSampleDataActive: false,
+      hasCompletedSetup: true,
+    });
+    if (cleanSettings.currency) {
+      cleanSettings.currencySymbol = getCurrencySymbol(cleanSettings.currency);
+    }
+    cleanSettings.enabledTools = migrateEnabledTools(cleanSettings.enabledTools);
+    cleanSettings.pinnedTools = migratePinnedTools(cleanSettings.pinnedTools);
+    applyThemeToDocument(cleanSettings.theme);
+    const freshToday = getRealTodayDate(cleanSettings.timeZone);
+    setTodayDate(freshToday);
+    setCurrentDate(freshToday);
+    setSettings(cleanSettings);
+    settingsRef.current = cleanSettings;
+    triggerSave(cleanSettings);
+  };
+
+  // Full erase of all app-owned personal data, settings, cloud session, and recovery snapshots on this device (LP-07)
+  const eraseAllPlannerData = () => {
+    isApplyingExternalSyncRef.current = true;
+    clearAllCollectionsInMemory();
+    clearCloudSession();
+    eraseAllAppStorageKeys();
+
+    const freshSettings = createEmptySettings({
+      hasCompletedSetup: false,
+      isSampleDataActive: false,
+    });
+    applyThemeToDocument(freshSettings.theme);
+    setSettings(freshSettings);
+    settingsRef.current = freshSettings;
+    currentRevisionRef.current = 1;
+    baseSnapshotRef.current = null;
+    setPreRestoreSnapshot(null);
+    setCorruptStartupQuarantine(null);
+    setConflictQueue([]);
+    setLastSaveError(null);
+    setCloudSyncState(getStoredCloudSyncState());
+    setSavingState('saved_local');
+    setActiveView('today');
+    setActiveModal('setup');
   };
 
   const loadSampleData = () => {
-    setTasks(SAMPLE_TASKS);
-    setRoutines(SAMPLE_ROUTINES);
-    setGoals(SAMPLE_GOALS);
-    setHabits(SAMPLE_HABITS);
-    setInbox(SAMPLE_BRAIN_DUMP);
-    setTransactions(SAMPLE_TRANSACTIONS);
-    setBills(SAMPLE_BILLS);
-    setSavingsPots(SAMPLE_SAVINGS_POTS);
-    setDebts(SAMPLE_DEBTS);
-    setRecipes(SAMPLE_RECIPES);
-    setPlannedMeals(SAMPLE_PLANNED_MEALS);
-    setGroceries(SAMPLE_GROCERIES);
-    setWorkouts(SAMPLE_WORKOUTS);
-    setWeightProfiles(SAMPLE_WEIGHT_PROFILES);
-    setWeightRecords(SAMPLE_WEIGHT_RECORDS);
-    setHydrationEntries(SAMPLE_HYDRATION_LOG);
-    setHydrationTargets(SAMPLE_HYDRATION_TARGETS);
-    setCalendarEvents(SAMPLE_CALENDAR_EVENTS);
-    updateSettings({ isSampleDataActive: true });
+    const snap = savePreRestoreSnapshot(createDataSnapshot(), currentRevisionRef.current);
+    if (snap) setPreRestoreSnapshot(snap);
+
+    setTasks(SAMPLE_TASKS); tasksRef.current = SAMPLE_TASKS;
+    setRoutines(SAMPLE_ROUTINES); routinesRef.current = SAMPLE_ROUTINES;
+    setGoals(SAMPLE_GOALS); goalsRef.current = SAMPLE_GOALS;
+    setHabits(SAMPLE_HABITS); habitsRef.current = SAMPLE_HABITS;
+    setInbox(SAMPLE_BRAIN_DUMP); inboxRef.current = SAMPLE_BRAIN_DUMP;
+    setTransactions(SAMPLE_TRANSACTIONS); transactionsRef.current = SAMPLE_TRANSACTIONS;
+    setBills(SAMPLE_BILLS); billsRef.current = SAMPLE_BILLS;
+    setSavingsPots(SAMPLE_SAVINGS_POTS); savingsPotsRef.current = SAMPLE_SAVINGS_POTS;
+    setDebts(SAMPLE_DEBTS); debtsRef.current = SAMPLE_DEBTS;
+    setRecipes(SAMPLE_RECIPES); recipesRef.current = SAMPLE_RECIPES;
+    setPlannedMeals(SAMPLE_PLANNED_MEALS); plannedMealsRef.current = SAMPLE_PLANNED_MEALS;
+    setGroceries(SAMPLE_GROCERIES); groceriesRef.current = SAMPLE_GROCERIES;
+    setWorkouts(SAMPLE_WORKOUTS); workoutsRef.current = SAMPLE_WORKOUTS;
+    setWeightProfiles(SAMPLE_WEIGHT_PROFILES); weightProfilesRef.current = SAMPLE_WEIGHT_PROFILES;
+    setSelectedProfileId('wp-1');
+    setWeightRecords(SAMPLE_WEIGHT_RECORDS); weightRecordsRef.current = SAMPLE_WEIGHT_RECORDS;
+    setHydrationEntries(SAMPLE_HYDRATION_LOG); hydrationEntriesRef.current = SAMPLE_HYDRATION_LOG;
+    setHydrationTargets(SAMPLE_HYDRATION_TARGETS); hydrationTargetsRef.current = SAMPLE_HYDRATION_TARGETS;
+    setCalendarEvents(SAMPLE_CALENDAR_EVENTS); calendarEventsRef.current = SAMPLE_CALENDAR_EVENTS;
+    setWeeklyReviews([]); weeklyReviewsRef.current = [];
+    updateSettings({
+      budgetOpeningBalance: INITIAL_SETTINGS.budgetOpeningBalance,
+      budgetPlannedIncome: INITIAL_SETTINGS.budgetPlannedIncome,
+      budgetPlannedSavings: INITIAL_SETTINGS.budgetPlannedSavings,
+      budgetCategoryLimits: INITIAL_SETTINGS.budgetCategoryLimits,
+      isSampleDataActive: true,
+    });
   };
 
   const exportBackup = (): PlannerBackupData => {
@@ -2159,9 +2539,19 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setActiveModal,
         savingState,
         setSavingState,
+        lastSaveError,
+        retrySave,
+        exportUnsavedSnapshot,
+        corruptStartupQuarantine,
+        exportCorruptQuarantine,
+        dismissCorruptQuarantine,
         conflictItem,
+        conflictQueue,
         setConflictItem,
         resolveConflict,
+        cloudSyncState,
+        setCloudSyncState,
+        syncWithCloudNow,
         tasks,
         routines,
         goals,
@@ -2190,6 +2580,7 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         addTask,
         updateTask,
         deleteTask,
+        restoreDeletedTask,
         toggleTaskCompletion,
         archiveTask,
         unarchiveTask,
@@ -2262,7 +2653,9 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         deleteWaterLog,
         updateWaterTarget,
         addCalendarEvent,
+        updateCalendarEvent,
         deleteCalendarEvent,
+        restoreCalendarEvent,
         saveWeeklyReview,
         deleteWeeklyReview,
         addHouseholdMember,
@@ -2272,6 +2665,8 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         exportCalendarIcs,
         removeSampleData,
         resetAllData,
+        startEmptyPlanner,
+        eraseAllPlannerData,
         loadSampleData,
         exportBackup,
         validateBackup,

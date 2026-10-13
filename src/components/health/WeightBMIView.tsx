@@ -17,6 +17,7 @@ import {
 import { WeightProfile, WeightRecord } from '../../types/planner';
 import {
   calculateBMI,
+  computeWeightMetrics,
   convertKgToLb,
   convertLbToKg,
   convertCmToInches,
@@ -46,32 +47,43 @@ export const WeightBMIView: React.FC = () => {
 
   // Records for this profile sorted newest first
   const profileRecords = useMemo(() => {
+    if (!selectedProfile) return [];
     return weightRecords
-      .filter((r) => r.profileId === selectedProfile?.id)
+      .filter((r) => r.profileId === selectedProfile.id)
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [weightRecords, selectedProfile]);
 
-  const latestRecord = profileRecords.length > 0 ? profileRecords[0] : null;
-  const previousRecord = profileRecords.length > 1 ? profileRecords[1] : null;
+  const weightMetrics = useMemo(
+    () => computeWeightMetrics(profileRecords, selectedProfile),
+    [profileRecords, selectedProfile]
+  );
+  const {
+    latestRecord,
+    previousRecord,
+    latestWeightKg,
+    previousWeightKg,
+    weightChangeKg,
+    currentHeightCm,
+    currentBmi,
+  } = weightMetrics;
 
-  const latestWeightKg = latestRecord ? latestRecord.weightKg : 72.0;
-  const previousWeightKg = previousRecord ? previousRecord.weightKg : 72.4;
-  const weightChangeKg = Math.round((latestWeightKg - previousWeightKg) * 10) / 10;
-
-  // BMI calculated via CDC guidance: kg / (height_m ^ 2)
-  const currentHeightCm = latestRecord?.recordedHeightCm || selectedProfile?.heightCm || 180;
-  const currentBmi = calculateBMI(latestWeightKg, currentHeightCm);
-
-  // Canonical draft weight (in physical kg). Defaults to latest recorded weight or standard 72.0 kg
-  const [canonicalDraftKg, setCanonicalDraftKg] = useState<number | null>(() => 72.0);
+  // Canonical draft weight (in physical kg). Defaults to latest recorded weight if present, otherwise null
+  const [canonicalDraftKg, setCanonicalDraftKg] = useState<number | null>(() =>
+    latestWeightKg !== null ? latestWeightKg : null
+  );
 
   // Text draft input displayed to the user
   const [inputWeightStr, setInputWeightStr] = useState<string>(() => {
+    if (latestWeightKg === null) return '';
     const initialUnit = settings.weightUnit || 'kg';
-    return initialUnit === 'lb' ? convertKgToLb(72.0).toFixed(1) : '72.0';
+    return initialUnit === 'lb'
+      ? convertKgToLb(latestWeightKg).toFixed(1)
+      : latestWeightKg.toFixed(1);
   });
 
-  const [inputHeight, setInputHeight] = useState<number>(180);
+  const [inputHeight, setInputHeight] = useState<number>(
+    () => currentHeightCm || selectedProfile?.heightCm || 175
+  );
   const [inputDate, setInputDate] = useState<string>(currentDate);
   const [inputTime, setInputTime] = useState<string>('07:00');
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
@@ -155,7 +167,8 @@ export const WeightBMIView: React.FC = () => {
 
   // Prefill draft from the profile's latest recorded measurement
   const handlePrefillLatest = () => {
-    const baseKg = latestRecord ? latestRecord.weightKg : 72.0;
+    if (!latestRecord) return;
+    const baseKg = latestRecord.weightKg;
     setCanonicalDraftKg(baseKg);
     if (unitMode === 'kg') {
       setInputWeightStr(baseKg.toFixed(1));
@@ -166,13 +179,23 @@ export const WeightBMIView: React.FC = () => {
 
   // Display conversions for current metrics
   const displayedLatestWeight =
-    unitMode === 'kg' ? latestWeightKg : convertKgToLb(latestWeightKg);
+    latestWeightKg !== null
+      ? unitMode === 'kg'
+        ? latestWeightKg
+        : convertKgToLb(latestWeightKg)
+      : null;
   const displayedPreviousWeight =
-    unitMode === 'kg' ? previousWeightKg : convertKgToLb(previousWeightKg);
+    previousWeightKg !== null
+      ? unitMode === 'kg'
+        ? previousWeightKg
+        : convertKgToLb(previousWeightKg)
+      : null;
   const displayedWeightChange =
-    unitMode === 'kg'
-      ? weightChangeKg
-      : Math.round((displayedLatestWeight - displayedPreviousWeight) * 10) / 10;
+    weightChangeKg !== null && displayedLatestWeight !== null && displayedPreviousWeight !== null
+      ? unitMode === 'kg'
+        ? weightChangeKg
+        : Math.round((displayedLatestWeight - displayedPreviousWeight) * 10) / 10
+      : null;
 
   // Add Profile Modal state
   const [isAddProfileModalOpen, setIsAddProfileModalOpen] = useState(false);
@@ -233,8 +256,8 @@ export const WeightBMIView: React.FC = () => {
           <h2 className="text-xl font-bold text-[#071A3A] dark:text-[#EDF4FF]">
             Weight & BMI
           </h2>
-          <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
-            Track your weight, monitor progress, and automatically convert draft measurements between kg and lb.
+          <p className="text-xs sm:text-sm text-[#526782] dark:text-[#A8B8CE]">
+            Log your weight readings, follow your progress over time, and switch between kg and lb anytime.
           </p>
         </div>
 
@@ -266,6 +289,38 @@ export const WeightBMIView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* First-Use Empty State Hero CTA */}
+      {profileRecords.length === 0 && (
+        <div
+          data-testid="weight-empty-hero"
+          className="bg-teal-50/70 dark:bg-teal-950/30 rounded-2xl p-6 border border-teal-200 dark:border-teal-800/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
+        >
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+              Log your first weight reading
+            </h3>
+            <p className="text-xs sm:text-sm text-[#526782] dark:text-[#A8B8CE] max-w-xl">
+              Record a starting measurement{selectedProfile ? ` for ${selectedProfile.name}` : ''} to unlock your trend chart and progress history.
+            </p>
+          </div>
+          <button
+            type="button"
+            data-testid="weight-empty-cta"
+            onClick={() => {
+              const input = document.getElementById('weight-log-amount');
+              if (input) {
+                input.focus();
+                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            }}
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Log first reading</span>
+          </button>
+        </div>
+      )}
 
       {/* Profiles Bar (Up to 8 named profiles) */}
       <div className="flex flex-wrap items-center gap-2">
@@ -312,39 +367,55 @@ export const WeightBMIView: React.FC = () => {
         <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
           <div className="text-xs text-[#526782]">Current weight</div>
           <div className="text-3xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] mt-1">
-            {displayedLatestWeight} {unitMode}
+            {displayedLatestWeight !== null ? `${displayedLatestWeight} ${unitMode}` : 'No readings'}
           </div>
-          <div
-            className={`text-xs font-semibold flex items-center gap-1 mt-1.5 ${
-              displayedWeightChange < 0
-                ? 'text-emerald-600'
-                : displayedWeightChange > 0
-                ? 'text-amber-600'
-                : 'text-slate-500'
-            }`}
-          >
-            {displayedWeightChange < 0 ? (
-              <TrendingDown className="w-3.5 h-3.5" />
-            ) : displayedWeightChange > 0 ? (
-              <TrendingUp className="w-3.5 h-3.5" />
-            ) : (
-              <Minus className="w-3.5 h-3.5" />
-            )}
-            <span>
-              {displayedWeightChange > 0 ? `+${displayedWeightChange}` : displayedWeightChange}{' '}
-              {unitMode} since {previousRecord?.date || '28 Sep 2026'}
-            </span>
-          </div>
+          {displayedWeightChange !== null && previousRecord ? (
+            <div
+              className={`text-xs font-semibold flex items-center gap-1 mt-1.5 ${
+                displayedWeightChange < 0
+                  ? 'text-emerald-600'
+                  : displayedWeightChange > 0
+                  ? 'text-amber-600'
+                  : 'text-slate-500'
+              }`}
+            >
+              {displayedWeightChange < 0 ? (
+                <TrendingDown className="w-3.5 h-3.5" />
+              ) : displayedWeightChange > 0 ? (
+                <TrendingUp className="w-3.5 h-3.5" />
+              ) : (
+                <Minus className="w-3.5 h-3.5" />
+              )}
+              <span>
+                {displayedWeightChange > 0 ? `+${displayedWeightChange}` : displayedWeightChange}{' '}
+                {unitMode} since {previousRecord.date}
+              </span>
+            </div>
+          ) : latestRecord ? (
+            <div className="text-xs font-medium text-[#526782] mt-1.5">
+              First reading logged on {latestRecord.date}
+            </div>
+          ) : (
+            <div className="text-xs font-medium text-[#526782] mt-1.5">
+              Log your first reading below
+            </div>
+          )}
         </div>
 
         {/* Height */}
         <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
           <div className="text-xs text-[#526782]">Height</div>
           <div className="text-3xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] mt-1">
-            {currentHeightCm} cm
-            <span className="text-xs font-normal text-[#526782] ml-1.5">
-              ({convertCmToInches(currentHeightCm)} in)
-            </span>
+            {currentHeightCm !== null ? (
+              <>
+                {currentHeightCm} cm
+                <span className="text-xs font-normal text-[#526782] ml-1.5">
+                  ({convertCmToInches(currentHeightCm)} in)
+                </span>
+              </>
+            ) : (
+              'Not set'
+            )}
           </div>
           <div className="text-[11px] text-[#526782] mt-1.5">
             Saved with your measurements
@@ -363,10 +434,10 @@ export const WeightBMIView: React.FC = () => {
             </div>
           </div>
           <div className="text-3xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] mt-1">
-            {currentBmi || '–'}
+            {currentBmi !== null ? currentBmi : '–'}
           </div>
           <div className="text-[11px] text-[#526782] mt-1.5">
-            {latestRecord?.date || currentDate}
+            {latestRecord ? latestRecord.date : 'Requires weight & height'}
           </div>
         </div>
       </div>
@@ -412,7 +483,7 @@ export const WeightBMIView: React.FC = () => {
             </div>
           ) : (
             <div className="h-44 flex items-center justify-center text-xs text-[#526782] border border-dashed rounded-xl">
-              No measurements logged yet for {selectedProfile?.name}. Record your first entry below.
+              No measurements logged yet{selectedProfile ? ` for ${selectedProfile.name}` : ''}. Record your first entry below.
             </div>
           )}
 
@@ -421,10 +492,40 @@ export const WeightBMIView: React.FC = () => {
             <h4 className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF] uppercase tracking-wider mb-2">
               Recent measurements
             </h4>
-            <div className="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-mono">
+            <div
+              data-testid="weight-accessible-chart-table"
+              className="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-mono"
+            >
+              <table className="sr-only">
+                <caption>Recent weight measurements and BMI history</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Time</th>
+                    <th scope="col">Weight ({unitMode})</th>
+                    <th scope="col">BMI</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {profileRecords.map((r) => {
+                    const displayedVal =
+                      unitMode === 'kg' ? r.weightKg : convertKgToLb(r.weightKg);
+                    const recHeight = r.recordedHeightCm || currentHeightCm || 175;
+                    return (
+                      <tr key={r.id}>
+                        <td>{r.date}</td>
+                        <td>{r.time || '07:00'}</td>
+                        <td>{displayedVal}</td>
+                        <td>{calculateBMI(r.weightKg, recHeight)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
               {profileRecords.map((r) => {
                 const displayedVal =
                   unitMode === 'kg' ? r.weightKg : convertKgToLb(r.weightKg);
+                const recHeight = r.recordedHeightCm || currentHeightCm || 175;
                 return (
                   <div key={r.id} className="py-2.5 flex items-center justify-between">
                     <div>
@@ -440,7 +541,7 @@ export const WeightBMIView: React.FC = () => {
                         {displayedVal} {unitMode}
                       </span>
                       <span className="text-[#526782]">
-                        BMI {calculateBMI(r.weightKg, r.recordedHeightCm || currentHeightCm)}
+                        BMI {calculateBMI(r.weightKg, recHeight)}
                       </span>
                       <button
                         type="button"
@@ -466,16 +567,18 @@ export const WeightBMIView: React.FC = () => {
               Add measurement
             </h3>
             {/* Quick Prefill Button */}
-            <button
-              type="button"
-              onClick={handlePrefillLatest}
-              className="text-[11px] text-[#087F83] dark:text-[#38D0C5] hover:underline flex items-center gap-1 cursor-pointer"
-              title="Reset draft to latest measurement"
-              aria-label={`Reset draft to latest measurement (${displayedLatestWeight} ${unitMode})`}
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>Use latest ({displayedLatestWeight} {unitMode})</span>
-            </button>
+            {displayedLatestWeight !== null && (
+              <button
+                type="button"
+                onClick={handlePrefillLatest}
+                className="text-[11px] text-[#087F83] dark:text-[#38D0C5] hover:underline flex items-center gap-1 cursor-pointer"
+                title="Reset draft to latest measurement"
+                aria-label={`Reset draft to latest measurement (${displayedLatestWeight} ${unitMode})`}
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Use latest ({displayedLatestWeight} {unitMode})</span>
+              </button>
+            )}
           </div>
 
           {saveSuccessMessage && (
@@ -571,18 +674,31 @@ export const WeightBMIView: React.FC = () => {
                   )}
                 </div>
               </div>
-              <div className="mt-1 flex items-center justify-between text-[10px] text-[#526782]">
-                <span>
-                  {canonicalDraftKg !== null
-                    ? `Canonical: ${canonicalDraftKg.toFixed(1)} kg (${convertKgToLb(canonicalDraftKg).toFixed(1)} lb)`
-                    : 'Clear draft explicitly requires re-entry'}
-                </span>
-                {canonicalDraftKg !== null && (
-                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                    Auto-converts on unit change
-                  </span>
-                )}
-              </div>
+              <details
+                data-testid="weight-advanced-details"
+                className="mt-2 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/40 px-3 py-2 text-[11px]"
+              >
+                <summary className="font-semibold text-[#526782] dark:text-[#A8B8CE] cursor-pointer select-none">
+                  Advanced details: Canonical unit &amp; BMI conversion
+                </summary>
+                <div className="mt-1.5 space-y-1 text-[10px] text-[#526782] dark:text-[#A8B8CE]">
+                  <div className="flex items-center justify-between">
+                    <span>
+                      {canonicalDraftKg !== null
+                        ? `Canonical: ${canonicalDraftKg.toFixed(1)} kg (${convertKgToLb(canonicalDraftKg).toFixed(1)} lb)`
+                        : 'Clear draft explicitly requires re-entry'}
+                    </span>
+                    {canonicalDraftKg !== null && (
+                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                        Auto-converts on unit change
+                      </span>
+                    )}
+                  </div>
+                  <p>
+                    Height is stored with each reading to compute BMI (kg/m²) accurately across unit switches.
+                  </p>
+                </div>
+              </details>
             </div>
 
             <div>
@@ -600,9 +716,6 @@ export const WeightBMIView: React.FC = () => {
                 onChange={(e) => setInputHeight(parseInt(e.target.value) || 0)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-mono"
               />
-              <span className="text-[10px] text-[#526782] mt-0.5 block">
-                Height is saved with each measurement for accurate BMI calculation.
-              </span>
             </div>
 
             <div className="grid grid-cols-2 gap-3">

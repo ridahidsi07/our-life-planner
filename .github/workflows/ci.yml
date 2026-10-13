@@ -1,0 +1,43 @@
+name: CI / Automated Verification & Quality Gate
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify:
+    name: Verify Locked Install, Build & Regression Suites
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Verify Reproducible Locked Dependencies (npm ci)
+        run: npm ci
+
+      - name: Scan Repository for Secrets
+        run: node scripts/scan-secrets.mjs
+
+      - name: Run Dependency Vulnerability Audit
+        run: npm audit --audit-level=high
+
+      - name: Run TypeScript Type Checks
+        run: npm run lint
+
+      - name: Build Production Client & Standalone Bundle
+        run: npm run build
+
+      - name: Package Delivery Bundle & Artifacts
+        run: npm run package
+
+      - name: Run Complete Test Suite
+        run: npm run test:all

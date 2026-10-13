@@ -217,32 +217,33 @@ export const BackupRestoreModal: React.FC = () => {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF] uppercase tracking-wider">
-                Restore from backup
+                Restore from backup file
               </h4>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsPasteMode(!isPasteMode);
-                  clearFeedback();
-                  setRestorePreview(null);
-                }}
-                className="text-xs text-[#087F83] dark:text-[#38D0C5] hover:underline font-medium cursor-pointer"
-              >
-                {isPasteMode ? 'Switch to file upload' : 'Paste JSON text instead'}
-              </button>
             </div>
 
-            {!isPasteMode ? (
-              <input
-                type="file"
-                accept=".json"
-                aria-label="Select backup JSON file to restore"
-                onChange={handleFileSelect}
-                className="block w-full text-xs text-[#526782] dark:text-[#A8B8CE] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-teal-50 dark:file:bg-teal-950/60 file:text-[#087F83] dark:file:text-[#38D0C5] hover:file:bg-teal-100 cursor-pointer"
-              />
-            ) : (
-              <div className="space-y-2">
+            <input
+              type="file"
+              accept=".json"
+              aria-label="Select backup JSON file to restore"
+              onChange={handleFileSelect}
+              className="block w-full text-xs text-[#526782] dark:text-[#A8B8CE] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-teal-50 dark:file:bg-teal-950/60 file:text-[#087F83] dark:file:text-[#38D0C5] hover:file:bg-teal-100 cursor-pointer"
+            />
+
+            <details
+              data-testid="backup-advanced-details"
+              open={isPasteMode}
+              onToggle={(e) => setIsPasteMode((e.currentTarget as HTMLDetailsElement).open)}
+              className="rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/40 px-3.5 py-2.5 text-xs"
+            >
+              <summary className="font-semibold text-[#526782] dark:text-[#A8B8CE] cursor-pointer select-none">
+                Advanced details: Paste raw backup JSON or inspect schema
+              </summary>
+              <div className="mt-2.5 space-y-2">
+                <p className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
+                  Paste a complete version <code className="font-mono">1.0.0</code> JSON backup below to validate all 19 collection arrays before restoring:
+                </p>
                 <textarea
+                  aria-label="Paste backup JSON content"
                   value={pastedJson}
                   onChange={(e) => setPastedJson(e.target.value)}
                   placeholder="Paste backup JSON content here (must be a complete version '1.0.0' backup)..."
@@ -257,7 +258,7 @@ export const BackupRestoreModal: React.FC = () => {
                   Validate and preview backup
                 </button>
               </div>
-            )}
+            </details>
 
             {errorMessage && (
               <div

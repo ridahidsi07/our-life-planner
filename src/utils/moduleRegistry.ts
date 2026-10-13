@@ -134,12 +134,18 @@ export const MODULE_REGISTRY: PlannerModuleDefinition[] = [
 
 export const DEFAULT_ENABLED_MODULES: CanonicalModuleId[] = MODULE_REGISTRY.map((m) => m.id);
 
-export const DEFAULT_PINNED_MODULES: CanonicalModuleId[] = [
+/**
+ * Focused starter set of core planning modules for first-time setup (LP-20).
+ */
+export const STARTER_ENABLED_MODULES: CanonicalModuleId[] = [
   'today',
   'tasks',
-  'routines',
   'calendar',
+  'routines',
+  'inbox',
 ];
+
+export const DEFAULT_PINNED_MODULES: CanonicalModuleId[] = [];
 
 /**
  * Single source of truth for all 15 individual tool views and their parent module.

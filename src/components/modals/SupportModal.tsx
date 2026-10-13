@@ -25,6 +25,7 @@ import {
   getConfiguredSupportEndpoint,
   submitSupportRequest,
 } from '../../utils/supportDelivery';
+import { APP_VERSION } from '../../utils/releaseInfo';
 
 export const SupportModal: React.FC = () => {
   const { activeModal, setActiveModal, settings } = usePlanner();
@@ -420,7 +421,7 @@ export const SupportModal: React.FC = () => {
               <span>Diagnostic Information</span>
             </div>
             <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] font-mono">
-              Version 1.0.0 · Edition: {settings.edition} · Timezone: {settings.timeZone}
+              Version {APP_VERSION} · Edition: {settings.edition} · Timezone: {settings.timeZone}
             </div>
           </div>
 

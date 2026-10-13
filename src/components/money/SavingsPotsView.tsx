@@ -13,6 +13,7 @@ import {
   Edit2,
   Trash2,
   Wallet,
+  AlertCircle,
 } from 'lucide-react';
 import { SavingsPot } from '../../types/planner';
 
@@ -87,9 +88,19 @@ export const SavingsPotsView: React.FC = () => {
     return { totalDeposits, currentBalance, remaining, progress };
   }, [selectedPot]);
 
+  const [potNameError, setPotNameError] = useState('');
+
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!potName.trim() || potTargetAmt <= 0) return;
+    if (!potName.trim()) {
+      setPotNameError('Please enter a pot name.');
+      return;
+    }
+    if (potTargetAmt <= 0) {
+      setPotNameError('Target amount must be greater than zero.');
+      return;
+    }
+    setPotNameError('');
     addSavingsPot({
       name: potName.trim(),
       targetAmount: potTargetAmt,
@@ -130,6 +141,32 @@ export const SavingsPotsView: React.FC = () => {
         </button>
       </div>
 
+      {/* First-Use Empty State Hero CTA */}
+      {savingsPots.length === 0 && (
+        <div
+          data-testid="savings-empty-hero"
+          className="bg-teal-50/70 dark:bg-teal-950/30 rounded-2xl p-6 border border-teal-200 dark:border-teal-800/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
+        >
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+              Create your first savings pot
+            </h3>
+            <p className="text-xs sm:text-sm text-[#526782] dark:text-[#A8B8CE] max-w-xl">
+              Set a target amount and target date for an emergency fund, holiday, or upcoming purchase.
+            </p>
+          </div>
+          <button
+            type="button"
+            data-testid="savings-empty-cta"
+            onClick={() => setIsAddPotModalOpen(true)}
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Create first savings pot</span>
+          </button>
+        </div>
+      )}
+
       {/* Top Metric Cards Row (Board 11) */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Total saved */}
@@ -139,7 +176,11 @@ export const SavingsPotsView: React.FC = () => {
             {currencySymbol}{combinedMetrics.totalSaved.toFixed(0)}
           </div>
           <div className="text-xs font-mono text-[#526782] mt-1">
-            of {currencySymbol}{combinedMetrics.totalTarget.toFixed(0)} target
+            {savingsPots.length === 0 ? (
+              <span className="text-slate-400 dark:text-slate-500">No savings pots configured yet</span>
+            ) : (
+              `of ${currencySymbol}${combinedMetrics.totalTarget.toFixed(0)} target`
+            )}
           </div>
         </div>
 
@@ -499,7 +540,18 @@ export const SavingsPotsView: React.FC = () => {
         title="Create savings pot"
         subtitle="Set a target and track your savings"
       >
-        <form onSubmit={handleCreatePot} className="space-y-4">
+        <form onSubmit={handleCreatePot} noValidate className="space-y-4">
+          {potNameError && (
+            <div
+              role="alert"
+              data-testid="savings-pot-error"
+              className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 text-xs flex items-center gap-2"
+            >
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{potNameError}</span>
+            </div>
+          )}
+
           <div>
             <label
               htmlFor="savings-pot-name"
@@ -511,10 +563,14 @@ export const SavingsPotsView: React.FC = () => {
               id="savings-pot-name"
               type="text"
               required
+              aria-invalid={Boolean(potNameError)}
               value={potName}
-              onChange={(e) => setPotName(e.target.value)}
+              onChange={(e) => {
+                setPotName(e.target.value);
+                if (potNameError && e.target.value.trim()) setPotNameError('');
+              }}
               placeholder="e.g. Emergency fund, Holiday"
-              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs"
+              className={`w-full px-3 py-2 rounded-xl border ${potNameError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-[#E2E8F0] dark:border-[#1E2D4A]'} bg-white dark:bg-[#152238] text-xs`}
             />
           </div>
 

@@ -109,14 +109,14 @@ export const FocusModal: React.FC = () => {
         aria-modal="true"
         aria-labelledby="focus-title"
         tabIndex={-1}
-        className="bg-white dark:bg-[#152238] rounded-3xl max-w-xl w-full p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl relative z-10 flex flex-col items-center text-center outline-none"
+        className="bg-white dark:bg-[#152238] rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl relative z-10 flex flex-col items-center text-center outline-none"
       >
         {/* Close Button */}
         <button
           type="button"
           onClick={() => setActiveModal(null)}
-          aria-label="Close focus view"
-          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          aria-label="Close Focus Mode"
+          className="absolute top-4 right-4 min-w-[44px] min-h-[44px] p-2.5 rounded-xl flex items-center justify-center text-slate-500 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -124,7 +124,7 @@ export const FocusModal: React.FC = () => {
         {/* Header Tag */}
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold mb-4">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Distraction-Free Focus View</span>
+          <span>Focus Mode</span>
         </div>
 
         <h2 id="focus-title" className="text-xl md:text-2xl font-bold text-[#071A3A] dark:text-[#EDF4FF] mb-1">
@@ -138,33 +138,41 @@ export const FocusModal: React.FC = () => {
 
         {/* Timer Box */}
         <div className="mb-6 flex flex-col items-center">
-          <div className="text-5xl md:text-6xl font-mono font-bold text-[#071A3A] dark:text-[#EDF4FF] tracking-wider mb-3">
+          <div
+            aria-live="off"
+            aria-label={`Focus timer ${formatTimer(timerSeconds)}`}
+            className="text-5xl md:text-6xl font-mono font-bold text-[#071A3A] dark:text-[#EDF4FF] tracking-wider mb-3"
+          >
             {formatTimer(timerSeconds)}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             <button
+              type="button"
               onClick={() => setIsTimerRunning(!isTimerRunning)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors ${
+              aria-pressed={isTimerRunning}
+              className={`min-h-[44px] px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors ${
                 isTimerRunning
-                  ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 hover:bg-amber-200'
-                  : 'bg-[#087F83] text-white hover:bg-[#06676A]'
+                  ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 hover:text-amber-950 dark:bg-amber-950/90 dark:text-amber-200 dark:border-amber-700/80 dark:hover:bg-amber-900 dark:hover:text-amber-100'
+                  : 'bg-[#087F83] text-white border border-transparent hover:bg-[#06676A] dark:bg-[#38D0C5] dark:text-[#071A3A] dark:hover:bg-[#2BB5AB]'
               }`}
             >
-              {isTimerRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+              {isTimerRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
               <span>{isTimerRunning ? 'Pause' : 'Start Timer'}</span>
             </button>
             <button
+              type="button"
               onClick={handleResetFocusTimer}
               aria-label="Reset timer to 25 minutes"
-              className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              className="min-w-[44px] min-h-[44px] p-2.5 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
             <button
+              type="button"
               onClick={handleStartBreak}
-              className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium flex items-center gap-1.5 cursor-pointer"
+              className="min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <Coffee className="w-3.5 h-3.5" />
+              <Coffee className="w-4 h-4" />
               <span>5m Break</span>
             </button>
           </div>
@@ -224,20 +232,22 @@ export const FocusModal: React.FC = () => {
         {/* Action Controls */}
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
+            type="button"
             onClick={handleCompleteTask}
             disabled={!currentTask}
-            className="w-full py-3 px-4 rounded-xl bg-[#087F83] text-white font-semibold text-sm hover:bg-[#06676A] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-sm"
+            className="w-full min-h-[44px] py-3 px-4 rounded-xl bg-[#087F83] text-white font-semibold text-sm hover:bg-[#06676A] dark:bg-[#38D0C5] dark:text-[#071A3A] dark:hover:bg-[#2BB5AB] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-sm"
           >
             <CheckCircle2 className="w-4 h-4" />
             <span>Done · Next Action</span>
           </button>
 
           <button
+            type="button"
             onClick={handleDeferTomorrow}
             disabled={!currentTask}
-            className="w-full py-3 px-4 rounded-xl border border-slate-300 dark:border-slate-700 text-[#071A3A] dark:text-[#EDF4FF] font-semibold text-sm hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer transition-colors"
+            className="w-full min-h-[44px] py-3 px-4 rounded-xl border border-slate-300 dark:border-slate-700 text-[#071A3A] dark:text-[#EDF4FF] font-semibold text-sm hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer transition-colors"
           >
-            <Calendar className="w-4 h-4 text-slate-500" />
+            <Calendar className="w-4 h-4 text-slate-500 dark:text-slate-400" />
             <span>Reschedule for Tomorrow</span>
           </button>
         </div>
@@ -247,8 +257,9 @@ export const FocusModal: React.FC = () => {
             {pendingTasks.length} task{pendingTasks.length === 1 ? '' : 's'} remaining
           </span>
           <button
+            type="button"
             onClick={() => setActiveModal(null)}
-            className="hover:underline cursor-pointer font-medium"
+            className="min-h-[44px] px-2 flex items-center hover:underline cursor-pointer font-medium text-[#071A3A] dark:text-[#EDF4FF]"
           >
             Return to dashboard
           </button>

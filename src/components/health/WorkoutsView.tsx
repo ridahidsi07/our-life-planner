@@ -387,15 +387,17 @@ export const WorkoutsView: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-[#526782]">
+          <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-[#526782] dark:text-[#A8B8CE]">
             {(['plan', 'log', 'history'] as const).map((t) => (
               <button
                 key={t}
+                type="button"
                 onClick={() => setActiveTab(t)}
-                className={`px-3 py-1.5 rounded-lg capitalize transition-colors cursor-pointer ${
+                aria-pressed={activeTab === t}
+                className={`min-h-[44px] sm:min-h-[36px] px-3.5 py-1.5 rounded-lg capitalize transition-colors cursor-pointer ${
                   activeTab === t
                     ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
-                    : ''
+                    : 'hover:text-[#071A3A] dark:hover:text-[#EDF4FF]'
                 }`}
               >
                 {t}
@@ -404,14 +406,41 @@ export const WorkoutsView: React.FC = () => {
           </div>
 
           <button
+            type="button"
             onClick={() => openCreateModal(selectedDate)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+            className="min-h-[44px] flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>New workout</span>
           </button>
         </div>
       </div>
+
+      {/* First-Use Empty State Hero CTA */}
+      {workouts.length === 0 && (
+        <div
+          data-testid="workouts-empty-hero"
+          className="bg-white dark:bg-[#152238] rounded-2xl p-6 border-2 border-dashed border-[#087F83]/35 dark:border-[#38D0C5]/35 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+        >
+          <div className="space-y-1">
+            <h2 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+              No workouts scheduled yet
+            </h2>
+            <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
+              Create your first workout session to track exercises, sets, reps, and weights across your week.
+            </p>
+          </div>
+          <button
+            type="button"
+            data-testid="workouts-empty-cta"
+            onClick={() => openCreateModal(selectedDate)}
+            className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Create your first workout</span>
+          </button>
+        </div>
+      )}
 
       {/* Week Plan Strip (Dynamically populated from saved records) */}
       <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-3">
@@ -421,7 +450,7 @@ export const WorkoutsView: React.FC = () => {
               Workout week plan
             </h3>
             {weekOffset !== 0 && (
-              <span className="px-2 py-0.5 rounded text-[10px] bg-slate-100 dark:bg-slate-800 text-[#526782] font-semibold">
+              <span className="px-2 py-0.5 rounded text-[10px] bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] font-semibold">
                 {weekOffset > 0 ? `+${weekOffset} wks` : `${weekOffset} wks`}
               </span>
             )}
@@ -431,7 +460,7 @@ export const WorkoutsView: React.FC = () => {
             <button
               type="button"
               onClick={() => setWeekOffset((prev) => prev - 1)}
-              className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
+              className="min-w-[44px] min-h-[44px] sm:min-w-9 sm:min-h-9 p-2 rounded-lg flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
               title="Previous week"
               aria-label="Previous week"
             >
@@ -443,14 +472,14 @@ export const WorkoutsView: React.FC = () => {
                 setWeekOffset(0);
                 setSelectedDate(currentDate);
               }}
-              className="px-2 py-1 rounded-lg text-[11px] font-semibold text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              className="min-h-[44px] sm:min-h-9 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
             >
               This week
             </button>
             <button
               type="button"
               onClick={() => setWeekOffset((prev) => prev + 1)}
-              className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
+              className="min-w-[44px] min-h-[44px] sm:min-w-9 sm:min-h-9 p-2 rounded-lg flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
               title="Next week"
               aria-label="Next week"
             >
@@ -462,14 +491,25 @@ export const WorkoutsView: React.FC = () => {
         <div className="grid grid-cols-7 gap-3 text-center overflow-x-auto min-w-[650px]">
           {weekDays.map((col) => {
             const isColSelected = col.dateStr === selectedDate;
+            const selectDay = () => {
+              setSelectedDate(col.dateStr);
+              if (col.primarySession) {
+                setSelectedSessionId(col.primarySession.id);
+              }
+            };
 
             return (
               <div
                 key={col.dateStr}
-                onClick={() => {
-                  setSelectedDate(col.dateStr);
-                  if (col.primarySession) {
-                    setSelectedSessionId(col.primarySession.id);
+                role="button"
+                tabIndex={0}
+                aria-pressed={isColSelected}
+                aria-label={`${col.dayName} ${col.dayNum}: ${col.title} (${col.status})`}
+                onClick={selectDay}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    selectDay();
                   }
                 }}
                 className={`p-3 rounded-xl border text-xs transition-all cursor-pointer select-none text-left flex flex-col justify-between ${
@@ -482,7 +522,7 @@ export const WorkoutsView: React.FC = () => {
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-[#526782] font-semibold uppercase">
+                    <span className="text-[10px] text-[#526782] dark:text-[#A8B8CE] font-semibold uppercase">
                       {col.dayName} {col.dayNum}
                     </span>
                     {col.isToday && (
@@ -492,7 +532,7 @@ export const WorkoutsView: React.FC = () => {
                   <div className="font-bold text-[#071A3A] dark:text-[#EDF4FF] mt-1.5 truncate">
                     {col.title}
                   </div>
-                  <div className="text-[11px] text-[#526782] truncate">{col.sub}</div>
+                  <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE] truncate">{col.sub}</div>
                 </div>
 
                 <div className="pt-2 flex items-center justify-between">
@@ -509,7 +549,7 @@ export const WorkoutsView: React.FC = () => {
                   </span>
 
                   {col.sessions.length > 1 && (
-                    <span className="text-[10px] font-mono text-[#526782]">
+                    <span className="text-[10px] font-mono text-[#526782] dark:text-[#A8B8CE]">
                       +{col.sessions.length - 1}
                     </span>
                   )}
@@ -568,18 +608,18 @@ export const WorkoutsView: React.FC = () => {
                     <button
                       type="button"
                       onClick={openEditSessionModal}
-                      className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-1.5 cursor-pointer"
+                      className="min-h-[44px] sm:min-h-9 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-1.5 cursor-pointer"
                       title="Edit session details"
                       aria-label={`Edit session details for "${selectedSession.title}"`}
                     >
-                      <Edit2 className="w-3.5 h-3.5 text-[#087F83]" />
+                      <Edit2 className="w-3.5 h-3.5 text-[#087F83] dark:text-[#38D0C5]" />
                       <span>Edit</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setDeletingSessionId(selectedSession.id)}
-                      className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 cursor-pointer"
+                      className="min-w-[44px] min-h-[44px] sm:min-w-9 sm:min-h-9 p-2 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 cursor-pointer"
                       title="Delete workout session"
                       aria-label={`Delete workout session "${selectedSession.title}"`}
                     >
@@ -594,10 +634,10 @@ export const WorkoutsView: React.FC = () => {
                         });
                       }}
                       aria-label={`Mark session "${selectedSession.title}" as ${selectedSession.isCompleted ? 'active' : 'completed'}`}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${
+                      className={`min-h-[44px] sm:min-h-9 px-3.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${
                         selectedSession.isCompleted
-                          ? 'bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE]'
-                          : 'bg-[#087F83] text-white hover:bg-[#06676A]'
+                          ? 'bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-200 dark:hover:bg-slate-700'
+                          : 'bg-[#087F83] text-white hover:bg-[#06676A] dark:bg-[#38D0C5] dark:text-[#071A3A] dark:hover:bg-[#2BB5AB]'
                       }`}
                     >
                       {selectedSession.isCompleted ? 'Mark active' : 'Complete'}
@@ -608,7 +648,7 @@ export const WorkoutsView: React.FC = () => {
                 {/* Muscle groups badges */}
                 {selectedSession.muscleGroups && selectedSession.muscleGroups.length > 0 && (
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-semibold text-[#526782]">Target:</span>
+                    <span className="text-xs font-semibold text-[#526782] dark:text-[#A8B8CE]">Target:</span>
                     {selectedSession.muscleGroups.map((m) => (
                       <span
                         key={m}
@@ -627,6 +667,7 @@ export const WorkoutsView: React.FC = () => {
                   </div>
 
                   <button
+                    type="button"
                     onClick={() => {
                       setNewExName('Goblet squat');
                       setNewExMuscle('Legs');
@@ -637,7 +678,7 @@ export const WorkoutsView: React.FC = () => {
                       setNewExDefaultRest(60);
                       setIsAddExerciseModalOpen(true);
                     }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold cursor-pointer border border-teal-200 dark:border-teal-900/60"
+                    className="min-h-[44px] sm:min-h-9 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900/70 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold cursor-pointer border border-teal-200 dark:border-teal-900/60 transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Add exercise</span>
@@ -647,11 +688,12 @@ export const WorkoutsView: React.FC = () => {
                 {/* Exercises list */}
                 <div className="space-y-4">
                   {!selectedSession.exercises || selectedSession.exercises.length === 0 ? (
-                    <div className="py-8 text-center text-xs text-[#526782] bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                    <div className="py-8 text-center text-xs text-[#526782] dark:text-[#A8B8CE] bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
                       <p>No exercises logged in this session yet.</p>
                       <button
+                        type="button"
                         onClick={() => setIsAddExerciseModalOpen(true)}
-                        className="mt-2 text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline"
+                        className="mt-2 min-h-[44px] px-3 text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline"
                       >
                         + Add first exercise
                       </button>
@@ -671,19 +713,19 @@ export const WorkoutsView: React.FC = () => {
                           key={ex.id}
                           className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 space-y-3"
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
                                 {exIdx + 1}. {ex.name}
                               </span>
-                              <span className="text-[11px] text-[#526782] bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                              <span className="text-[11px] text-[#526782] dark:text-[#A8B8CE] bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
                                 {ex.muscleGroup} · {ex.equipment || 'Equipment'}
                               </span>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5">
                               <span className="text-xs font-mono font-bold text-[#087F83] dark:text-[#38D0C5]">
-                                {exVol} kg ({completedSets}/{ex.sets.length} sets)
+                                {exVol} {settings.weightUnit} ({completedSets}/{ex.sets.length} sets)
                               </span>
 
                               <button
@@ -696,7 +738,7 @@ export const WorkoutsView: React.FC = () => {
                                     equipment: ex.equipment || 'Dumbbell',
                                   })
                                 }
-                                className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
+                                className="min-w-[44px] min-h-[44px] sm:min-w-8 sm:min-h-8 p-1.5 rounded-lg flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 text-[#526782] dark:text-[#A8B8CE] cursor-pointer"
                                 title="Edit exercise"
                                 aria-label={`Edit exercise "${ex.name}"`}
                               >
@@ -706,7 +748,7 @@ export const WorkoutsView: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => deleteExerciseFromSession(selectedSession.id, ex.id)}
-                                className="p-1 rounded hover:bg-rose-100 dark:hover:bg-rose-950 text-rose-500 cursor-pointer"
+                                className="min-w-[44px] min-h-[44px] sm:min-w-8 sm:min-h-8 p-1.5 rounded-lg flex items-center justify-center hover:bg-rose-100 dark:hover:bg-rose-950/60 text-rose-600 dark:text-rose-400 cursor-pointer"
                                 title="Delete exercise"
                                 aria-label={`Delete exercise "${ex.name}"`}
                               >
@@ -719,26 +761,27 @@ export const WorkoutsView: React.FC = () => {
                           <div className="overflow-x-auto">
                             <table className="w-full text-left text-xs border-collapse">
                               <thead>
-                                <tr className="text-[#526782] border-b border-slate-200 dark:border-slate-700 text-[11px]">
-                                  <th className="py-1.5 px-2">Set</th>
-                                  <th className="py-1.5 px-2">Weight (kg)</th>
-                                  <th className="py-1.5 px-2">Reps</th>
-                                  <th className="py-1.5 px-2">Rest (s)</th>
-                                  <th className="py-1.5 px-2 text-center">Done</th>
-                                  <th className="py-1.5 px-2 text-right">Action</th>
+                                <tr className="text-[#526782] dark:text-[#A8B8CE] border-b border-slate-200 dark:border-slate-700 text-[11px]">
+                                  <th scope="col" className="py-1.5 px-2">Set</th>
+                                  <th scope="col" className="py-1.5 px-2">Weight ({settings.weightUnit})</th>
+                                  <th scope="col" className="py-1.5 px-2">Reps</th>
+                                  <th scope="col" className="py-1.5 px-2">Rest (s)</th>
+                                  <th scope="col" className="py-1.5 px-2 text-center">Done</th>
+                                  <th scope="col" className="py-1.5 px-2 text-right">Action</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {ex.sets.map((set) => (
                                   <tr key={set.setNumber} className="hover:bg-white/60 dark:hover:bg-slate-800/60">
-                                    <td className="py-2 px-2 font-mono font-semibold">
+                                    <td className="py-1.5 px-2 font-mono font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
                                       {set.setNumber}
                                     </td>
-                                    <td className="py-2 px-2">
+                                    <td className="py-1.5 px-2">
                                       <input
                                         type="number"
                                         min="0"
                                         step="0.5"
+                                        aria-label={`${ex.name} set ${set.setNumber} weight (${settings.weightUnit})`}
                                         value={set.weightKg ?? 0}
                                         onChange={(e) => {
                                           const val = parseFloat(e.target.value) || 0;
@@ -749,13 +792,14 @@ export const WorkoutsView: React.FC = () => {
                                             { weightKg: val }
                                           );
                                         }}
-                                        className="w-16 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] font-mono text-xs font-semibold"
+                                        className="w-16 min-h-[40px] sm:min-h-8 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-[#071A3A] dark:text-[#EDF4FF] font-mono text-xs font-semibold"
                                       />
                                     </td>
-                                    <td className="py-2 px-2">
+                                    <td className="py-1.5 px-2">
                                       <input
                                         type="number"
                                         min="1"
+                                        aria-label={`${ex.name} set ${set.setNumber} reps`}
                                         value={set.reps}
                                         onChange={(e) => {
                                           const val = parseInt(e.target.value) || 1;
@@ -766,14 +810,15 @@ export const WorkoutsView: React.FC = () => {
                                             { reps: val }
                                           );
                                         }}
-                                        className="w-14 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] font-mono text-xs font-semibold"
+                                        className="w-14 min-h-[40px] sm:min-h-8 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-[#071A3A] dark:text-[#EDF4FF] font-mono text-xs font-semibold"
                                       />
                                     </td>
-                                    <td className="py-2 px-2">
+                                    <td className="py-1.5 px-2">
                                       <input
                                         type="number"
                                         min="0"
                                         step="5"
+                                        aria-label={`${ex.name} set ${set.setNumber} rest (seconds)`}
                                         value={set.restSeconds}
                                         onChange={(e) => {
                                           const val = parseInt(e.target.value) || 0;
@@ -784,30 +829,38 @@ export const WorkoutsView: React.FC = () => {
                                             { restSeconds: val }
                                           );
                                         }}
-                                        className="w-14 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] font-mono text-xs"
+                                        className="w-16 min-h-[40px] sm:min-h-8 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-[#071A3A] dark:text-[#EDF4FF] font-mono text-xs"
                                       />
                                     </td>
-                                    <td className="py-2 px-2 text-center">
+                                    <td className="py-1 px-1 text-center">
                                       <button
+                                        type="button"
+                                        role="checkbox"
+                                        aria-checked={Boolean(set.isCompleted)}
+                                        aria-label={`${ex.name} set ${set.setNumber} completed (${set.weightKg ?? 0} ${settings.weightUnit}, ${set.reps} reps)`}
                                         onClick={() =>
                                           toggleSetCompleted(selectedSession.id, ex.id, set.setNumber)
                                         }
-                                        className={`w-5 h-5 rounded-md inline-flex items-center justify-center cursor-pointer transition-colors ${
-                                          set.isCompleted
-                                            ? 'bg-[#087F83] text-white'
-                                            : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
-                                        }`}
+                                        className="min-w-[44px] min-h-[44px] p-2 rounded-lg inline-flex items-center justify-center cursor-pointer transition-colors hover:bg-teal-50/70 dark:hover:bg-teal-950/40"
                                       >
-                                        {set.isCompleted && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                        <span
+                                          className={`w-5.5 h-5.5 rounded-md inline-flex items-center justify-center transition-colors ${
+                                            set.isCompleted
+                                              ? 'bg-[#087F83] dark:bg-[#38D0C5] text-white dark:text-[#071A3A] border border-[#087F83] dark:border-[#38D0C5]'
+                                              : 'border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-[#152238]'
+                                          }`}
+                                        >
+                                          {set.isCompleted && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                        </span>
                                       </button>
                                     </td>
-                                    <td className="py-2 px-2 text-right">
+                                    <td className="py-1 px-1 text-right">
                                       <button
                                         type="button"
                                         onClick={() =>
                                           deleteSetFromExercise(selectedSession.id, ex.id, set.setNumber)
                                         }
-                                        className="text-slate-400 hover:text-rose-500 cursor-pointer p-0.5"
+                                        className="min-w-[44px] min-h-[44px] sm:min-w-8 sm:min-h-8 rounded-lg inline-flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
                                         title="Delete set"
                                         aria-label={`Delete set ${set.setNumber} for "${ex.name}"`}
                                       >
@@ -823,10 +876,12 @@ export const WorkoutsView: React.FC = () => {
                           {/* Add set button */}
                           <div className="pt-1">
                             <button
+                              type="button"
+                              aria-label={`Add set for ${ex.name}`}
                               onClick={() => addSetToExercise(selectedSession.id, ex.id)}
-                              className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-50 dark:hover:bg-teal-950/40 border border-teal-200 dark:border-teal-900/40 inline-flex items-center gap-1 cursor-pointer"
+                              className="min-h-[44px] sm:min-h-8 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-50 dark:hover:bg-teal-950/50 border border-teal-200 dark:border-teal-900/50 inline-flex items-center gap-1 cursor-pointer transition-colors"
                             >
-                              <Plus className="w-3 h-3" />
+                              <Plus className="w-3.5 h-3.5" />
                               <span>Add set</span>
                             </button>
                           </div>
@@ -837,12 +892,13 @@ export const WorkoutsView: React.FC = () => {
                 </div>
               </>
             ) : (
-              <div className="py-12 text-center text-xs text-[#526782]">
+              <div className="py-12 text-center text-xs text-[#526782] dark:text-[#A8B8CE]">
                 <Dumbbell className="w-8 h-8 mx-auto text-slate-300 mb-2" />
                 <p>No workout session selected or scheduled for this date.</p>
                 <button
+                  type="button"
                   onClick={() => openCreateModal(selectedDate)}
-                  className="mt-3 px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer"
+                  className="mt-3 min-h-[44px] px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer"
                 >
                   Schedule workout on this date
                 </button>
@@ -860,21 +916,21 @@ export const WorkoutsView: React.FC = () => {
 
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                  <div className="text-[11px] text-[#526782]">Sets completed</div>
+                  <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">Sets completed</div>
                   <div className="text-xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] mt-1">
                     {totalSets.completed}/{totalSets.total}
                   </div>
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                  <div className="text-[11px] text-[#526782]">Volume</div>
+                  <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">Volume</div>
                   <div className="text-xl font-bold font-mono text-[#087F83] dark:text-[#38D0C5] mt-1">
                     {sessionVolume.toLocaleString()} {settings.weightUnit}
                   </div>
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                  <div className="text-[11px] text-[#526782]">Duration</div>
+                  <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">Duration</div>
                   <div className="text-xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] mt-1">
                     {selectedSession ? `${selectedSession.durationMinutes} min` : '–'}
                   </div>
@@ -883,15 +939,16 @@ export const WorkoutsView: React.FC = () => {
 
               {selectedSession && (
                 <button
+                  type="button"
                   onClick={() => {
                     updateWorkoutSession(selectedSession.id, {
                       isCompleted: !selectedSession.isCompleted,
                     });
                   }}
-                  className={`w-full py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${
+                  className={`w-full min-h-[44px] py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${
                     selectedSession.isCompleted
-                      ? 'bg-slate-100 dark:bg-slate-800 text-[#526782]'
-                      : 'bg-[#071A3A] dark:bg-[#087F83] text-white hover:bg-black'
+                      ? 'bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-200 dark:hover:bg-slate-700'
+                      : 'bg-[#071A3A] hover:bg-[#0B2552] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A]'
                   }`}
                 >
                   {selectedSession.isCompleted ? 'Session completed ✓' : 'Finish session'}
@@ -909,7 +966,7 @@ export const WorkoutsView: React.FC = () => {
                 <div>
                   <label
                     htmlFor="cardio-calc-duration"
-                    className="block text-[11px] text-[#526782] mb-1"
+                    className="block text-[11px] text-[#526782] dark:text-[#A8B8CE] mb-1"
                   >
                     Duration (min)
                   </label>
@@ -918,14 +975,14 @@ export const WorkoutsView: React.FC = () => {
                     type="number"
                     value={cardioDuration}
                     onChange={(e) => setCardioDuration(parseFloat(e.target.value) || 0)}
-                    className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-mono font-semibold"
+                    className="w-full min-h-[40px] px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-[#071A3A] dark:text-[#EDF4FF] text-xs font-mono font-semibold"
                   />
                 </div>
 
                 <div>
                   <label
                     htmlFor="cardio-calc-distance"
-                    className="block text-[11px] text-[#526782] mb-1"
+                    className="block text-[11px] text-[#526782] dark:text-[#A8B8CE] mb-1"
                   >
                     Distance (km)
                   </label>
@@ -935,20 +992,20 @@ export const WorkoutsView: React.FC = () => {
                     step="0.1"
                     value={cardioDistance}
                     onChange={(e) => setCardioDistance(parseFloat(e.target.value) || 0)}
-                    className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-mono font-semibold"
+                    className="w-full min-h-[40px] px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-[#071A3A] dark:text-[#EDF4FF] text-xs font-mono font-semibold"
                   />
                 </div>
 
                 <div>
                   <span
                     id="cardio-calc-speed-label"
-                    className="block text-[11px] text-[#526782] mb-1"
+                    className="block text-[11px] text-[#526782] dark:text-[#A8B8CE] mb-1"
                   >
                     Speed (km/h)
                   </span>
                   <div
                     aria-labelledby="cardio-calc-speed-label"
-                    className="px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-mono font-bold text-[#087F83]"
+                    className="min-h-[40px] px-2.5 py-1.5 rounded-xl flex items-center bg-slate-50 dark:bg-slate-800 text-xs font-mono font-bold text-[#087F83] dark:text-[#38D0C5]"
                   >
                     {calculatedSpeed ? `${calculatedSpeed} km/h` : '–'}
                   </div>
@@ -958,7 +1015,7 @@ export const WorkoutsView: React.FC = () => {
               <button
                 type="button"
                 onClick={handleComputeSpeed}
-                className="w-full py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-[#526782] hover:bg-slate-50 cursor-pointer"
+                className="w-full min-h-[44px] py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#071A3A] dark:hover:text-[#EDF4FF] transition-colors cursor-pointer"
               >
                 Calculate speed
               </button>
@@ -1063,6 +1120,27 @@ export const WorkoutsView: React.FC = () => {
                 </span>
               </div>
             </div>
+
+            {/* Accessible tabular alternative for trained muscle groups distribution */}
+            <table data-testid="workouts-accessible-chart-table" className="sr-only">
+              <caption>Trained muscle groups and workout distribution</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Muscle Group</th>
+                  <th scope="col">Total Tracked Sessions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Legs</td><td>{workouts.filter((w) => w.muscleGroups?.some((mg) => mg.toLowerCase().includes('leg'))).length}</td></tr>
+                <tr><td>Back</td><td>{workouts.filter((w) => w.muscleGroups?.some((mg) => mg.toLowerCase().includes('back'))).length}</td></tr>
+                <tr><td>Chest</td><td>{workouts.filter((w) => w.muscleGroups?.some((mg) => mg.toLowerCase().includes('chest'))).length}</td></tr>
+                <tr><td>Shoulders</td><td>{workouts.filter((w) => w.muscleGroups?.some((mg) => mg.toLowerCase().includes('shoulder'))).length}</td></tr>
+                <tr><td>Arms</td><td>{workouts.filter((w) => w.muscleGroups?.some((mg) => mg.toLowerCase().includes('arm'))).length}</td></tr>
+                <tr><td>Core / Abs</td><td>{workouts.filter((w) => w.muscleGroups?.some((mg) => mg.toLowerCase().includes('core') || mg.toLowerCase().includes('ab'))).length}</td></tr>
+                <tr><td>Full body</td><td>{workouts.filter((w) => w.muscleGroups?.some((mg) => mg.toLowerCase().includes('full'))).length}</td></tr>
+                <tr><td>Cardio</td><td>{workouts.filter((w) => w.muscleGroups?.some((mg) => mg.toLowerCase().includes('cardio')) || (Boolean(w.cardioMinutes) && w.cardioMinutes! > 0)).length}</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       )}
@@ -1234,7 +1312,7 @@ export const WorkoutsView: React.FC = () => {
                     <div>
                       <label
                         htmlFor={`workout-create-ex-${exIdx}-sets`}
-                        className="text-[#526782] block text-[10px]"
+                        className="text-[#526782] dark:text-[#A8B8CE] block text-[10px]"
                       >
                         Sets
                       </label>
@@ -1243,6 +1321,7 @@ export const WorkoutsView: React.FC = () => {
                         type="number"
                         min="1"
                         max="10"
+                        aria-label={`${ex.name} sets`}
                         value={ex.sets.length}
                         onChange={(e) => {
                           const count = Math.max(1, parseInt(e.target.value) || 1);
@@ -1261,20 +1340,21 @@ export const WorkoutsView: React.FC = () => {
                             )
                           );
                         }}
-                        className="w-full px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-mono"
+                        className="w-full min-h-[36px] px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-[#071A3A] dark:text-[#EDF4FF] font-mono"
                       />
                     </div>
                     <div>
                       <label
                         htmlFor={`workout-create-ex-${exIdx}-weight`}
-                        className="text-[#526782] block text-[10px]"
+                        className="text-[#526782] dark:text-[#A8B8CE] block text-[10px]"
                       >
-                        Weight (kg)
+                        Weight ({settings.weightUnit})
                       </label>
                       <input
                         id={`workout-create-ex-${exIdx}-weight`}
                         type="number"
                         min="0"
+                        aria-label={`${ex.name} weight (${settings.weightUnit})`}
                         value={ex.sets[0]?.weightKg ?? 20}
                         onChange={(e) => {
                           const val = parseFloat(e.target.value) || 0;
@@ -1289,13 +1369,13 @@ export const WorkoutsView: React.FC = () => {
                             )
                           );
                         }}
-                        className="w-full px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-mono"
+                        className="w-full min-h-[36px] px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-[#071A3A] dark:text-[#EDF4FF] font-mono"
                       />
                     </div>
                     <div>
                       <label
                         htmlFor={`workout-create-ex-${exIdx}-reps`}
-                        className="text-[#526782] block text-[10px]"
+                        className="text-[#526782] dark:text-[#A8B8CE] block text-[10px]"
                       >
                         Reps
                       </label>
@@ -1303,6 +1383,7 @@ export const WorkoutsView: React.FC = () => {
                         id={`workout-create-ex-${exIdx}-reps`}
                         type="number"
                         min="1"
+                        aria-label={`${ex.name} reps`}
                         value={ex.sets[0]?.reps ?? 10}
                         onChange={(e) => {
                           const val = parseInt(e.target.value) || 1;
@@ -1317,7 +1398,7 @@ export const WorkoutsView: React.FC = () => {
                             )
                           );
                         }}
-                        className="w-full px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-mono"
+                        className="w-full min-h-[36px] px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-[#071A3A] dark:text-[#EDF4FF] font-mono"
                       />
                     </div>
                   </div>
@@ -1330,13 +1411,13 @@ export const WorkoutsView: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsCreateModalOpen(false)}
-              className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-[#526782] cursor-pointer"
+              className="min-h-[44px] px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer"
+              className="min-h-[44px] px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] dark:bg-[#38D0C5] dark:text-[#071A3A] dark:hover:bg-[#2BB5AB] cursor-pointer"
             >
               Save workout
             </button>

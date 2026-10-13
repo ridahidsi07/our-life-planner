@@ -146,3 +146,101 @@ export function isRoutineScheduledOnDate(routine: RoutineItem, dateStr: string):
 
   return false;
 }
+
+/**
+ * Returns the current YYYY-MM-DD date string in the configured planner IANA timeZone
+ * (falling back to local calendar date if timeZone is omitted or invalid, never raw UTC toISOString).
+ */
+export function getRealTodayDate(timeZone?: string, now: Date = new Date()): string {
+  try {
+    if (timeZone && timeZone.trim()) {
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: timeZone.trim(),
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).formatToParts(now);
+      const y = parts.find((p) => p.type === 'year')?.value;
+      const m = parts.find((p) => p.type === 'month')?.value;
+      const d = parts.find((p) => p.type === 'day')?.value;
+      if (y && m && d) return `${y}-${m}-${d}`;
+    }
+  } catch {
+    // Fallback to local time if timeZone is invalid
+  }
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
+/**
+ * Checks whether a birthday CalendarEvent anchored on `eventDateStr` (YYYY-MM-DD)
+ * occurs on `targetDateStr` (YYYY-MM-DD), repeating yearly on the same month/day
+ * (with Feb 29 birthdays appearing on Feb 28 in non-leap years).
+ */
+export function isBirthdayEventOnDate(
+  eventOrDateStr: string | { date: string; type?: string },
+  targetDateStr: string
+): boolean {
+  if (!eventOrDateStr || !targetDateStr) return false;
+  const eventDateStr =
+    typeof eventOrDateStr === 'string' ? eventOrDateStr : eventOrDateStr.date;
+  if (
+    typeof eventOrDateStr === 'object' &&
+    eventOrDateStr.type &&
+    eventOrDateStr.type !== 'birthday'
+  ) {
+    return eventDateStr === targetDateStr;
+  }
+  if (!eventDateStr) return false;
+  if (eventDateStr === targetDateStr) return true;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(eventDateStr) || !/^\d{4}-\d{2}-\d{2}$/.test(targetDateStr)) {
+    return false;
+  }
+
+  const [eventYear, eventMonth, eventDay] = eventDateStr.split('-').map(Number);
+  const [targetYear, targetMonth, targetDay] = targetDateStr.split('-').map(Number);
+
+  if (targetYear < eventYear) {
+    return false;
+  }
+  if (targetMonth !== eventMonth) {
+    return false;
+  }
+
+  if (eventMonth === 2 && eventDay === 29) {
+    const isTargetLeap = (targetYear % 4 === 0 && targetYear % 100 !== 0) || targetYear % 400 === 0;
+    return targetDay === (isTargetLeap ? 29 : 28);
+  }
+
+  return targetDay === eventDay;
+}
+
+/**
+ * Pure calendar date navigation (day, week, month, or numeric day offset) without local-vs-UTC timezone drift.
+ */
+export function shiftCalendarDate(
+  dateStr: string,
+  modeOrDays: 'day' | 'week' | 'month' | number,
+  delta: number = 1
+): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  if (!y || !m || !d) return dateStr;
+
+  if (typeof modeOrDays === 'number') {
+    const utc = new Date(Date.UTC(y, m - 1, d + modeOrDays));
+    return `${utc.getUTCFullYear()}-${String(utc.getUTCMonth() + 1).padStart(2, '0')}-${String(utc.getUTCDate()).padStart(2, '0')}`;
+  }
+
+  if (modeOrDays === 'month') {
+    const totalMonths = y * 12 + (m - 1) + delta;
+    const nextYear = Math.floor(totalMonths / 12);
+    const nextMonthIdx = ((totalMonths % 12) + 12) % 12;
+    const daysInNextMonth = new Date(Date.UTC(nextYear, nextMonthIdx + 1, 0)).getUTCDate();
+    const clampedDay = Math.min(d, daysInNextMonth);
+    return `${nextYear}-${String(nextMonthIdx + 1).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`;
+  }
+
+  const stepDays = modeOrDays === 'week' ? 7 * delta : delta;
+  const utc = new Date(Date.UTC(y, m - 1, d + stepDays));
+  return `${utc.getUTCFullYear()}-${String(utc.getUTCMonth() + 1).padStart(2, '0')}-${String(utc.getUTCDate()).padStart(2, '0')}`;
+}
+

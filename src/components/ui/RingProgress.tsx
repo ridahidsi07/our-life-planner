@@ -54,7 +54,7 @@ export const RingProgress: React.FC<RingProgressProps> = ({
           strokeDashoffset={offset}
           strokeLinecap="round"
           fill="transparent"
-          className="transition-all duration-500 ease-out"
+          className="progress-ring-stroke"
         />
       </svg>
       {children && (
