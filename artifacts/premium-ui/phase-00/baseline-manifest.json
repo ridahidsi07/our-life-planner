@@ -1,0 +1,51 @@
+{
+  "capturedAt": "2026-10-14T12:42:40.555Z",
+  "phase": "00-baseline",
+  "browser": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+  "appUrl": "http://127.0.0.1:3001/",
+  "serverPort": 3001,
+  "dataFixture": "Demo sample data (all modules active)",
+  "viewports": [
+    {
+      "name": "desktop-wide",
+      "width": 1440,
+      "height": 900,
+      "mobile": false
+    },
+    {
+      "name": "desktop-standard",
+      "width": 1280,
+      "height": 720,
+      "mobile": false
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "height": 844,
+      "mobile": true
+    }
+  ],
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "capturedScreenshots": [
+    "today-1440x900-light.png",
+    "today-1280x720-light.png",
+    "today-390x844-light.png",
+    "today-1440x900-dark.png",
+    "tasks-list-1440x900-light.png",
+    "tasks-insights-1440x900-light.png",
+    "tasks-390x844-light.png",
+    "quick-add-1440x900-light.png",
+    "calendar-1440x900-light.png",
+    "calendar-390x844-light.png",
+    "settings-1440x900-light.png",
+    "settings-390x844-light.png",
+    "routines-1440x900-light.png",
+    "habits-1440x900-light.png",
+    "budget-1440x900-light.png",
+    "meals-1440x900-light.png",
+    "workouts-1440x900-light.png"
+  ]
+}
