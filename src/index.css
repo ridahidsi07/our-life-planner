@@ -5,24 +5,29 @@
 @layer base {
   :root,
   html.light {
-    --canvas: #F3F8FC;
+    --canvas: #F4F6F9;
     --surface: #FFFFFF;
     --surface-elevated: #FFFFFF;
     --surface-subtle: #F8FAFC;
-    --surface-muted: #F1F5F9;
-    --text-primary: #071A3A;
-    --text-secondary: #526782;
-    --text-muted: #64748B;
+    --surface-muted: #EEF2F6;
+    --text-primary: #14233B;
+    --text-secondary: #59677B;
+    --text-muted: #8A99AD;
     --accent: #087F83;
     --accent-hover: #06676A;
     --accent-light: #E0F2F1;
     --accent-subtle: #F0FDFA;
-    --border-color: #E2E8F0;
-    --border-subtle: #E2E8F0;
+    --accent-soft: rgba(8, 127, 131, 0.08);
+    --accent-soft-hover: rgba(8, 127, 131, 0.15);
+    --accent-deep: #071A3A;
+    --border-color: #E2E7EF;
+    --border-subtle: #EBF0F5;
     --border-strong: #CBD5E1;
     --focus-ring: #087F83;
+    --chart-current: #087F83;
+    --chart-previous: #94A3B8;
     --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.05);
-    --shadow-card-hover: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+    --shadow-card-hover: 0 4px 8px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
     --shadow-dropdown: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
     --btn-primary-bg: #087F83;
     --btn-primary-fg: #FFFFFF;
@@ -52,10 +57,15 @@
     --accent-hover: #2BB5AB;
     --accent-light: #163642;
     --accent-subtle: rgba(19, 78, 74, 0.55);
+    --accent-soft: rgba(56, 208, 197, 0.12);
+    --accent-soft-hover: rgba(56, 208, 197, 0.2);
+    --accent-deep: #0D1B3E;
     --border-color: #1E2D4A;
     --border-subtle: #1E2D4A;
     --border-strong: #2D4268;
     --focus-ring: #38D0C5;
+    --chart-current: #38D0C5;
+    --chart-previous: #64748B;
     --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.35);
     --shadow-card-hover: 0 4px 10px 0 rgba(0, 0, 0, 0.45);
     --shadow-dropdown: 0 10px 20px -3px rgba(0, 0, 0, 0.6);
@@ -84,15 +94,15 @@
   html.light body,
   html[data-theme='light'] body,
   :root:not(.dark) body {
-    background-color: #F3F8FC !important;
-    color: #071A3A !important;
+    background-color: var(--canvas) !important;
+    color: var(--text-primary) !important;
   }
 
   html.dark body,
   html[data-theme='dark'] body,
   .dark body {
-    background-color: #0B1220 !important;
-    color: #EDF4FF !important;
+    background-color: var(--canvas) !important;
+    color: var(--text-primary) !important;
   }
 }
 
@@ -159,6 +169,87 @@ textarea:focus-visible,
 .card-interactive:hover {
   border-color: var(--accent);
   box-shadow: var(--shadow-card-hover);
+}
+
+/* Featured Dark Hero / Metric Surface (Frame 003 / Master Brief) */
+.card-featured {
+  background: linear-gradient(145deg, #071A3A 0%, #102B63 100%);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1rem;
+  box-shadow: 0 4px 14px 0 rgba(7, 26, 58, 0.22);
+}
+.dark .card-featured {
+  background: linear-gradient(145deg, #0B1930 0%, #152B4E 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.45);
+}
+
+/* Standardized Metric Card */
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  min-height: 120px;
+  position: relative;
+}
+
+/* Standardized Page Heading Block */
+.page-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.page-title {
+  font-size: 1.625rem;
+  line-height: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+}
+.page-subtitle {
+  font-size: 0.84375rem;
+  color: var(--text-secondary);
+}
+
+/* Standardized Segmented Control */
+.segmented-control {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem;
+  border-radius: 0.75rem;
+  background-color: var(--surface-muted);
+  gap: 0.25rem;
+}
+.segmented-control-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.14s ease-out;
+}
+.segmented-control-item:hover {
+  color: var(--text-primary);
+}
+.segmented-control-item[aria-selected="true"],
+.segmented-control-item.active {
+  background-color: var(--surface);
+  color: var(--accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.dark .segmented-control-item[aria-selected="true"],
+.dark .segmented-control-item.active {
+  background-color: var(--surface-elevated);
+  color: var(--accent);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* 3. Button Foundations */

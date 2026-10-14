@@ -130,9 +130,9 @@ const PlannerAppContent: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-full bg-[#F3F8FC] dark:bg-[#0B1220] text-[#071A3A] dark:text-[#EDF4FF] overflow-hidden">
+    <div className="flex h-screen w-full bg-[var(--canvas)] text-[var(--text-primary)] overflow-hidden">
       {/* Desktop Persistent Sidebar */}
-      <div className="hidden md:block">
+      <div className="hidden md:block shrink-0">
         <Sidebar />
       </div>
 

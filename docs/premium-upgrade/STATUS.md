@@ -7,8 +7,8 @@ This document tracks progress across all phases of the Our Life Planner premium 
 | Phase | State | Evidence / next action |
 |---|---|---|
 | 00 Baseline | **Complete** | Baseline verified (`npm.cmd run verify` passed 25/25), checkpoint `ebb53b5` (tag `baseline-checkpoint-phase00`), 17 screenshots in `artifacts/premium-ui/phase-00/`, `IMPLEMENTATION-PLAN.md` written. |
-| 01 Foundations/shell | **Pending** | Next action: Implement 216-224px grouped navigation, refined persistent top bar, design tokens in `src/index.css`, shared buttons/surfaces. |
-| 02 Today | Pending | Four metric cards, featured dark card, content-led grid, compact overdue alert. |
+| 01 Foundations/shell | **Complete** | Grouped 220px sidebar, persistent 64px header, design tokens, and shared primitives (`PageHeader`, `SegmentedControl`, `MetricCard`) implemented. Verified (`npm.cmd run verify` 25/25 passed), 9 screenshots in `artifacts/premium-ui/phase-01/`. |
+| 02 Today | **Pending** | Next action: Implement Four metric cards (featured dark navy card), content-led grid, compact overdue alert pill/drawer, above-the-fold 1280x720 optimization. |
 | 03 Tasks/Board | Pending | Four-column Board view, drag & drop, status dropdown menu, card information hierarchy. |
 | 04 Insights/charts | Pending | Real-data throughput chart, inspection tooltips, range selector (7D/30D/90D). |
 | 05 Capture/drawers | Pending | Contextual Quick Add, reusable detail drawers, save feedback, undo support. |
@@ -36,27 +36,38 @@ This document tracks progress across all phases of the Our Life Planner premium 
 
 ## Current handoff
 
-- **Last completed phase:** Phase 00 (Baseline, Inspection, Checkpoint, and Plan)
-- **Current phase and completed substeps:** Phase 00 complete.
-  - Confirmed runtime tools and environment (`node`, `npm.cmd`, `git`, Edge CDP).
-  - Established dedicated branch `premium-ui-upgrade` and checkpoint tag `baseline-checkpoint-phase00`.
-  - Audited data safety, backup/restore flows, and standalone offline build mechanics.
-  - Executed full `npm.cmd run verify` suite (25/25 suites passing).
-  - Captured full baseline visual suite (17 images across viewports, themes, and views).
-  - Created `docs/premium-upgrade/IMPLEMENTATION-PLAN.md`.
-- **Next concrete action:** Prompt 01 — Foundations and Shell (`docs/premium-upgrade/prompts/01-foundations.md`).
+- **Last completed phase:** Phase 01 (Design Foundations & Persistent Shell)
+- **Current phase and completed substeps:** Phase 01 complete.
+  - Implemented semantic color tokens (`--canvas`, `--surface`, `--accent-deep`, `--accent-soft`, `--text-primary`, `--border-subtle`, etc.) and typography utility classes in `src/index.css`.
+  - Standardized component styling: `.card-featured`, `.metric-card`, `.page-heading`, `.segmented-control`, and touch target heights (40px desktop, 44px touch).
+  - Refined persistent sidebar (`src/components/layout/Sidebar.tsx`): 220px desktop width, grouped categories ("Plan", "Growth", "Money", "Food", "Health", "System"), left active indicator bar, CSS `::after` badge rendering to preserve text content equality for tests, preserved all navigation/favorite/settings test IDs.
+  - Refined persistent top bar (`src/components/layout/Header.tsx`): 64px height, compact pill search bar with `⌘K` hint, prominent quick add button, honest saving indicator, user avatar, preserved greeting heading for tests.
+  - Built reusable UI primitives: `PageHeader`, `SegmentedControl`, and `MetricCard`.
+  - Verified full test suite (`npm.cmd run verify` passed all 25 suites cleanly).
+  - Built standalone offline file `dist/Our-Life-Planner-Offline.html` (verified `$$typeof` count 30).
+  - Captured 9 visual evidence screenshots in `artifacts/premium-ui/phase-01/`.
+- **Next concrete action:** Prompt 02 — Today Dashboard (`docs/premium-upgrade/prompts/02-today.md`).
 - **Files changed:**
-  - `docs/premium-upgrade/IMPLEMENTATION-PLAN.md` (created)
+  - `src/index.css`
+  - `src/components/layout/Sidebar.tsx`
+  - `src/components/layout/Header.tsx`
+  - `src/App.tsx`
+  - `src/components/ui/PageHeader.tsx` (created)
+  - `src/components/ui/SegmentedControl.tsx` (created)
+  - `src/components/ui/MetricCard.tsx` (created)
+  - `scripts/capture-phase01-foundations.ts` (created)
+  - `artifacts/premium-ui/phase-01/*` (9 screenshots + manifest)
   - `docs/premium-upgrade/STATUS.md` (updated)
-  - `scripts/capture-phase00-baseline.ts` (created)
-  - `artifacts/premium-ui/phase-00/*` (17 screenshots + manifest)
-- **Design decisions and metric definitions:** Documented in `IMPLEMENTATION-PLAN.md` Sections 3, 4, and 5.
-- **New dependencies and offline implications:** None added.
-- **Schema/preferences/session migrations:** None required for Phase 00.
-- **Checks run with results:** `npm.cmd run verify` (exit 0, all 25 suites pass); `capture-phase00-baseline.ts` (exit 0, 17 screenshots captured).
+- **Design decisions and metric definitions:**
+  - Sidebar width set to 220px to give maximum breathing room to main content while maintaining readable labels.
+  - Count badges rendered via CSS `::after` pseudo-element (`after:content-[attr(data-count)]`) to prevent breaking exact textContent matching in tests (`scripts/test-dialog-accessibility.ts`).
+  - Header greeting preserved in `header h1` for test compatibility (`verify-stage4-session-saving.ts`), while styling as an understated contextual label above local view headers.
+- **New dependencies and offline implications:** None added. Zero CDN dependencies. Standalone offline build fully functional.
+- **Schema/preferences/session migrations:** None required for Phase 01.
+- **Checks run with results:** `npm.cmd run verify` (exit 0, all 25 suites pass); `capture-phase01-foundations.ts` (exit 0, 9 screenshots captured).
 - **Checks not run and reasons:** None.
-- **Evidence paths:** `artifacts/premium-ui/phase-00/`, `docs/premium-upgrade/IMPLEMENTATION-PLAN.md`.
-- **Known defects/blockers:** No blockers. Live app runtime UI was strictly preserved without changes during this baseline phase.
+- **Evidence paths:** `artifacts/premium-ui/phase-01/`, `artifacts/premium-ui/phase-01/phase01-manifest.json`.
+- **Known defects/blockers:** None.
 
 ## Module coverage (complete in phase 08)
 
@@ -70,3 +81,11 @@ To be populated during Phase 08.
 3. Identified primary Today composition bottleneck: at 1280x720, the overdue panel (~200px) and week strip crowd out actionable commitments above the fold.
 4. Created baseline branch `premium-ui-upgrade`, checkpoint tag `baseline-checkpoint-phase00`, and detailed architecture plan `IMPLEMENTATION-PLAN.md`.
 5. Ready to execute Phase 01: Foundations & Shell.
+
+### October 14, 2026 — Phase 01 Complete
+1. Implemented Fernly-inspired design tokens in `src/index.css` with semantic variables, clean borders, high-contrast dark navy surfaces (`--accent-deep: #071A3A`), and standardized touch targets.
+2. Refined `Sidebar.tsx` to 220px width with structured group headers, subtle active state indicator, and badge styling that preserves test assertions.
+3. Refined `Header.tsx` to 64px height with search bar pill, quick add button, and status indicator.
+4. Created core reusable UI primitives: `PageHeader`, `SegmentedControl`, and `MetricCard`.
+5. Ran full verification suite: all 25 test suites passed, standalone offline bundle verified.
+6. Captured 9 screenshots across viewports, themes, and interactive states in `artifacts/premium-ui/phase-01/`.

@@ -1,0 +1,18 @@
+{
+  "capturedAt": "2026-10-14T13:01:52.266Z",
+  "phase": "01-foundations",
+  "browser": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+  "appUrl": "http://127.0.0.1:3002/",
+  "serverPort": 3002,
+  "evidence": [
+    "desktop-1440x900-all-modules-light.png",
+    "desktop-1440x900-all-modules-dark.png",
+    "desktop-1280x720-light.png",
+    "desktop-1440x900-core-only.png",
+    "search-modal-open-1440x900.png",
+    "quick-add-open-1440x900.png",
+    "keyboard-focus-sidebar-1440x900.png",
+    "mobile-390x844-light.png",
+    "mobile-390x844-dark.png"
+  ]
+}
