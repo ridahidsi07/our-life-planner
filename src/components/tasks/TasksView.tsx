@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { TaskItem, Priority, TaskStatus } from '../../types/planner';
 import { TasksBoardView } from './TasksBoardView';
+import { TasksInsightsView } from './TasksInsightsView';
 
 export const TasksView: React.FC = () => {
   const {
@@ -1259,200 +1260,13 @@ export const TasksView: React.FC = () => {
         />
       )}
 
-      {/* Insights Tab View (Board 17) */}
+      {/* Insights Tab View (Phase 04 Analytics & Throughput) */}
       {activeTab === 'insights' && (
-        <div className="space-y-6">
-          {/* Top row donuts */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Status Breakdown */}
-            <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
-              <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF] mb-4">
-                Tasks by status
-              </h3>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between items-center py-1">
-                  <span className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-slate-400" />
-                    <span>Not started</span>
-                  </span>
-                  <span className="font-mono font-semibold">{statusCounts.not_started}</span>
-                </div>
-                <div className="flex justify-between items-center py-1">
-                  <span className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                    <span>In progress</span>
-                  </span>
-                  <span className="font-mono font-semibold">{statusCounts.in_progress}</span>
-                </div>
-                <div className="flex justify-between items-center py-1">
-                  <span className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                    <span>On hold</span>
-                  </span>
-                  <span className="font-mono font-semibold">{statusCounts.on_hold}</span>
-                </div>
-                <div className="flex justify-between items-center py-1">
-                  <span className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                    <span>Completed</span>
-                  </span>
-                  <span className="font-mono font-semibold">{statusCounts.completed}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Category Breakdown */}
-            <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
-              <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF] mb-4">
-                Tasks by category
-              </h3>
-              <div className="space-y-2 text-xs">
-                {Object.entries(categoryCounts).map(([cat, count]) => (
-                  <div key={cat} className="flex justify-between items-center py-1">
-                    <span className="text-[#526782] dark:text-[#A8B8CE]">{cat}</span>
-                    <span className="font-mono font-semibold">{count}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Priority Breakdown */}
-            <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
-              <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF] mb-4">
-                Tasks by priority
-              </h3>
-              <div className="space-y-2 text-xs">
-                {Object.entries(priorityCounts).map(([prio, count]) => (
-                  <div key={prio} className="flex justify-between items-center py-1 capitalize">
-                    <span className="text-[#526782] dark:text-[#A8B8CE]">{prio}</span>
-                    <span className="font-mono font-semibold">{count}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Matrix table: Outstanding Priorities by Category */}
-          <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
-            <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF] mb-4">
-              Outstanding priorities by category
-            </h3>
-            <div className="overflow-x-auto">
-              <table
-                data-testid="tasks-accessible-insights-table"
-                className="w-full text-left text-xs border-collapse"
-              >
-                <thead>
-                  <tr className="border-b border-[#E2E8F0] dark:border-[#1E2D4A] text-[#526782]">
-                    <th className="py-2.5 px-3">Category</th>
-                    <th className="py-2.5 px-3 text-center">Urgent</th>
-                    <th className="py-2.5 px-3 text-center">High</th>
-                    <th className="py-2.5 px-3 text-center">Medium</th>
-                    <th className="py-2.5 px-3 text-center">Low</th>
-                    <th className="py-2.5 px-3 text-center">Lowest</th>
-                    <th className="py-2.5 px-3 text-right">Total</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {['Personal', 'Career', 'Health', 'Finances', 'Relationships'].map(
-                    (cat) => {
-                      const openInCat = filteredTasks.filter(
-                        (t) => t.category === cat && t.status !== 'completed'
-                      );
-                      const urgent = openInCat.filter((t) => t.priority === 'urgent').length;
-                      const high = openInCat.filter((t) => t.priority === 'high').length;
-                      const medium = openInCat.filter((t) => t.priority === 'medium').length;
-                      const low = openInCat.filter((t) => t.priority === 'low').length;
-                      const lowest = openInCat.filter((t) => t.priority === 'lowest').length;
-
-                      return (
-                        <tr key={cat}>
-                          <td className="py-2.5 px-3 font-semibold">{cat}</td>
-                          <td className="py-2.5 px-3 text-center font-mono">
-                            {urgent || '–'}
-                          </td>
-                          <td className="py-2.5 px-3 text-center font-mono">
-                            {high || '–'}
-                          </td>
-                          <td className="py-2.5 px-3 text-center font-mono">
-                            {medium || '–'}
-                          </td>
-                          <td className="py-2.5 px-3 text-center font-mono">
-                            {low || '–'}
-                          </td>
-                          <td className="py-2.5 px-3 text-center font-mono">
-                            {lowest || '–'}
-                          </td>
-                          <td className="py-2.5 px-3 text-right font-mono font-bold">
-                            {openInCat.length}
-                          </td>
-                        </tr>
-                      );
-                    }
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Bottom row: Deadlines next 7 days & Overdue tasks */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Deadlines Next 7 Days */}
-            <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
-              <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF] mb-4">
-                Upcoming deadlines (next 7 days)
-              </h3>
-              <div className="flex items-end justify-between h-32 pt-6">
-                {next7DaysCounts.map((d) => (
-                  <div key={d.iso} className="flex flex-col items-center gap-1.5 flex-1">
-                    <span className="text-xs font-mono font-bold text-[#087F83]">
-                      {d.count}
-                    </span>
-                    <div
-                      className="w-5 bg-teal-100 dark:bg-teal-900/60 rounded-t-md transition-all"
-                      style={{ height: `${Math.max(6, d.count * 28)}px` }}
-                    />
-                    <span className="text-[10px] text-[#526782]">{d.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Overdue tasks */}
-            <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
-              <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF] mb-3">
-                Overdue tasks
-              </h3>
-              <div className="space-y-2">
-                {filteredTasks
-                  .filter((t) => t.status !== 'completed' && t.dueDate && t.dueDate < currentDate)
-                  .map((t) => (
-                    <div
-                      key={t.id}
-                      className="flex items-center justify-between p-2.5 rounded-xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/40"
-                    >
-                      <div>
-                        <div className="text-xs font-semibold text-rose-900 dark:text-rose-200">
-                          {t.title}
-                        </div>
-                        <div className="text-[10px] text-rose-600">
-                          Due {t.dueDate}
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => toggleTaskCompletion(t.id)}
-                        className="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-[10px] font-semibold hover:bg-rose-700 cursor-pointer"
-                        aria-label={`Complete overdue task "${t.title}"`}
-                      >
-                        Complete
-                      </button>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        <TasksInsightsView
+          tasks={tasks}
+          currentDate={currentDate}
+          onToggleTaskCompletion={toggleTaskCompletion}
+        />
       )}
 
       {/* Create / Edit Task Contextual Detail Panel */}

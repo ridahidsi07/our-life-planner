@@ -10,8 +10,8 @@ This document tracks progress across all phases of the Our Life Planner premium 
 | 01 Foundations/shell | **Complete** | Grouped 220px sidebar, persistent 64px header, design tokens, and shared primitives (`PageHeader`, `SegmentedControl`, `MetricCard`) implemented. Verified (`npm.cmd run verify` 25/25 passed), 9 screenshots in `artifacts/premium-ui/phase-01/`. |
 | 02 Today | **Complete** | 4-card metric row (Featured Dark Navy `#071A3A` card), compact overdue alert bar with expandable details & reschedule, responsive mobile row, and above-the-fold 1280×720 optimization. Verified (`npm.cmd run verify` 25/25 passed), 10 screenshots in `artifacts/premium-ui/phase-02/`, `phase-02-manifest.json`, `METRICS-DOCUMENTATION.md`. |
 | 03 Tasks/Board | **Complete** | Four-column working board (`not_started`, `in_progress`, `on_hold`, `completed`), HTML5 DnD with placeholder & cancel, keyboard/touch action menu with `aria-live` announcements, completion & reopening timestamp semantics, shared filters & quick pills, responsive 390×844 layout. 18/18 checks passed, 10 screenshots in `artifacts/premium-ui/phase-03/`. |
-| 04 Insights/charts | **Pending** | Next action: Real-data throughput chart, inspection tooltips, range selector (7D/30D/90D), and category completion breakdown. |
-| 05 Capture/drawers | Pending | Contextual Quick Add, reusable detail drawers, save feedback, undo support. |
+| 04 Insights/charts | **Complete** | Interactive SVG Throughput chart with dual-period comparison, inspection crosshair, floating tooltips, keyboard navigation, Category distribution donut with interactive readout, 7D/30D/90D range control, and preserved accessible matrix table. 18/18 checks passed, 8 screenshots in `artifacts/premium-ui/phase-04/`, `METRICS-INSIGHTS-DOCUMENTATION.md`. |
+| 05 Capture/drawers | **Pending** | Next action: Contextual Quick Add, reusable detail drawers, save feedback, undo support. |
 | 06 Calendar | Pending | Informative month cells, synchronized agenda, recurrence/export checks. |
 | 07 Focus | Pending | Shared persistent focus controller, timer card with contour texture. |
 | 08 Themes/all modules | Pending | Accent system (Teal, Ocean, Plum, Ember), Settings reorganization, all-modules verification. |
@@ -24,7 +24,7 @@ This document tracks progress across all phases of the Our Life Planner premium 
 - **Git branch and baseline checkpoint:** `premium-ui-upgrade`, commit `ebb53b5`, git tag `baseline-checkpoint-phase00`
 - **Existing unrelated edits:** None. Git working tree clean after committing baseline upgrade docs.
 - **Runtime/package versions:** Node.js `v24.16.0`, npm `11.13.0`, Git `2.54.0.windows.1`, React `19.0.1`, Vite `8.3.0`, Tailwind `4.3.3`, Lucide React `0.546.0`.
-- **Browser/profile and local URL:** Microsoft Edge (`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`) run with `--headless=new` and isolated temporary profile in OS tmpdir; app served at `http://127.0.0.1:3004/`.
+- **Browser/profile and local URL:** Microsoft Edge (`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`) run with `--headless=new` and isolated temporary profile in OS tmpdir; app served at `http://127.0.0.1:3005/`.
 - **Test data and enabled modules:** Demo sample records with all 15 modules enabled for navigation verification.
 - **Protected delivery outputs / data-backup procedure:** Standalone bundle `dist/Our-Life-Planner-Offline.html` and release package `dist/Our-Life-Planner-v1.0.0-Delivery.zip` verified and protected. User backup export available via Settings > Data & Storage > Export JSON Backup (`Ctrl+B`).
 - **Baseline commands, exit codes and failures:**
@@ -36,29 +36,36 @@ This document tracks progress across all phases of the Our Life Planner premium 
 
 ## Current handoff
 
-- **Last completed phase:** Phase 03 (Tasks Hierarchy & Working Board)
-- **Current phase and completed substeps:** Phase 03 complete.
-  - Implemented 3-way view switcher in `src/components/tasks/TasksView.tsx` (`List | Board | Insights`) preserving legacy `textContent` assertions and URL/tab state.
-  - Created 4-column Board view in `src/components/tasks/TasksBoardView.tsx` mapped directly to stored `TaskStatus`: `not_started`, `in_progress`, `on_hold`, `completed`.
-  - Created scannable task cards in `src/components/tasks/BoardTaskCard.tsx` with primary leading title, quiet metadata badges (category, priority, due date, member initials), and zero fabricated comment counts or progress bars.
-  - Implemented native HTML5 drag-and-drop with elevated card, readable source placeholder (`opacity-40 border-dashed`), highlighted destination dropzone (`ring-2 ring-[#087F83] bg-teal-50/50`), and `Escape` key cancellation.
-  - Implemented accessible status change overflow menu on every card (`...`) for keyboard and touch operations without dragging, with screen-reader live announcements (`aria-live="polite"`).
-  - Enhanced `updateTask` in `src/context/PlannerContext.tsx` to set `completedAt` timestamp when completing, and clear `completedAt` to `undefined` when reopening to `in_progress` or `not_started`.
-  - Added shared quick filter pills (`All`, `My tasks`, `High priority`, `Due this week`) and unified search & filter toolbar across List and Board views.
-  - Implemented mobile (390×844) responsive single-column switcher with column counters and zero horizontal overflow (`390px <= 390px`).
-  - Added dashed empty column dropzone state with "+ Add task" action.
-  - Verified full test suite (`npm.cmd run verify` passed all 25 suites cleanly).
-  - Built standalone offline file `dist/Our-Life-Planner-Offline.html` (verified `$$typeof` count 30).
-  - Captured 10 visual evidence screenshots in `artifacts/premium-ui/phase-03/` and generated `phase-03-manifest.json`.
-- **Next concrete action:** Prompt 04 — Insights & Charts (`docs/premium-upgrade/prompts/04-insights.md`).
+- **Last completed phase:** Phase 04 (Insights & Useful Charts)
+- **Current phase and completed substeps:** Phase 04 complete.
+  - Built pure calculation engine in `src/utils/insightsMetrics.ts` computing clean mathematical boundaries for `7D`, `30D`, and `90D` ranges, period comparison deltas, daily completion velocity, on-time delivery rates, and category distribution.
+  - Built interactive SVG Throughput chart in `src/components/tasks/TasksThroughputChart.tsx`:
+    - Responsive SVG with subtle gradient area fill and solid line for current period, paired with dashed previous-period line.
+    - Hover/touch inspection with dashed crosshair, circular point marker, and dark floating tooltip showing date, tasks completed, and previous period count.
+    - Keyboard accessible with `tabIndex={0}`, `ArrowRight`/`ArrowLeft` step navigation, and `aria-live="polite"` live announcements.
+  - Built interactive SVG Category Donut chart in `src/components/tasks/TasksCategoryDonut.tsx`:
+    - Multi-color segmented ring mapped to the 5 life categories (Personal, Career, Health, Finances, Relationships).
+    - Center readout dynamically updating on hover/focus to display category name, count, and percentage.
+    - Interactive legend with colored badges and percentages.
+  - Implemented 4-metric summary card row:
+    - Tasks completed (with period delta pill vs previous range).
+    - Daily velocity (tasks/day with period comparison).
+    - On-time delivery (% completed on/before due date with period comparison).
+    - Active backlog (open tasks count with urgent/high and overdue breakdown).
+  - Preserved `[data-testid="tasks-accessible-insights-table"]` matrix table (5 categories x 5 priorities + Total) for full accessibility and Stage 5 test compatibility.
+  - Added concise data tracking disclosure notice explaining `completedAt` timestamp semantics.
+  - Extracted and integrated `TasksInsightsView` into `src/components/tasks/TasksView.tsx`.
+  - Verified full test suite (`npm.cmd run verify`, Stage 5, Phase 3, Phase 4 delivery, Buyer rehearsal all pass 100%).
+  - Captured 8 screenshots in `artifacts/premium-ui/phase-04/` and generated `phase-04-manifest.json` + `METRICS-INSIGHTS-DOCUMENTATION.md`.
+- **Next concrete action:** Prompt 05 — Contextual Capture & Shared Drawers (`docs/premium-upgrade/prompts/05-drawers.md`).
 - **Files changed:**
-  - `src/components/tasks/TasksView.tsx`
-  - `src/components/tasks/TasksBoardView.tsx` (created)
-  - `src/components/tasks/BoardTaskCard.tsx` (created)
-  - `src/context/PlannerContext.tsx`
-  - `src/components/ui/PageHeader.tsx`
-  - `scripts/test-phase03-tasks-board.ts` (created)
-  - `artifacts/premium-ui/phase-03/*` (10 screenshots + manifest)
+  - `src/utils/insightsMetrics.ts` (created)
+  - `src/components/tasks/TasksThroughputChart.tsx` (created)
+  - `src/components/tasks/TasksCategoryDonut.tsx` (created)
+  - `src/components/tasks/TasksInsightsView.tsx` (created)
+  - `src/components/tasks/TasksView.tsx` (integrated `TasksInsightsView`)
+  - `scripts/test-phase04-insights.ts` (created)
+  - `artifacts/premium-ui/phase-04/*` (8 screenshots + manifest + metrics documentation)
   - `docs/premium-upgrade/STATUS.md` (updated)
   - `docs/premium-upgrade/ACCEPTANCE.md` (updated)
 - **Design decisions and status definitions:**
@@ -121,6 +128,15 @@ To be populated during Phase 08.
 5. Created an accessible status menu on every card for full keyboard and touch equivalence, complete with `aria-live` announcements.
 6. Enhanced `PlannerContext.tsx` with strict completion timestamp recording (`completedAt`) and clean removal on reopening.
 7. Supported empty column dropzones, quick filters (`All`, `My tasks`, `High priority`, `Due this week`), and responsive mobile tab switcher (390×844).
-8. Verified all tests passed cleanly with zero regressions, and saved 10 screenshots in `artifacts/premium-ui/phase-03/`.
+### October 14, 2026 — Phase 04 Complete
+1. Built pure analytics calculation module in `src/utils/insightsMetrics.ts` supporting `7D`, `30D`, and `90D` range boundaries, prior-period comparison deltas, daily throughput velocity, and category distribution.
+2. Created interactive SVG Throughput chart (`TasksThroughputChart.tsx`) with area gradient, solid current period line, dashed previous period line, floating dark tooltip inspection, vertical dashed crosshair, and keyboard/touch navigation.
+3. Created interactive SVG Category Donut chart (`TasksCategoryDonut.tsx`) with color-coded slices for the 5 life categories, dynamic center readout on hover/focus, and interactive legend.
+4. Created 4-metric summary card row (Tasks completed, Daily velocity, On-time delivery, Active backlog) with delta pills against prior range.
+5. Preserved the full accessible matrix table (`[data-testid="tasks-accessible-insights-table"]`) for Category x Priority breakdown.
+6. Added truthful historical data notice disclosing `completedAt` timestamp semantics.
+7. Verified all checks passed (18/18 checks in `test-phase04-insights.ts`, 45/45 in `verify-stage5-interactions.ts`, 41/41 in `test-phase4-delivery.ts`, 31/31 in `rehearse-buyer-journey.ts`).
+8. Saved 8 screenshots and documentation in `artifacts/premium-ui/phase-04/`.
+
 
 

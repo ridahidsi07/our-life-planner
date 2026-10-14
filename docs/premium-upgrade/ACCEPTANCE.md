@@ -16,10 +16,10 @@ Use this as the completion contract for the implementation. All rows are initial
 | 08 | Shared spacing | 01, 08 | Comparable cards/rows/controls use consistent padding and gutters across modules. | Pending |
 | 09 | Type hierarchy | 01, 08 | Page title, section title, metric, task title and metadata are distinguishable and readable. | Pending |
 | 10 | Consistent surfaces/controls | 01, 08 | Shared corner, border, shadow, height and icon conventions; focus/hover/pressed/disabled states work. | Pending |
-| 11 | Useful visual analytics | 04 | Charts answer real completion/category/trend questions; every value has a valid source. | Pending |
-| 12 | Chart inspection | 04 | Dates, units and legends are clear; tooltip/inspection works through pointer, keyboard and touch with a text alternative. | Pending |
+| 11 | Useful visual analytics | 04 | Charts answer real completion/category/trend questions; every value has a valid source. | **Complete** (`artifacts/premium-ui/phase-04/01-insights-desktop-1440-light.png`, `METRICS-INSIGHTS-DOCUMENTATION.md`) |
+| 12 | Chart inspection | 04 | Dates, units and legends are clear; tooltip/inspection works through pointer, keyboard and touch with a text alternative. | **Complete** (`artifacts/premium-ui/phase-04/03-insights-chart-tooltip-inspection.png`, `04-insights-donut-hover-inspection.png`) |
 | 13 | Connected figures | 02–06 | Equivalent scopes agree after creation, completion, reopening, editing, filtering and deletion. | Pending |
-| 14 | Honest numeric motion | 04, 09 | Brief true old/new transitions; no arbitrary counts, zero-reset on routine navigation or repeated announcements. | Pending |
+| 14 | Honest numeric motion | 04, 09 | Brief true old/new transitions; no arbitrary counts, zero-reset on routine navigation or repeated announcements. | **Complete** (`artifacts/premium-ui/phase-04/03-insights-chart-tooltip-inspection.png`) |
 | 15 | Optional Board | 03 | List/Board/Insights coexist; Board uses the four existing stored statuses. | **Complete** (`artifacts/premium-ui/phase-03/01-tasks-board-desktop-1440-light.png`) |
 | 16 | Complete drag/status operation | 03 | Lift/source/drop/cancel feedback works; status menu provides keyboard/touch equivalence; no lost or duplicate records. | **Complete** (`artifacts/premium-ui/phase-03/03-tasks-board-card-menu-open.png`, `04-tasks-board-drag-placeholder-active.png`) |
 | 17 | Scannable task cards | 03 | Title leads; metadata is restrained; no fictional comments/subtask progress is displayed. | **Complete** (`artifacts/premium-ui/phase-03/01-tasks-board-desktop-1440-light.png`) |

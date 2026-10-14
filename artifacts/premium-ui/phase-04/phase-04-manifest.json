@@ -1,0 +1,16 @@
+{
+  "phase": "04-insights-charts",
+  "timestamp": "2026-10-14T14:12:41.398Z",
+  "screenshots": [
+    "01-insights-desktop-1440-light.png",
+    "02-insights-desktop-1440-dark.png",
+    "03-insights-chart-tooltip-inspection.png",
+    "04-insights-donut-hover-inspection.png",
+    "05-insights-range-7d.png",
+    "06-insights-range-90d.png",
+    "07-insights-mobile-390-light.png",
+    "08-insights-mobile-390-dark.png"
+  ],
+  "assertionsPassed": 18,
+  "assertionsFailed": 0
+}
