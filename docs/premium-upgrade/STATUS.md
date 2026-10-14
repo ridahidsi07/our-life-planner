@@ -8,8 +8,8 @@ This document tracks progress across all phases of the Our Life Planner premium 
 |---|---|---|
 | 00 Baseline | **Complete** | Baseline verified (`npm.cmd run verify` passed 25/25), checkpoint `ebb53b5` (tag `baseline-checkpoint-phase00`), 17 screenshots in `artifacts/premium-ui/phase-00/`, `IMPLEMENTATION-PLAN.md` written. |
 | 01 Foundations/shell | **Complete** | Grouped 220px sidebar, persistent 64px header, design tokens, and shared primitives (`PageHeader`, `SegmentedControl`, `MetricCard`) implemented. Verified (`npm.cmd run verify` 25/25 passed), 9 screenshots in `artifacts/premium-ui/phase-01/`. |
-| 02 Today | **Pending** | Next action: Implement Four metric cards (featured dark navy card), content-led grid, compact overdue alert pill/drawer, above-the-fold 1280x720 optimization. |
-| 03 Tasks/Board | Pending | Four-column Board view, drag & drop, status dropdown menu, card information hierarchy. |
+| 02 Today | **Complete** | 4-card metric row (Featured Dark Navy `#071A3A` card), compact overdue alert bar with expandable details & reschedule, responsive mobile row, and above-the-fold 1280×720 optimization. Verified (`npm.cmd run verify` 25/25 passed), 10 screenshots in `artifacts/premium-ui/phase-02/`, `phase-02-manifest.json`, `METRICS-DOCUMENTATION.md`. |
+| 03 Tasks/Board | **Pending** | Next action: Four-column Board view (`not_started`, `in_progress`, `on_hold`, `completed`), drag & drop, status dropdown menu, and scannable card hierarchy. |
 | 04 Insights/charts | Pending | Real-data throughput chart, inspection tooltips, range selector (7D/30D/90D). |
 | 05 Capture/drawers | Pending | Contextual Quick Add, reusable detail drawers, save feedback, undo support. |
 | 06 Calendar | Pending | Informative month cells, synchronized agenda, recurrence/export checks. |
@@ -36,37 +36,37 @@ This document tracks progress across all phases of the Our Life Planner premium 
 
 ## Current handoff
 
-- **Last completed phase:** Phase 01 (Design Foundations & Persistent Shell)
-- **Current phase and completed substeps:** Phase 01 complete.
-  - Implemented semantic color tokens (`--canvas`, `--surface`, `--accent-deep`, `--accent-soft`, `--text-primary`, `--border-subtle`, etc.) and typography utility classes in `src/index.css`.
-  - Standardized component styling: `.card-featured`, `.metric-card`, `.page-heading`, `.segmented-control`, and touch target heights (40px desktop, 44px touch).
-  - Refined persistent sidebar (`src/components/layout/Sidebar.tsx`): 220px desktop width, grouped categories ("Plan", "Growth", "Money", "Food", "Health", "System"), left active indicator bar, CSS `::after` badge rendering to preserve text content equality for tests, preserved all navigation/favorite/settings test IDs.
-  - Refined persistent top bar (`src/components/layout/Header.tsx`): 64px height, compact pill search bar with `⌘K` hint, prominent quick add button, honest saving indicator, user avatar, preserved greeting heading for tests.
-  - Built reusable UI primitives: `PageHeader`, `SegmentedControl`, and `MetricCard`.
+- **Last completed phase:** Phase 02 (Today Dashboard)
+- **Current phase and completed substeps:** Phase 02 complete.
+  - Implemented 4-card metric row in `src/components/today/TodayDashboard.tsx`: Commitments Today (Featured Navy `#071A3A`), Completed Today (pure white surface), Needs Attention (explicit overdue scope), and Weekly Consistency (% rate across 7 calendar days).
+  - All metrics have explicit formulas, truthful zero/empty states (never NaN), and smooth scroll/modal click actions.
+  - Transformed tall ~180px overdue panel into a compact alert bar with exact `Reschedule Today` primary button, expandable drawer toggle ("Show details" / "Hide details"), and "View all in tasks" link.
+  - Optimized above-the-fold layout at 1280×720: Next Up card and meaningful commitments appear well within the 720px viewport without scrolling.
+  - Optimized mobile 390×844: rendered 4 metrics as a horizontal scrolling strip with compact padding to ensure Next Up action button bottom remains above mobile navigation bar (< 780px).
+  - Added compact Focus Session card in secondary column as bridge to Phase 07.
   - Verified full test suite (`npm.cmd run verify` passed all 25 suites cleanly).
   - Built standalone offline file `dist/Our-Life-Planner-Offline.html` (verified `$$typeof` count 30).
-  - Captured 9 visual evidence screenshots in `artifacts/premium-ui/phase-01/`.
-- **Next concrete action:** Prompt 02 — Today Dashboard (`docs/premium-upgrade/prompts/02-today.md`).
+  - Captured 10 visual evidence screenshots in `artifacts/premium-ui/phase-02/` and generated `phase-02-manifest.json` + `METRICS-DOCUMENTATION.md`.
+- **Next concrete action:** Prompt 03 — Tasks & Board (`docs/premium-upgrade/prompts/03-tasks-board.md`).
 - **Files changed:**
-  - `src/index.css`
-  - `src/components/layout/Sidebar.tsx`
-  - `src/components/layout/Header.tsx`
-  - `src/App.tsx`
-  - `src/components/ui/PageHeader.tsx` (created)
-  - `src/components/ui/SegmentedControl.tsx` (created)
-  - `src/components/ui/MetricCard.tsx` (created)
-  - `scripts/capture-phase01-foundations.ts` (created)
-  - `artifacts/premium-ui/phase-01/*` (9 screenshots + manifest)
+  - `src/components/today/TodayDashboard.tsx`
+  - `src/components/ui/MetricCard.tsx`
+  - `scripts/capture-phase02-today.ts` (created)
+  - `artifacts/premium-ui/phase-02/*` (10 screenshots + manifest + metrics docs)
   - `docs/premium-upgrade/STATUS.md` (updated)
+  - `docs/premium-upgrade/ACCEPTANCE.md` (updated)
 - **Design decisions and metric definitions:**
-  - Sidebar width set to 220px to give maximum breathing room to main content while maintaining readable labels.
-  - Count badges rendered via CSS `::after` pseudo-element (`after:content-[attr(data-count)]`) to prevent breaking exact textContent matching in tests (`scripts/test-dialog-accessibility.ts`).
-  - Header greeting preserved in `header h1` for test compatibility (`verify-stage4-session-saving.ts`), while styling as an understated contextual label above local view headers.
+  - Commitments Today formula: `allTasks.filter(t => isDueToday(t.dueDate) || (isOverdue(t.dueDate) && !isCompleted(t.status))).length + todayHabits.length`.
+  - Completed Today formula: `todayCompletedTasks.length + todayCompletedHabits.length`.
+  - Needs Attention formula: `overdueTasks.length` (scoped strictly to overdue tasks).
+  - Weekly Consistency formula: `Math.round((completedCount / totalScheduledCount) * 100)` over past 7 calendar days (0% if total is 0).
+  - Metric row on mobile rendered as horizontal scrolling strip (`flex sm:grid sm:grid-cols-2 lg:grid-cols-4 overflow-x-auto no-scrollbar gap-2.5 sm:gap-4`) with compact `p-2.5` padding to fit Next Up button within 780px budget.
+  - Anchor ID `today-schedule-section` added to schedule card for smooth jump action from metric cards.
 - **New dependencies and offline implications:** None added. Zero CDN dependencies. Standalone offline build fully functional.
-- **Schema/preferences/session migrations:** None required for Phase 01.
-- **Checks run with results:** `npm.cmd run verify` (exit 0, all 25 suites pass); `capture-phase01-foundations.ts` (exit 0, 9 screenshots captured).
+- **Schema/preferences/session migrations:** None required for Phase 02.
+- **Checks run with results:** `npm.cmd run verify` (exit 0, all 25 suites pass); `capture-phase02-today.ts` (exit 0, 10 screenshots captured).
 - **Checks not run and reasons:** None.
-- **Evidence paths:** `artifacts/premium-ui/phase-01/`, `artifacts/premium-ui/phase-01/phase01-manifest.json`.
+- **Evidence paths:** `artifacts/premium-ui/phase-02/`, `artifacts/premium-ui/phase-02/phase-02-manifest.json`, `artifacts/premium-ui/phase-02/METRICS-DOCUMENTATION.md`.
 - **Known defects/blockers:** None.
 
 ## Module coverage (complete in phase 08)
@@ -89,3 +89,11 @@ To be populated during Phase 08.
 4. Created core reusable UI primitives: `PageHeader`, `SegmentedControl`, and `MetricCard`.
 5. Ran full verification suite: all 25 test suites passed, standalone offline bundle verified.
 6. Captured 9 screenshots across viewports, themes, and interactive states in `artifacts/premium-ui/phase-01/`.
+
+### October 14, 2026 — Phase 02 Complete
+1. Implemented 4-card metric row in `TodayDashboard.tsx` with Featured Dark Navy card (`#071A3A`) for Commitments Today, crisp white surfaces for Completed Today, explicit overdue scope for Needs Attention, and 7-day Weekly Consistency rate.
+2. Replaced the tall ~180px overdue panel with a compact alert bar featuring a primary "Reschedule Today" button, "Show details" / "Hide details" toggle, and "View all in tasks" link.
+3. Solved the 1280×720 above-the-fold limitation: Next Up actionable commitments are now visible without scrolling.
+4. Solved mobile 390×844 fold budget: horizontally scrolling metric row keeps Next Up action button bottom at 769px (< 780px mobile nav bar).
+5. All 25 test suites passed cleanly (`npm.cmd run verify`), and 10 screenshots were captured in `artifacts/premium-ui/phase-02/`.
+

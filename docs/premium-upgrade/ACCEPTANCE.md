@@ -6,12 +6,12 @@ Use this as the completion contract for the implementation. All rows are initial
 
 | ID | Requirement | Phase | Observable completion criterion | State |
 |---|---|---|---|---|
-| 01 | Quieter navigation | 01 | Labeled, grouped navigation is usable with core-only and all modules; pinned/hidden preferences work. | Pending |
-| 02 | Persistent refined header | 01 | Search, creation, saving status and profile remain accessible without duplicated visual emphasis. | Pending |
-| 03 | Useful first screen | 02 | At 1280×720, Today shows its title, key metrics and meaningful task content; attention details can expand. | Pending |
-| 04 | Four Today metrics | 02 | Four useful figures have explicit scopes, valid formulas and working relevant destinations. | Pending |
-| 05 | Featured summary card | 02 | First summary card has deep navy/accent treatment; text/actions remain readable in every supported theme. | Pending |
-| 06 | Content-led grid | 02 | Next Up/schedule gets appropriate space; support cards align; optional modules leave no empty holes. | Pending |
+| 01 | Quieter navigation | 01 | Labeled, grouped navigation is usable with core-only and all modules; pinned/hidden preferences work. | **Complete** (`artifacts/premium-ui/phase-01/`) |
+| 02 | Persistent refined header | 01 | Search, creation, saving status and profile remain accessible without duplicated visual emphasis. | **Complete** (`artifacts/premium-ui/phase-01/`) |
+| 03 | Useful first screen | 02 | At 1280×720, Today shows its title, key metrics and meaningful task content; attention details can expand. | **Complete** (`artifacts/premium-ui/phase-02/today-1280x720-above-the-fold-light.png`) |
+| 04 | Four Today metrics | 02 | Four useful figures have explicit scopes, valid formulas and working relevant destinations. | **Complete** (`artifacts/premium-ui/phase-02/METRICS-DOCUMENTATION.md`) |
+| 05 | Featured summary card | 02 | First summary card has deep navy/accent treatment; text/actions remain readable in every supported theme. | **Complete** (`artifacts/premium-ui/phase-02/today-1440x900-light.png`, `dark.png`) |
+| 06 | Content-led grid | 02 | Next Up/schedule gets appropriate space; support cards align; optional modules leave no empty holes. | **Complete** (`artifacts/premium-ui/phase-02/`) |
 | 07 | Less redundant framing | 01, 08 | Heading/toolbars use hierarchy and spacing; cards are reserved for meaningful content groupings. | Pending |
 | 08 | Shared spacing | 01, 08 | Comparable cards/rows/controls use consistent padding and gutters across modules. | Pending |
 | 09 | Type hierarchy | 01, 08 | Page title, section title, metric, task title and metadata are distinguishable and readable. | Pending |

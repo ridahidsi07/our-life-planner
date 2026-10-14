@@ -1,13 +1,17 @@
 import React, { useMemo, useState } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
 import { RingProgress } from '../ui/RingProgress';
+import { PageHeader } from '../ui/PageHeader';
+import { MetricCard } from '../ui/MetricCard';
 import { getWeekDaysForDate, getCurrencySymbol } from '../../utils/formatters';
 import {
   AlertCircle,
   ArrowRight,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Clock,
   Droplet,
   Flame,
@@ -86,6 +90,7 @@ export const TodayDashboard: React.FC = () => {
   } = usePlanner();
 
   const [isCalmMode, setIsCalmMode] = useState(false);
+  const [isOverdueExpanded, setIsOverdueExpanded] = useState(false);
 
   const currencySymbol = settings.currencySymbol || getCurrencySymbol(settings.currency) || '$';
 
@@ -307,6 +312,52 @@ export const TodayDashboard: React.FC = () => {
       isSelected: d.dateStr === currentDate,
     }));
   }, [currentDate, todayDate, settings.weekStartsOn]);
+
+  // Weekly Consistency rate calculation (7 calendar days)
+  const { weeklyConsistencyRate, weeklyCompletedCount, weeklyTotalCount } = useMemo(() => {
+    const isHabitsEnabled = isModuleOrToolEnabled('habits', settings.enabledTools);
+    const isTasksEnabled = isModuleOrToolEnabled('tasks', settings.enabledTools);
+    const isRoutinesEnabled = isModuleOrToolEnabled('routines', settings.enabledTools);
+
+    let totalDue = 0;
+    let totalDone = 0;
+
+    weekDays.forEach((day) => {
+      const dStr = day.dateStr;
+
+      if (isTasksEnabled) {
+        const dayTasks = tasks.filter((t) => !t.isArchived && t.dueDate === dStr);
+        totalDue += dayTasks.length;
+        totalDone += dayTasks.filter((t) => t.status === 'completed').length;
+      }
+
+      if (isRoutinesEnabled) {
+        const dayRoutines = routines.filter(
+          (r) => isRoutineActiveOnDate(r, dStr) && !r.skippedDates.includes(dStr)
+        );
+        totalDue += dayRoutines.length;
+        totalDone += dayRoutines.filter(
+          (r) => r.completedDates.includes(dStr) || (r.forgivenDates || []).includes(dStr)
+        ).length;
+      }
+
+      if (isHabitsEnabled && habits.length > 0) {
+        totalDue += habits.length;
+        totalDone += habits.filter((h) => h.checkedDates.includes(dStr)).length;
+      }
+    });
+
+    const rate = totalDue > 0 ? Math.round((totalDone / totalDue) * 100) : 0;
+    return {
+      weeklyConsistencyRate: rate,
+      weeklyCompletedCount: totalDone,
+      weeklyTotalCount: totalDue,
+    };
+  }, [weekDays, tasks, routines, habits, settings.enabledTools]);
+
+  const handleRescheduleAllToday = () => {
+    overdueTasks.forEach((t) => rescheduleTask(t.id, todayDate));
+  };
 
   // Helper to compile dynamic schedule items for any given date
   const getScheduleItemsForDate = (dateStr: string) => {
@@ -571,11 +622,12 @@ export const TodayDashboard: React.FC = () => {
     !isCalmMode &&
     isModuleOrToolEnabled('body', settings.enabledTools) &&
     settings.todayVisibleSections?.health !== false;
+  const isFocusVisible = isModuleOrToolEnabled('focus', settings.enabledTools) && !isCalmMode;
   const hasRightWidgets =
     isHabitsVisible || isWaterVisible || isMoneyVisible || isGoalsVisible || isHealthVisible;
 
   return (
-    <div className="p-3 sm:p-4 md:p-8 max-w-7xl mx-auto space-y-3 sm:space-y-4 md:space-y-6">
+    <div className="p-2 sm:p-4 md:p-8 max-w-7xl mx-auto space-y-2 sm:space-y-4 md:space-y-6">
       {/* Historical Date Notice Banner */}
       {!isViewingToday && (
         <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-2xl p-2.5 sm:p-3.5 px-3 sm:px-4 flex items-center justify-between shadow-2xs animate-in fade-in text-xs">
@@ -595,13 +647,66 @@ export const TodayDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Quick Action Toolbar & Calm Toggle */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
-        <div className="flex items-center gap-2">
+      {/* Desktop Page Header */}
+      <div className="hidden sm:block">
+        <PageHeader
+          title="Today"
+          subtitle={formattedCurrentDate}
+          actions={
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveModal('quick_add')}
+                className="btn-primary min-h-[40px] px-3.5 py-2 text-xs font-semibold"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Commitment</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModal('focus_mode')}
+                className="btn-tonal min-h-[40px] px-3.5 py-2 text-xs font-semibold"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Focus Mode</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModal('weekly_review')}
+                className="btn-secondary min-h-[40px] px-3.5 py-2 text-xs font-semibold"
+              >
+                <Calendar className="w-3.5 h-3.5 text-[#526782] dark:text-[#A8B8CE]" />
+                <span>Weekly Review</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsCalmMode(!isCalmMode)}
+                aria-pressed={isCalmMode}
+                title="Calm View simplifies your dashboard by temporarily hiding financial balances and health metrics."
+                aria-label={
+                  isCalmMode
+                    ? 'Disable Calm View (shows financial and health widgets)'
+                    : 'Enable Calm View (hides financial and health widgets for a reduced-stimulation view)'
+                }
+                className={`min-h-[40px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer border ${
+                  isCalmMode ? 'btn-primary' : 'btn-secondary'
+                }`}
+              >
+                {isCalmMode ? <Sun className="w-3.5 h-3.5" /> : <SlidersHorizontal className="w-3.5 h-3.5" />}
+                <span>{isCalmMode ? 'Calm Mode Active' : 'Calm View'}</span>
+              </button>
+            </div>
+          }
+        />
+      </div>
+
+      {/* Mobile-only compact action toolbar */}
+      <div className="flex sm:hidden items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => setActiveModal('focus_mode')}
-            className="btn-tonal min-h-[44px] sm:min-h-9 px-3.5 py-2 text-xs font-semibold"
+            className="btn-tonal min-h-[36px] px-2.5 py-1 text-xs font-semibold"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>Focus Mode</span>
@@ -609,7 +714,7 @@ export const TodayDashboard: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveModal('weekly_review')}
-            className="btn-secondary min-h-[44px] sm:min-h-9 px-3.5 py-2 text-xs font-semibold"
+            className="btn-secondary min-h-[36px] px-2.5 py-1 text-xs font-semibold"
           >
             <Calendar className="w-3.5 h-3.5 text-[#526782] dark:text-[#A8B8CE]" />
             <span>Weekly Review</span>
@@ -626,10 +731,8 @@ export const TodayDashboard: React.FC = () => {
               ? 'Disable Calm View (shows financial and health widgets)'
               : 'Enable Calm View (hides financial and health widgets for a reduced-stimulation view)'
           }
-          className={`min-h-[44px] sm:min-h-9 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer border ${
-            isCalmMode
-              ? 'btn-primary'
-              : 'btn-secondary'
+          className={`min-h-[36px] inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold transition-colors cursor-pointer border ${
+            isCalmMode ? 'btn-primary' : 'btn-secondary'
           }`}
         >
           {isCalmMode ? <Sun className="w-3.5 h-3.5" /> : <SlidersHorizontal className="w-3.5 h-3.5" />}
@@ -639,8 +742,8 @@ export const TodayDashboard: React.FC = () => {
 
       {/* 1. Overdue Action Center */}
       {overdueTasks.length > 0 && (
-        <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-2xl p-3 sm:p-4 shadow-2xs animate-in fade-in space-y-2 sm:space-y-3">
-          <div className="flex items-center justify-between gap-2">
+        <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-2xl p-2.5 sm:p-3.5 shadow-2xs animate-in fade-in transition-all">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
                 <AlertCircle className="w-3.5 h-3.5" />
@@ -649,69 +752,90 @@ export const TodayDashboard: React.FC = () => {
                 {overdueTasks.length} Overdue Action{overdueTasks.length > 1 ? 's' : ''} Need Rescheduling
               </span>
             </div>
-            <button
-              type="button"
-              onClick={() => setActiveView('tasks')}
-              className="min-h-[44px] sm:min-h-8 px-2 text-xs font-semibold text-rose-700 dark:text-rose-300 hover:underline flex items-center gap-1 cursor-pointer shrink-0"
-            >
-              <span>View all in tasks</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleRescheduleAllToday}
+                className="min-h-[44px] sm:min-h-8 px-2.5 py-1 rounded-lg bg-rose-100/90 hover:bg-rose-200 dark:bg-rose-900/50 dark:hover:bg-rose-900/70 text-rose-800 dark:text-rose-200 text-xs font-semibold cursor-pointer transition-colors"
+              >
+                Reschedule Today
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsOverdueExpanded(!isOverdueExpanded)}
+                aria-expanded={isOverdueExpanded}
+                className="min-h-[44px] sm:min-h-8 px-2.5 py-1 rounded-lg bg-white/80 dark:bg-slate-800 border border-rose-200/80 dark:border-rose-800/60 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] hover:bg-white dark:hover:bg-slate-700 flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                <span>{isOverdueExpanded ? 'Hide' : 'Show'} details</span>
+                {isOverdueExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveView('tasks')}
+                className="min-h-[44px] sm:min-h-8 px-2 text-xs font-semibold text-rose-700 dark:text-rose-300 hover:underline flex items-center gap-1 cursor-pointer shrink-0"
+              >
+                <span>View all in tasks</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
-          <div className="space-y-1.5 sm:space-y-2">
-            {overdueTasks.slice(0, 2).map((t, idx) => {
-              const dueParts = (t.dueDate || '').split('-');
-              const due = new Date(parseInt(dueParts[0]), parseInt(dueParts[1]) - 1, parseInt(dueParts[2]));
-              const todayParts = todayDate.split('-');
-              const today = new Date(parseInt(todayParts[0]), parseInt(todayParts[1]) - 1, parseInt(todayParts[2]));
-              const daysLate = Math.max(1, Math.round((today.getTime() - due.getTime()) / (1000 * 3600 * 24)));
+          {isOverdueExpanded && (
+            <div className="space-y-1.5 sm:space-y-2 pt-2.5 mt-2.5 border-t border-rose-200/60 dark:border-rose-900/40">
+              {overdueTasks.slice(0, 5).map((t, idx) => {
+                const dueParts = (t.dueDate || '').split('-');
+                const due = new Date(parseInt(dueParts[0]), parseInt(dueParts[1]) - 1, parseInt(dueParts[2]));
+                const todayParts = todayDate.split('-');
+                const today = new Date(parseInt(todayParts[0]), parseInt(todayParts[1]) - 1, parseInt(todayParts[2]));
+                const daysLate = Math.max(1, Math.round((today.getTime() - due.getTime()) / (1000 * 3600 * 24)));
 
-              return (
-                <div
-                  key={t.id}
-                  className={`bg-white/80 dark:bg-[#152238]/80 p-2.5 sm:p-3 rounded-xl border border-rose-100 dark:border-rose-900/40 flex items-center justify-between gap-2.5 ${
-                    idx > 0 ? 'hidden sm:flex' : 'flex'
-                  }`}
-                >
-                  <div className="min-w-0 flex-1 truncate">
-                    <span className="font-semibold text-xs text-[#071A3A] dark:text-[#EDF4FF] mr-1.5 truncate">
-                      {t.title}
-                    </span>
-                    <span className="text-[10px] sm:text-[11px] text-rose-600 dark:text-rose-400 font-medium whitespace-nowrap">
-                      ({daysLate}d late{t.category ? ` · ${t.category}` : ''})
-                    </span>
-                  </div>
+                return (
+                  <div
+                    key={t.id}
+                    className={`bg-white/80 dark:bg-[#152238]/80 p-2.5 sm:p-3 rounded-xl border border-rose-100 dark:border-rose-900/40 flex items-center justify-between gap-2.5 ${
+                      idx > 1 ? 'hidden sm:flex' : 'flex'
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1 truncate">
+                      <span className="font-semibold text-xs text-[#071A3A] dark:text-[#EDF4FF] mr-1.5 truncate">
+                        {t.title}
+                      </span>
+                      <span className="text-[10px] sm:text-[11px] text-rose-600 dark:text-rose-400 font-medium whitespace-nowrap">
+                        ({daysLate}d late{t.category ? ` · ${t.category}` : ''})
+                      </span>
+                    </div>
 
-                  <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => rescheduleTask(t.id, todayDate)}
-                      className="min-h-[44px] sm:min-h-8 px-3 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] text-[11px] font-semibold hover:bg-teal-100 dark:hover:bg-teal-900/70 cursor-pointer transition-colors"
-                    >
-                      Reschedule Today
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => rescheduleTask(t.id, tomorrowDateStr)}
-                      className="hidden sm:inline-flex min-h-[44px] sm:min-h-8 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-[11px] font-semibold hover:bg-blue-100 dark:hover:bg-blue-900/70 cursor-pointer transition-colors"
-                    >
-                      Tomorrow
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => archiveTask(t.id)}
-                      aria-label={`Archive task ${t.title}`}
-                      className="min-w-[44px] min-h-[44px] sm:min-w-8 sm:min-h-8 p-2 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
-                      title="Archive task"
-                    >
-                      <Archive className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => rescheduleTask(t.id, todayDate)}
+                        className="min-h-[44px] sm:min-h-8 px-3 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] text-[11px] font-semibold hover:bg-teal-100 dark:hover:bg-teal-900/70 cursor-pointer transition-colors"
+                      >
+                        Reschedule Today
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => rescheduleTask(t.id, tomorrowDateStr)}
+                        className="hidden sm:inline-flex min-h-[44px] sm:min-h-8 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-[11px] font-semibold hover:bg-blue-100 dark:hover:bg-blue-900/70 cursor-pointer transition-colors"
+                      >
+                        Tomorrow
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => archiveTask(t.id)}
+                        aria-label={`Archive task ${t.title}`}
+                        className="min-w-[44px] min-h-[44px] sm:min-w-8 sm:min-h-8 p-2 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                        title="Archive task"
+                      >
+                        <Archive className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -721,7 +845,7 @@ export const TodayDashboard: React.FC = () => {
       </div>
 
       {/* 2. Week Strip & Daily Progress Meter */}
-      <div className="card-surface px-3 py-3 sm:p-4 md:p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 md:gap-5">
+      <div className="card-surface px-3 py-2 sm:p-4 md:p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 sm:gap-4 md:gap-5">
         {/* Week navigation & days */}
         <div className="flex flex-col md:flex-row md:items-center gap-2.5 sm:gap-3 w-full md:w-auto min-w-0">
           <div className="flex items-center justify-between md:justify-start gap-2">
@@ -838,14 +962,94 @@ export const TodayDashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* 4 Today Metrics */}
+      <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 overflow-x-auto sm:overflow-visible no-scrollbar gap-2.5 sm:gap-4 pb-1 sm:pb-0">
+        <MetricCard
+          variant="featured"
+          testId="today-metric-commitments"
+          className="min-w-[140px] sm:min-w-0 shrink-0 sm:shrink flex-1 sm:flex-initial p-2.5 sm:p-5"
+          title="Commitments Today"
+          value={totalCompletable}
+          subtitle={
+            totalCompletable === 0
+              ? 'No commitments scheduled'
+              : completedCount === totalCompletable
+              ? 'All finished today'
+              : `${Math.max(0, totalCompletable - completedCount)} remaining today`
+          }
+          badge={{
+            text: `${completedCount}/${totalCompletable} done`,
+            positive: completedCount === totalCompletable && totalCompletable > 0,
+          }}
+          actionAriaLabel="View today's schedule"
+          onAction={() => {
+            document.getElementById('today-schedule-section')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+        />
+
+        <MetricCard
+          variant="standard"
+          testId="today-metric-completed"
+          className="min-w-[140px] sm:min-w-0 shrink-0 sm:shrink flex-1 sm:flex-initial p-2.5 sm:p-5"
+          title="Completed Today"
+          value={completedCount}
+          subtitle={`${completionPercentage}% of daily commitments`}
+          badge={{
+            text: `${completionPercentage}%`,
+            positive: completionPercentage >= 50,
+          }}
+          actionAriaLabel="View completed schedule items"
+          onAction={() => {
+            document.getElementById('today-schedule-section')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+        />
+
+        <MetricCard
+          variant="standard"
+          testId="today-metric-overdue"
+          className="min-w-[140px] sm:min-w-0 shrink-0 sm:shrink flex-1 sm:flex-initial p-2.5 sm:p-5"
+          title="Needs Attention"
+          value={overdueTasks.length}
+          subtitle="overdue across all dates"
+          badge={
+            overdueTasks.length > 0
+              ? { text: `${overdueTasks.length} action${overdueTasks.length > 1 ? 's' : ''}`, negative: true }
+              : { text: 'All clear', positive: true }
+          }
+          actionAriaLabel="View overdue items"
+          onAction={() => {
+            if (overdueTasks.length > 0) {
+              setIsOverdueExpanded(true);
+            } else {
+              setActiveView('tasks');
+            }
+          }}
+        />
+
+        <MetricCard
+          variant="standard"
+          testId="today-metric-consistency"
+          className="min-w-[140px] sm:min-w-0 shrink-0 sm:shrink flex-1 sm:flex-initial p-2.5 sm:p-5"
+          title="Weekly Consistency"
+          value={`${weeklyConsistencyRate}%`}
+          subtitle={`${weeklyCompletedCount} of ${weeklyTotalCount} this week`}
+          badge={{
+            text: weeklyConsistencyRate >= 70 ? 'On track' : weeklyConsistencyRate > 0 ? 'Building' : 'Start week',
+            positive: weeklyConsistencyRate >= 70,
+          }}
+          actionAriaLabel="Open Weekly Review"
+          onAction={() => setActiveModal('weekly_review')}
+        />
+      </div>
+
       {/* 3. Main Dashboard 2-Column Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
         {/* Left Column: Your Day (Timeline) + Tomorrow Preview (7 cols or 12 cols) */}
         <div className={`${hasRightWidgets ? 'lg:col-span-7' : 'lg:col-span-12'} space-y-4 sm:space-y-6`}>
           {/* Hero Next Up Card */}
           {nextUpItem && (
-            <div className="card-surface p-4 sm:p-5 border-l-4 border-l-[#087F83] dark:border-l-[#38D0C5] animate-in fade-in">
-              <div className="flex items-center justify-between mb-2">
+            <div className="card-surface p-3 sm:p-5 border-l-4 border-l-[#087F83] dark:border-l-[#38D0C5] animate-in fade-in">
+              <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#087F83] dark:text-[#38D0C5]">
                   <Zap className="w-3.5 h-3.5 fill-current" />
                   <span>Next Up</span>
@@ -866,11 +1070,11 @@ export const TodayDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div data-testid="today-next-up-title" className="text-base md:text-lg font-bold text-[#071A3A] dark:text-[#EDF4FF] mb-2 sm:mb-3">
+              <div data-testid="today-next-up-title" className="text-base md:text-lg font-bold text-[#071A3A] dark:text-[#EDF4FF] mb-1.5 sm:mb-3">
                 {nextUpItem.title}
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 pt-2 sm:pt-2.5 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex flex-wrap items-center gap-2 pt-1.5 sm:pt-2.5 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={nextUpItem.onComplete}
@@ -902,7 +1106,7 @@ export const TodayDashboard: React.FC = () => {
           )}
 
           {/* Your Day Card */}
-          <div className="card-surface p-5 md:p-6">
+          <div id="today-schedule-section" className="card-surface p-5 md:p-6 scroll-mt-20">
             <div className="flex items-center justify-between pb-4 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-[#071A3A] dark:text-[#EDF4FF]">
@@ -1238,6 +1442,50 @@ export const TodayDashboard: React.FC = () => {
                       </div>
                     );
                   })}
+                </div>
+              </div>
+            )}
+
+            {/* Compact Focus Session Card (preview of Phase 07 shared controller) */}
+            {isFocusVisible && (
+              <div className="card-featured p-4 sm:p-5 rounded-2xl relative overflow-hidden">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-white/90" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-white/90">
+                      Focus Session
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/15 text-white">
+                    25 min
+                  </span>
+                </div>
+
+                <div className="flex items-baseline justify-between my-2">
+                  <div className="text-3xl font-extrabold tracking-tight tabular-nums text-white">
+                    25:00
+                  </div>
+                  <span className="text-xs text-white/70">
+                    Pomodoro timer
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 pt-3 border-t border-white/10 mt-3">
+                  <button
+                    type="button"
+                    onClick={() => setActiveModal('focus_mode')}
+                    className="flex-1 min-h-[38px] px-3 py-1.5 rounded-xl bg-white text-[#071A3A] hover:bg-slate-100 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-xs"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-[#071A3A]" />
+                    <span>Start Focus</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveModal('focus_mode')}
+                    className="min-h-[38px] px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold cursor-pointer transition-colors"
+                  >
+                    Full Mode
+                  </button>
                 </div>
               </div>
             )}

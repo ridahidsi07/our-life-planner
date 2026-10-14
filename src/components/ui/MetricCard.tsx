@@ -15,6 +15,7 @@ export interface MetricCardProps {
   onAction?: () => void;
   actionIcon?: React.ElementType;
   className?: string;
+  testId?: string;
   children?: React.ReactNode;
 }
 
@@ -28,12 +29,14 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   onAction,
   actionIcon: ActionIcon = ArrowUpRight,
   className = '',
+  testId,
   children,
 }) => {
   const isFeatured = variant === 'featured';
 
   return (
     <div
+      data-testid={testId}
       className={`metric-card p-5 transition-all ${
         isFeatured ? 'card-featured' : 'card-surface'
       } ${className}`}

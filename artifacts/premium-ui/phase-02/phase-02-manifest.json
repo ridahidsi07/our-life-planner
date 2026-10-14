@@ -1,0 +1,62 @@
+[
+  {
+    "filename": "today-1440x900-light-populated.png",
+    "description": "Desktop 1440x900 Light with 4 metric cards (featured navy card), Next Up, and schedule",
+    "viewport": "1440x900",
+    "theme": "light"
+  },
+  {
+    "filename": "today-1440x900-dark-populated.png",
+    "description": "Desktop 1440x900 Dark theme with high-contrast surfaces and readable metrics",
+    "viewport": "1440x900",
+    "theme": "dark"
+  },
+  {
+    "filename": "today-1280x720-light-above-the-fold.png",
+    "description": "Desktop 1280x720 Light proving Next Up card and meaningful commitments start above 720px fold",
+    "viewport": "1280x720",
+    "theme": "light"
+  },
+  {
+    "filename": "today-768x1024-tablet-light.png",
+    "description": "Tablet 768x1024 portrait showing responsive 2-column metric cards and fluid schedule",
+    "viewport": "768x1024",
+    "theme": "light"
+  },
+  {
+    "filename": "today-390x844-mobile-light.png",
+    "description": "Mobile 390x844 Light showing compact horizontal metric row and docked bottom nav",
+    "viewport": "390x844",
+    "theme": "light"
+  },
+  {
+    "filename": "today-390x844-mobile-dark.png",
+    "description": "Mobile 390x844 Dark showing compact horizontal metrics and clean surface elevation",
+    "viewport": "390x844",
+    "theme": "dark"
+  },
+  {
+    "filename": "today-1440x900-overdue-expanded.png",
+    "description": "Desktop 1440x900 with overdue details drawer expanded showing individual overdue action items",
+    "viewport": "1440x900",
+    "theme": "light"
+  },
+  {
+    "filename": "today-1440x900-after-task-complete.png",
+    "description": "Desktop 1440x900 after completing Next Up item, demonstrating reactive live metrics update",
+    "viewport": "1440x900",
+    "theme": "light"
+  },
+  {
+    "filename": "today-1440x900-long-task-names.png",
+    "description": "Desktop 1440x900 with extended commitment title demonstrating no overflow or broken layout",
+    "viewport": "1440x900",
+    "theme": "light"
+  },
+  {
+    "filename": "today-1440x900-empty-starter.png",
+    "description": "Desktop 1440x900 Starter Empty State with zero commitments, 0% metrics, and prominent hero CTA",
+    "viewport": "1440x900",
+    "theme": "light"
+  }
+]
