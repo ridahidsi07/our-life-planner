@@ -7,7 +7,7 @@ This document tracks progress across all phases of the Our Life Planner premium 
 | Phase | State | Evidence / next action |
 |---|---|---|
 | 00 Baseline | **Complete** | Baseline verified (`npm.cmd run verify` passed 25/25), checkpoint `ebb53b5` (tag `baseline-checkpoint-phase00`), 17 screenshots in `artifacts/premium-ui/phase-00/`, `IMPLEMENTATION-PLAN.md` written. |
-| 01 Foundations/shell | **Complete** | Grouped 220px sidebar, persistent 64px header, design tokens, and shared primitives (`PageHeader`, `SegmentedControl`, `MetricCard`) implemented. Verified (`npm.cmd run verify` 25/25 passed), 9 screenshots in `artifacts/premium-ui/phase-01/`. |
+| 01 Foundations/shell | **Complete (Corrections Verified)** | Grouped 220px sidebar, persistent 64px header, design tokens, and shared primitives (`PageHeader`, `SegmentedControl`, `MetricCard`) implemented. Review corrections (R1 header responsiveness & long-name containment, R2 SegmentedControl roving tabindex & arrow-key navigation, R3 sidebar section-label contrast >= 4.5:1, R4 genuine keyboard focus evidence) verified with 64/64 automated checks. 14 screenshots in `artifacts/premium-ui/phase-01-corrections/`. |
 | 02 Today | **Complete** | 4-card metric row (Featured Dark Navy `#071A3A` card), compact overdue alert bar with expandable details & reschedule, responsive mobile row, and above-the-fold 1280×720 optimization. Verified (`npm.cmd run verify` 25/25 passed), 10 screenshots in `artifacts/premium-ui/phase-02/`, `phase-02-manifest.json`, `METRICS-DOCUMENTATION.md`. |
 | 03 Tasks/Board | **Complete** | Four-column working board (`not_started`, `in_progress`, `on_hold`, `completed`), HTML5 DnD with placeholder & cancel, keyboard/touch action menu with `aria-live` announcements, completion & reopening timestamp semantics, shared filters & quick pills, responsive 390×844 layout. 18/18 checks passed, 10 screenshots in `artifacts/premium-ui/phase-03/`. |
 | 04 Insights/charts | **Complete** | Interactive SVG Throughput chart with dual-period comparison, inspection crosshair, floating tooltips, keyboard navigation, Category distribution donut with interactive readout, 7D/30D/90D range control, and preserved accessible matrix table. 18/18 checks passed, 8 screenshots in `artifacts/premium-ui/phase-04/`, `METRICS-INSIGHTS-DOCUMENTATION.md`. |
@@ -36,28 +36,9 @@ This document tracks progress across all phases of the Our Life Planner premium 
 
 ## Current handoff
 
-- **Last completed phase:** Phase 04 (Insights & Useful Charts)
-- **Current phase and completed substeps:** Phase 04 complete.
-  - Built pure calculation engine in `src/utils/insightsMetrics.ts` computing clean mathematical boundaries for `7D`, `30D`, and `90D` ranges, period comparison deltas, daily completion velocity, on-time delivery rates, and category distribution.
-  - Built interactive SVG Throughput chart in `src/components/tasks/TasksThroughputChart.tsx`:
-    - Responsive SVG with subtle gradient area fill and solid line for current period, paired with dashed previous-period line.
-    - Hover/touch inspection with dashed crosshair, circular point marker, and dark floating tooltip showing date, tasks completed, and previous period count.
-    - Keyboard accessible with `tabIndex={0}`, `ArrowRight`/`ArrowLeft` step navigation, and `aria-live="polite"` live announcements.
-  - Built interactive SVG Category Donut chart in `src/components/tasks/TasksCategoryDonut.tsx`:
-    - Multi-color segmented ring mapped to the 5 life categories (Personal, Career, Health, Finances, Relationships).
-    - Center readout dynamically updating on hover/focus to display category name, count, and percentage.
-    - Interactive legend with colored badges and percentages.
-  - Implemented 4-metric summary card row:
-    - Tasks completed (with period delta pill vs previous range).
-    - Daily velocity (tasks/day with period comparison).
-    - On-time delivery (% completed on/before due date with period comparison).
-    - Active backlog (open tasks count with urgent/high and overdue breakdown).
-  - Preserved `[data-testid="tasks-accessible-insights-table"]` matrix table (5 categories x 5 priorities + Total) for full accessibility and Stage 5 test compatibility.
-  - Added concise data tracking disclosure notice explaining `completedAt` timestamp semantics.
-  - Extracted and integrated `TasksInsightsView` into `src/components/tasks/TasksView.tsx`.
-  - Verified full test suite (`npm.cmd run verify`, Stage 5, Phase 3, Phase 4 delivery, Buyer rehearsal all pass 100%).
-  - Captured 8 screenshots in `artifacts/premium-ui/phase-04/` and generated `phase-04-manifest.json` + `METRICS-INSIGHTS-DOCUMENTATION.md`.
-- **Next concrete action:** Prompt 05 — Contextual Capture & Shared Drawers (`docs/premium-upgrade/prompts/05-drawers.md`).
+- **Last completed phase:** Phase 01 Corrections Pass (October 14, 2026)
+- **Current phase and completed substeps:** Phase 01 review corrections fully implemented and verified; Phases 02–04 preserved without regression.
+- **Next concrete action:** Prompt 05 — Contextual Capture & Shared Drawers (`docs/premium-upgrade/prompts/05-capture-and-details.md`).
 - **Files changed:**
   - `src/utils/insightsMetrics.ts` (created)
   - `src/components/tasks/TasksThroughputChart.tsx` (created)
@@ -137,6 +118,26 @@ To be populated during Phase 08.
 6. Added truthful historical data notice disclosing `completedAt` timestamp semantics.
 7. Verified all checks passed (18/18 checks in `test-phase04-insights.ts`, 45/45 in `verify-stage5-interactions.ts`, 41/41 in `test-phase4-delivery.ts`, 31/31 in `rehearse-buyer-journey.ts`).
 8. Saved 8 screenshots and documentation in `artifacts/premium-ui/phase-04/`.
+
+### October 14, 2026 — Phase 01 Review Corrections Pass Complete
+1. **R1 Header Responsiveness & Containment:** Fixed flex ancestor shrinkability (`min-w-0 flex-1`) on greeting heading in `Header.tsx`, ensured `shrink-0` on right actions container, and responsive label collapse (`hidden lg:inline` / `hidden xl:inline`). Fixed sidebar profile text truncation with `min-w-0` in `Sidebar.tsx`. Verified zero page/sidebar overflow and full control containment with owner name "Alexandria Catherine Montgomery-Wellington" across 390px, 768px, 1024px, 1280px, and 1440px viewports.
+2. **R2 SegmentedControl Keyboard Accessibility:** Implemented complete WAI-ARIA tab navigation pattern in `SegmentedControl.tsx` with roving tabindex (`tabIndex={isSelected ? 0 : -1}`), `ArrowRight`/`ArrowLeft`/`ArrowUp`/`ArrowDown`/`Home`/`End` focus and selection movement with wrap-around, programmatic focus transfer (`buttonRefs.current[idx]?.focus()`), visible focus-ring styling, and ARIA panel linkage. Verified in dedicated component interaction test suite.
+3. **R3 Sidebar Section-Label Contrast:** Replaced faint colors with semantic tokens `#475569` (light) and `#94A3B8` (dark) at 11px uppercase tracking-wider. Computed real browser contrast ratios:
+   - Light mode: `#475569` on `#FFFFFF` = **7.58:1** (WCAG AA >= 4.5:1 passed).
+   - Dark mode: `#94A3B8` on `#152238` = **6.22:1** (WCAG AA >= 4.5:1 passed).
+4. **R4 Verification Evidence & Handoff Path:** Replaced duplicate screenshot with genuine CDP Tab-key navigation capture showing `:focus-visible: true` on `sidebar-nav-today`. Saved evidence in `artifacts/premium-ui/phase-01-corrections/11-keyboard-focus-sidebar-genuine.png` and updated historical `artifacts/premium-ui/phase-01/keyboard-focus-sidebar-1440x900.png`. Corrected next-phase handoff path to `prompts/05-capture-and-details.md`.
+5. **Test Suite Verification Results:**
+   - `scripts/test-phase01-corrections.ts`: **64 passed, 0 failed**.
+   - `scripts/test-module-visibility.ts`: **22 passed, 0 failed**.
+   - `scripts/test-dialog-accessibility.ts`: **25 passed, 0 failed**.
+   - `scripts/test-tab-sync-coordinator.ts`: **14 passed, 0 failed**.
+   - `scripts/test-backup-validation.ts`: **54 passed, 0 failed**.
+   - `scripts/test-phase03-tasks-board.ts`: **18 passed, 0 failed**.
+   - `scripts/test-phase04-insights.ts`: **18 passed, 0 failed**.
+   - `npm.cmd run lint`: Exit 0 (0 errors).
+   - `npm.cmd run build`: Exit 0 (Standalone inline bundle `$$typeof` count 30).
+   - 14 screenshots and manifest recorded in `artifacts/premium-ui/phase-01-corrections/`.
+
 
 
 

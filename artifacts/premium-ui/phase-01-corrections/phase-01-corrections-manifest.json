@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-10-14T14:52:40.104Z",
+  "checksPassed": 64,
+  "totalChecks": 64,
+  "issuesFixed": [
+    "R1 Header responsiveness & truncation",
+    "R2 SegmentedControl keyboard model",
+    "R3 Sidebar contrast",
+    "R4 Genuine focus evidence & handoff link"
+  ],
+  "screenshots": [
+    "01-header-long-name-768x1024.png",
+    "02-header-long-name-1024x768.png",
+    "03-header-long-name-1280x800.png",
+    "04-header-long-name-1440x900.png",
+    "05-header-long-name-390x844.png",
+    "06-header-short-name-768x1024.png",
+    "07-sidebar-profile-long-name-768x1024.png",
+    "08-sidebar-labels-light-mode.png",
+    "09-sidebar-labels-dark-mode.png",
+    "10-segmented-control-keyboard-navigation.png",
+    "11-keyboard-focus-sidebar-genuine.png",
+    "12-today-smoke-check.png",
+    "13-board-smoke-check.png",
+    "14-insights-smoke-check.png"
+  ]
+}

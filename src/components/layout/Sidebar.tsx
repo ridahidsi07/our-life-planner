@@ -130,7 +130,7 @@ export const Sidebar: React.FC = () => {
             className="space-y-0.5 pb-2.5 border-b border-slate-100 dark:border-slate-800"
           >
             <div className="flex items-center justify-between px-2.5 py-1">
-              <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#8A99AD] dark:text-[#64748B]">
+              <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#475569] dark:text-[#94A3B8]">
                 <Pin className="w-3 h-3 text-[#087F83] dark:text-[#38D0C5]" />
                 <span>Favorites</span>
               </div>
@@ -173,7 +173,7 @@ export const Sidebar: React.FC = () => {
         {/* Grouped Nav List */}
         {filteredNavGroups.map((group, groupIdx) => (
           <div key={groupIdx} className="space-y-0.5">
-            <div className="px-2.5 pt-1.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-[#8A99AD] dark:text-[#64748B]">
+            <div className="px-2.5 pt-1.5 pb-1 text-[11px] font-bold uppercase tracking-wider text-[#475569] dark:text-[#94A3B8]">
               {group.name}
             </div>
             {group.items.map((item) => {
@@ -246,13 +246,13 @@ export const Sidebar: React.FC = () => {
           type="button"
           onClick={() => setActiveModal('account')}
           aria-label={`Manage profile and storage for ${settings.ownerName}`}
-          className="w-full flex items-center justify-between p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left cursor-pointer"
+          className="w-full flex items-center justify-between p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left cursor-pointer min-w-0"
         >
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-[#087F83] text-white flex items-center justify-center font-bold text-[11px] uppercase shadow-xs">
+          <div className="flex items-center gap-2 min-w-0 flex-1 mr-1">
+            <div className="w-6 h-6 rounded-full bg-[#087F83] text-white flex items-center justify-center font-bold text-[11px] uppercase shadow-xs shrink-0">
               {settings.ownerName.charAt(0) || 'R'}
             </div>
-            <div className="truncate">
+            <div className="min-w-0 flex-1 truncate">
               <div className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] truncate">
                 {settings.ownerName}
               </div>
@@ -261,7 +261,7 @@ export const Sidebar: React.FC = () => {
               </div>
             </div>
           </div>
-          <ChevronRight className="w-3.5 h-3.5 text-[#526782] dark:text-[#A8B8CE]" />
+          <ChevronRight className="w-3.5 h-3.5 text-[#526782] dark:text-[#A8B8CE] shrink-0" />
         </button>
 
         {/* Backup & Restore */}
