@@ -40,6 +40,11 @@ export const TasksView: React.FC = () => {
     toggleTaskCompletion,
     currentDate,
     settings,
+    highlightedTaskId,
+    setHighlightedTaskId,
+    lastCreationFeedback,
+    undoLastCreation,
+    setLastCreationFeedback,
   } = usePlanner();
 
   const defaultOwner = settings.ownerName || 'Me';
@@ -346,6 +351,42 @@ export const TasksView: React.FC = () => {
     }
   };
 
+  // Check if a newly created task is currently hidden by active filters (Phase 05 requirement)
+  const newlyCreatedTaskHidden = useMemo(() => {
+    if (!lastCreationFeedback || lastCreationFeedback.type !== 'task') return null;
+    const taskExists = tasks.some((t) => t.id === lastCreationFeedback.id);
+    if (!taskExists) return null;
+    const isVisibleInFiltered = filteredTasks.some((t) => t.id === lastCreationFeedback.id);
+    if (!isVisibleInFiltered) {
+      return tasks.find((t) => t.id === lastCreationFeedback.id) || null;
+    }
+    return null;
+  }, [lastCreationFeedback, tasks, filteredTasks]);
+
+  const handleRevealHiddenTask = () => {
+    if (!newlyCreatedTaskHidden) return;
+    setCategoryFilter('All');
+    setAssignedFilter('Anyone');
+    setPriorityFilter('All');
+    setStatusFilter('All');
+    setSelectedDateFilter('all');
+    setQuickFilter('all');
+    setSearchQuery('');
+    setHighlightedTaskId(newlyCreatedTaskHidden.id);
+  };
+
+  useEffect(() => {
+    if (!highlightedTaskId) return;
+    const el = document.querySelector(`[data-task-id="${highlightedTaskId}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    const timer = setTimeout(() => {
+      setHighlightedTaskId(null);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [highlightedTaskId, setHighlightedTaskId]);
+
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
       {/* Screen reader live announcement for task count and filters */}
@@ -422,6 +463,49 @@ export const TasksView: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Filter Disclosure Notice for newly created task hidden by filters */}
+      {newlyCreatedTaskHidden && (
+        <div
+          role="status"
+          aria-live="polite"
+          data-testid="task-filter-disclosure-banner"
+          className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs text-xs"
+        >
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            <span>
+              Task <strong>&ldquo;{newlyCreatedTaskHidden.title}&rdquo;</strong> was added, but is hidden by your active filters.
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleRevealHiddenTask}
+              data-testid="reveal-hidden-task-btn"
+              className="px-3 py-1.5 rounded-lg bg-[#087F83] text-white font-semibold hover:bg-[#06676A] transition-colors cursor-pointer"
+            >
+              Show task
+            </button>
+            <button
+              type="button"
+              onClick={undoLastCreation}
+              data-testid="undo-created-task-btn"
+              className="px-2.5 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700 font-semibold hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Undo</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setLastCreationFeedback(null)}
+              className="px-2 py-1 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Undo Delete Banner (LP-08) */}
       {lastDeletedTask && (
@@ -876,10 +960,16 @@ export const TasksView: React.FC = () => {
                   task.status !== 'completed' &&
                   task.dueDate &&
                   task.dueDate < currentDate;
+                const isHighlighted = task.id === highlightedTaskId;
                 return (
                   <div
                     key={task.id}
-                    className="p-3 rounded-xl bg-white dark:bg-[#152238] border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs flex items-start gap-3 transition-colors"
+                    data-task-id={task.id}
+                    className={`p-3 rounded-xl bg-white dark:bg-[#152238] border shadow-2xs flex items-start gap-3 transition-all duration-300 ${
+                      isHighlighted
+                        ? 'border-[#087F83] ring-2 ring-[#087F83] bg-teal-50/70 dark:bg-teal-950/40'
+                        : 'border-[#E2E8F0] dark:border-[#1E2D4A]'
+                    }`}
                   >
                     {/* Completion Checkbox */}
                     <button
@@ -1048,10 +1138,14 @@ export const TasksView: React.FC = () => {
                       task.status !== 'completed' &&
                       task.dueDate &&
                       task.dueDate < currentDate;
+                    const isHighlighted = task.id === highlightedTaskId;
                     return (
                       <tr
                         key={task.id}
-                        className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group"
+                        data-task-id={task.id}
+                        className={`hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group ${
+                          isHighlighted ? 'bg-teal-50/70 dark:bg-teal-950/40 ring-2 ring-[#087F83]' : ''
+                        }`}
                       >
                         <td className="py-3 px-3">
                           <button

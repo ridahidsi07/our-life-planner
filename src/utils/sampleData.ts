@@ -32,6 +32,7 @@ export const INITIAL_SETTINGS: UserSettings = {
   heightUnit: 'cm',
   waterUnit: 'ml',
   theme: 'light',
+  accentColor: 'teal',
   isSampleDataActive: true,
   hasCompletedSetup: true,
   lastBackupDate: '4 Oct 2026, 15:32',
@@ -97,6 +98,7 @@ export const EMPTY_SETTINGS: UserSettings = {
   heightUnit: 'cm',
   waterUnit: 'ml',
   theme: 'light',
+  accentColor: 'teal',
   isSampleDataActive: false,
   hasCompletedSetup: false,
   lastBackupDate: undefined,
@@ -1162,3 +1164,137 @@ export const SAMPLE_CALENDAR_EVENTS: CalendarEvent[] = [
     isSample: true,
   },
 ];
+
+export const BASE_SAMPLE_REFERENCE_DATE = '2026-10-05';
+
+function shiftDateStr(dateStr: string, deltaDays: number): string {
+  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+  const d = new Date(`${dateStr}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + deltaDays);
+  return d.toISOString().split('T')[0];
+}
+
+function shiftTimestampStr(isoStr: string, deltaDays: number): string {
+  if (!isoStr) return isoStr;
+  const d = new Date(isoStr);
+  if (isNaN(d.getTime())) return isoStr;
+  d.setUTCDate(d.getUTCDate() + deltaDays);
+  return d.toISOString();
+}
+
+/**
+ * Generates sample data with dates shifted relative to a target reference date.
+ * Stable IDs, categories, amounts, completion statuses, and relationships are preserved.
+ * Only invoked when user explicitly reloads or sets up sample data.
+ */
+export function generateRelativeSampleData(targetReferenceDate: string = '2026-10-05') {
+  if (!targetReferenceDate || targetReferenceDate === BASE_SAMPLE_REFERENCE_DATE) {
+    return {
+      tasks: SAMPLE_TASKS,
+      routines: SAMPLE_ROUTINES,
+      goals: SAMPLE_GOALS,
+      habits: SAMPLE_HABITS,
+      inbox: SAMPLE_BRAIN_DUMP,
+      transactions: SAMPLE_TRANSACTIONS,
+      bills: SAMPLE_BILLS,
+      savingsPots: SAMPLE_SAVINGS_POTS,
+      debts: SAMPLE_DEBTS,
+      recipes: SAMPLE_RECIPES,
+      plannedMeals: SAMPLE_PLANNED_MEALS,
+      groceries: SAMPLE_GROCERIES,
+      workouts: SAMPLE_WORKOUTS,
+      weightProfiles: SAMPLE_WEIGHT_PROFILES,
+      weightRecords: SAMPLE_WEIGHT_RECORDS,
+      hydrationEntries: SAMPLE_HYDRATION_LOG,
+      hydrationTargets: SAMPLE_HYDRATION_TARGETS,
+      calendarEvents: SAMPLE_CALENDAR_EVENTS,
+    };
+  }
+
+  const baseMs = new Date(`${BASE_SAMPLE_REFERENCE_DATE}T12:00:00Z`).getTime();
+  const targetMs = new Date(`${targetReferenceDate}T12:00:00Z`).getTime();
+  const deltaDays = Math.round((targetMs - baseMs) / (1000 * 60 * 60 * 24));
+
+  if (deltaDays === 0) {
+    return {
+      tasks: SAMPLE_TASKS,
+      routines: SAMPLE_ROUTINES,
+      goals: SAMPLE_GOALS,
+      habits: SAMPLE_HABITS,
+      inbox: SAMPLE_BRAIN_DUMP,
+      transactions: SAMPLE_TRANSACTIONS,
+      bills: SAMPLE_BILLS,
+      savingsPots: SAMPLE_SAVINGS_POTS,
+      debts: SAMPLE_DEBTS,
+      recipes: SAMPLE_RECIPES,
+      plannedMeals: SAMPLE_PLANNED_MEALS,
+      groceries: SAMPLE_GROCERIES,
+      workouts: SAMPLE_WORKOUTS,
+      weightProfiles: SAMPLE_WEIGHT_PROFILES,
+      weightRecords: SAMPLE_WEIGHT_RECORDS,
+      hydrationEntries: SAMPLE_HYDRATION_LOG,
+      hydrationTargets: SAMPLE_HYDRATION_TARGETS,
+      calendarEvents: SAMPLE_CALENDAR_EVENTS,
+    };
+  }
+
+  return {
+    tasks: SAMPLE_TASKS.map((t) => ({
+      ...t,
+      dueDate: t.dueDate ? shiftDateStr(t.dueDate, deltaDays) : t.dueDate,
+      createdAt: shiftTimestampStr(t.createdAt, deltaDays),
+      completedAt: t.completedAt ? shiftTimestampStr(t.completedAt, deltaDays) : t.completedAt,
+    })),
+    routines: SAMPLE_ROUTINES,
+    goals: SAMPLE_GOALS,
+    habits: SAMPLE_HABITS.map((h) => ({
+      ...h,
+      effectiveDate: shiftDateStr(h.effectiveDate, deltaDays),
+      checkedDates: Array.isArray(h.checkedDates)
+        ? h.checkedDates.map((dt) => shiftDateStr(dt, deltaDays))
+        : [],
+    })),
+    inbox: SAMPLE_BRAIN_DUMP.map((i) => ({
+      ...i,
+      createdAt: shiftTimestampStr(i.createdAt, deltaDays),
+    })),
+    transactions: SAMPLE_TRANSACTIONS.map((tx) => ({
+      ...tx,
+      date: shiftDateStr(tx.date, deltaDays),
+    })),
+    bills: SAMPLE_BILLS.map((b) => ({
+      ...b,
+      dueDate: shiftDateStr(b.dueDate, deltaDays),
+      paidDate: b.paidDate ? shiftDateStr(b.paidDate, deltaDays) : b.paidDate,
+    })),
+    savingsPots: SAMPLE_SAVINGS_POTS,
+    debts: SAMPLE_DEBTS,
+    recipes: SAMPLE_RECIPES,
+    plannedMeals: SAMPLE_PLANNED_MEALS.map((pm) => ({
+      ...pm,
+      date: shiftDateStr(pm.date, deltaDays),
+    })),
+    groceries: SAMPLE_GROCERIES,
+    workouts: SAMPLE_WORKOUTS.map((w) => ({
+      ...w,
+      date: shiftDateStr(w.date, deltaDays),
+    })),
+    weightProfiles: SAMPLE_WEIGHT_PROFILES,
+    weightRecords: SAMPLE_WEIGHT_RECORDS.map((wr) => ({
+      ...wr,
+      date: shiftDateStr(wr.date, deltaDays),
+    })),
+    hydrationEntries: SAMPLE_HYDRATION_LOG.map((he) => ({
+      ...he,
+      date: shiftDateStr(he.date, deltaDays),
+    })),
+    hydrationTargets: SAMPLE_HYDRATION_TARGETS.map((ht) => ({
+      ...ht,
+      date: shiftDateStr(ht.date, deltaDays),
+    })),
+    calendarEvents: SAMPLE_CALENDAR_EVENTS.map((ce) => ({
+      ...ce,
+      date: shiftDateStr(ce.date, deltaDays),
+    })),
+  };
+}

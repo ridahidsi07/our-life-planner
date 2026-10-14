@@ -56,9 +56,10 @@ export const MobileNav: React.FC<MobileNavProps> = ({
             data-testid="mobile-nav-today"
             aria-current={activeView === 'today' ? 'page' : undefined}
             onClick={() => setActiveView('today')}
+            style={activeView === 'today' ? { color: 'var(--accent)' } : undefined}
             className={`flex flex-col items-center justify-center w-16 h-full transition-colors cursor-pointer ${
               activeView === 'today'
-                ? 'text-[#087F83] dark:text-[#38D0C5]'
+                ? 'font-semibold'
                 : 'text-[#526782] dark:text-[#A8B8CE]'
             }`}
           >
@@ -74,9 +75,10 @@ export const MobileNav: React.FC<MobileNavProps> = ({
             data-testid="mobile-nav-calendar"
             aria-current={activeView === 'calendar' ? 'page' : undefined}
             onClick={() => setActiveView('calendar')}
+            style={activeView === 'calendar' ? { color: 'var(--accent)' } : undefined}
             className={`flex flex-col items-center justify-center w-16 h-full transition-colors cursor-pointer ${
               activeView === 'calendar'
-                ? 'text-[#087F83] dark:text-[#38D0C5]'
+                ? 'font-semibold'
                 : 'text-[#526782] dark:text-[#A8B8CE]'
             }`}
           >
@@ -89,7 +91,11 @@ export const MobileNav: React.FC<MobileNavProps> = ({
         <button
           type="button"
           onClick={() => setActiveModal('quick_add')}
-          className="flex items-center justify-center w-12 h-12 rounded-full bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] shadow-md transition-all -mt-5 cursor-pointer"
+          style={{
+            backgroundColor: 'var(--btn-primary-bg)',
+            color: 'var(--btn-primary-fg)',
+          }}
+          className="flex items-center justify-center w-12 h-12 rounded-full shadow-md transition-all -mt-5 cursor-pointer hover:opacity-90"
           aria-label="Quick add"
         >
           <Plus className="w-6 h-6 stroke-[2.5]" />
@@ -102,9 +108,14 @@ export const MobileNav: React.FC<MobileNavProps> = ({
           aria-label="All tools and views"
           aria-controls="all-tools-menu"
           aria-expanded={isMoreSheetOpen}
+          style={
+            isMoreSheetOpen || (activeView !== 'today' && activeView !== 'calendar')
+              ? { color: 'var(--accent)' }
+              : undefined
+          }
           className={`flex flex-col items-center justify-center w-16 h-full transition-colors cursor-pointer ${
             isMoreSheetOpen || (activeView !== 'today' && activeView !== 'calendar')
-              ? 'text-[#087F83] dark:text-[#38D0C5]'
+              ? 'font-semibold'
               : 'text-[#526782] dark:text-[#A8B8CE]'
           }`}
         >

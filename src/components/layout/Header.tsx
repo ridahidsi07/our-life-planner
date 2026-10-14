@@ -87,7 +87,11 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({
           data-testid="header-quick-add"
           onClick={() => setActiveModal('quick_add')}
           aria-label="Quick add item"
-          className="min-h-[44px] sm:min-h-9 flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-all shadow-xs cursor-pointer active:scale-97 shrink-0"
+          style={{
+            backgroundColor: 'var(--btn-primary-bg)',
+            color: 'var(--btn-primary-fg)',
+          }}
+          className="min-h-[44px] sm:min-h-9 flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl font-semibold text-xs transition-all shadow-xs cursor-pointer active:scale-97 shrink-0 hover:opacity-90"
         >
           <Plus className="w-4 h-4 stroke-[2.5] shrink-0" />
           <span>Quick add</span>
@@ -142,7 +146,10 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({
           title={`Profile & Storage: ${settings.ownerName}`}
           className="min-w-[44px] min-h-[44px] sm:min-w-9 sm:min-h-9 p-0.5 rounded-full flex items-center justify-center cursor-pointer relative shrink-0"
         >
-          <span className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#087F83] to-[#38D0C5] text-white flex items-center justify-center font-bold text-xs shadow-xs hover:ring-2 hover:ring-[#087F83]/50 transition-all">
+          <span
+            className="w-8 h-8 rounded-full text-white flex items-center justify-center font-bold text-xs shadow-xs hover:ring-2 transition-all"
+            style={{ backgroundColor: 'var(--accent)' }}
+          >
             {settings.ownerName.charAt(0) || 'R'}
           </span>
           <span

@@ -1,0 +1,27 @@
+{
+  "phase": "06-calendar",
+  "timestamp": "2026-10-14T18:09:33.394Z",
+  "screenshots": [
+    "01-desktop-calendar-month-1440.png",
+    "02-desktop-selected-day-agenda.png",
+    "03-desktop-calendar-week-view.png",
+    "04-desktop-calendar-day-view.png",
+    "05-desktop-calendar-add-drawer.png",
+    "06-tablet-calendar-768.png",
+    "07-mobile-calendar-390.png",
+    "08-mobile-calendar-320.png"
+  ],
+  "passedChecks": [
+    "Month, Week, Day view switching and rendering",
+    "Visible month/year header with next/previous navigation and return to Today",
+    "Sunday/Monday week-start configuration",
+    "Desktop event chips preview with +N more overflow link",
+    "Mobile compact colored dots in calendar cells",
+    "Today (aria-current=\"date\") vs Selected Day (aria-pressed=\"true\") visual distinction",
+    "Selected day agenda synchronization with progress indicator",
+    "Coming up card (data-testid=\"calendar-upcoming-card\") per reference frame-037.png",
+    "Clicking Coming up items navigates to target date",
+    "ContextualDetailPanel for adding and editing calendar entries with Escape close",
+    ".ics calendar export functionality"
+  ]
+}

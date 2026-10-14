@@ -106,6 +106,139 @@
   }
 }
 
+/* ==========================================================================
+   COORDINATED ACCENT THEMES (Phase 08 - Teal, Ocean, Plum, Ember)
+   ========================================================================== */
+
+/* Ocean Light */
+:root[data-accent="ocean"],
+html[data-accent="ocean"],
+html[data-accent="ocean"].light {
+  --accent: #1D6AE5;
+  --accent-hover: #1555BD;
+  --accent-light: #EFF6FF;
+  --accent-subtle: #F0F7FF;
+  --accent-soft: rgba(29, 106, 229, 0.08);
+  --accent-soft-hover: rgba(29, 106, 229, 0.15);
+  --focus-ring: #1D6AE5;
+  --chart-current: #1D6AE5;
+  --btn-primary-bg: #1D6AE5;
+  --btn-primary-fg: #FFFFFF;
+  --btn-primary-hover-bg: #1555BD;
+  --btn-tonal-bg: #EFF6FF;
+  --btn-tonal-fg: #1D6AE5;
+  --btn-tonal-hover-bg: #DBEAFE;
+  --btn-tonal-border: #BFDBFE;
+}
+
+/* Ocean Dark */
+html[data-accent="ocean"].dark,
+html[data-accent="ocean"][data-theme="dark"],
+.dark[data-accent="ocean"],
+[data-accent="ocean"] .dark {
+  --accent: #60A5FA;
+  --accent-hover: #3B82F6;
+  --accent-light: #1E293B;
+  --accent-subtle: rgba(30, 58, 138, 0.55);
+  --accent-soft: rgba(96, 165, 250, 0.12);
+  --accent-soft-hover: rgba(96, 165, 250, 0.2);
+  --focus-ring: #60A5FA;
+  --chart-current: #60A5FA;
+  --btn-primary-bg: #60A5FA;
+  --btn-primary-fg: #071A3A;
+  --btn-primary-hover-bg: #3B82F6;
+  --btn-tonal-bg: rgba(30, 58, 138, 0.55);
+  --btn-tonal-fg: #93C5FD;
+  --btn-tonal-hover-bg: rgba(30, 58, 138, 0.85);
+  --btn-tonal-border: rgba(96, 165, 250, 0.35);
+}
+
+/* Plum Light */
+:root[data-accent="plum"],
+html[data-accent="plum"],
+html[data-accent="plum"].light {
+  --accent: #7E22CE;
+  --accent-hover: #6B21A8;
+  --accent-light: #FAF5FF;
+  --accent-subtle: #FAF5FF;
+  --accent-soft: rgba(126, 34, 206, 0.08);
+  --accent-soft-hover: rgba(126, 34, 206, 0.15);
+  --focus-ring: #7E22CE;
+  --chart-current: #7E22CE;
+  --btn-primary-bg: #7E22CE;
+  --btn-primary-fg: #FFFFFF;
+  --btn-primary-hover-bg: #6B21A8;
+  --btn-tonal-bg: #FAF5FF;
+  --btn-tonal-fg: #7E22CE;
+  --btn-tonal-hover-bg: #F3E8FF;
+  --btn-tonal-border: #E9D5FF;
+}
+
+/* Plum Dark */
+html[data-accent="plum"].dark,
+html[data-accent="plum"][data-theme="dark"],
+.dark[data-accent="plum"],
+[data-accent="plum"] .dark {
+  --accent: #C084FC;
+  --accent-hover: #A855F7;
+  --accent-light: #2E1065;
+  --accent-subtle: rgba(88, 28, 135, 0.55);
+  --accent-soft: rgba(192, 132, 252, 0.12);
+  --accent-soft-hover: rgba(192, 132, 252, 0.2);
+  --focus-ring: #C084FC;
+  --chart-current: #C084FC;
+  --btn-primary-bg: #C084FC;
+  --btn-primary-fg: #071A3A;
+  --btn-primary-hover-bg: #A855F7;
+  --btn-tonal-bg: rgba(88, 28, 135, 0.55);
+  --btn-tonal-fg: #D8B4FE;
+  --btn-tonal-hover-bg: rgba(88, 28, 135, 0.85);
+  --btn-tonal-border: rgba(192, 132, 252, 0.35);
+}
+
+/* Ember Light */
+:root[data-accent="ember"],
+html[data-accent="ember"],
+html[data-accent="ember"].light {
+  --accent: #C2410C;
+  --accent-hover: #9A3412;
+  --accent-light: #FFF7ED;
+  --accent-subtle: #FFF7ED;
+  --accent-soft: rgba(194, 65, 12, 0.08);
+  --accent-soft-hover: rgba(194, 65, 12, 0.15);
+  --focus-ring: #C2410C;
+  --chart-current: #C2410C;
+  --btn-primary-bg: #C2410C;
+  --btn-primary-fg: #FFFFFF;
+  --btn-primary-hover-bg: #9A3412;
+  --btn-tonal-bg: #FFF7ED;
+  --btn-tonal-fg: #C2410C;
+  --btn-tonal-hover-bg: #FFEDD5;
+  --btn-tonal-border: #FED7AA;
+}
+
+/* Ember Dark */
+html[data-accent="ember"].dark,
+html[data-accent="ember"][data-theme="dark"],
+.dark[data-accent="ember"],
+[data-accent="ember"] .dark {
+  --accent: #FB923C;
+  --accent-hover: #F97316;
+  --accent-light: #431407;
+  --accent-subtle: rgba(124, 45, 18, 0.55);
+  --accent-soft: rgba(251, 146, 60, 0.12);
+  --accent-soft-hover: rgba(251, 146, 60, 0.2);
+  --focus-ring: #FB923C;
+  --chart-current: #FB923C;
+  --btn-primary-bg: #FB923C;
+  --btn-primary-fg: #071A3A;
+  --btn-primary-hover-bg: #F97316;
+  --btn-tonal-bg: rgba(124, 45, 18, 0.55);
+  --btn-tonal-fg: #FDBA74;
+  --btn-tonal-hover-bg: rgba(124, 45, 18, 0.85);
+  --btn-tonal-border: rgba(251, 146, 60, 0.35);
+}
+
 /* Visible, high-contrast keyboard focus indicator across both themes (LP-13 / LP-14) */
 button:focus-visible,
 a:focus-visible,

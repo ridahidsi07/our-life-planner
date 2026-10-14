@@ -153,16 +153,27 @@ export const Sidebar: React.FC = () => {
                   data-testid={`sidebar-favorite-${item.id}`}
                   aria-current={isActive ? 'page' : undefined}
                   onClick={() => setActiveView(item.id)}
+                  style={
+                    isActive
+                      ? { backgroundColor: 'var(--accent-light)', color: 'var(--accent)' }
+                      : undefined
+                  }
                   className={`relative w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] font-medium transition-colors cursor-pointer text-left ${
                     isActive
-                      ? 'bg-[#E0F2F1] text-[#087F83] dark:bg-[#163642] dark:text-[#38D0C5] font-semibold'
+                      ? 'font-semibold'
                       : 'text-[#526782] hover:text-[#071A3A] hover:bg-slate-100/70 dark:text-[#A8B8CE] dark:hover:text-[#EDF4FF] dark:hover:bg-slate-800/60'
                   }`}
                 >
                   {isActive && (
-                    <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-[#087F83] dark:bg-[#38D0C5]" />
+                    <span
+                      className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full"
+                      style={{ backgroundColor: 'var(--accent)' }}
+                    />
                   )}
-                  <Icon className="w-4 h-4 shrink-0 text-[#087F83] dark:text-[#38D0C5]" />
+                  <Icon
+                    className="w-4 h-4 shrink-0"
+                    style={isActive ? { color: 'var(--accent)' } : undefined}
+                  />
                   <span className="truncate">{item.label}</span>
                 </button>
               );
@@ -186,21 +197,26 @@ export const Sidebar: React.FC = () => {
                   data-testid={`sidebar-nav-${item.id}`}
                   aria-current={isActive ? 'page' : undefined}
                   onClick={() => setActiveView(item.id)}
+                  style={
+                    isActive
+                      ? { backgroundColor: 'var(--accent-light)', color: 'var(--accent)' }
+                      : undefined
+                  }
                   className={`relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] font-medium transition-colors cursor-pointer text-left ${
                     isActive
-                      ? 'bg-[#E0F2F1] text-[#087F83] dark:bg-[#163642] dark:text-[#38D0C5] font-semibold'
+                      ? 'font-semibold'
                       : 'text-[#526782] hover:text-[#071A3A] hover:bg-slate-100/70 dark:text-[#A8B8CE] dark:hover:text-[#EDF4FF] dark:hover:bg-slate-800/60'
                   }`}
                 >
                   {isActive && (
-                    <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-[#087F83] dark:bg-[#38D0C5]" />
+                    <span
+                      className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full"
+                      style={{ backgroundColor: 'var(--accent)' }}
+                    />
                   )}
                   <Icon
-                    className={`w-[17px] h-[17px] shrink-0 ${
-                      isActive
-                        ? 'text-[#087F83] dark:text-[#38D0C5]'
-                        : 'text-[#526782] dark:text-[#A8B8CE]'
-                    }`}
+                    className="w-[17px] h-[17px] shrink-0"
+                    style={isActive ? { color: 'var(--accent)' } : undefined}
                   />
                   <span
                     className={`truncate flex-1 ${
@@ -249,7 +265,10 @@ export const Sidebar: React.FC = () => {
           className="w-full flex items-center justify-between p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left cursor-pointer min-w-0"
         >
           <div className="flex items-center gap-2 min-w-0 flex-1 mr-1">
-            <div className="w-6 h-6 rounded-full bg-[#087F83] text-white flex items-center justify-center font-bold text-[11px] uppercase shadow-xs shrink-0">
+            <div
+              className="w-6 h-6 rounded-full text-white flex items-center justify-center font-bold text-[11px] uppercase shadow-xs shrink-0"
+              style={{ backgroundColor: 'var(--accent)' }}
+            >
               {settings.ownerName.charAt(0) || 'R'}
             </div>
             <div className="min-w-0 flex-1 truncate">
@@ -281,13 +300,18 @@ export const Sidebar: React.FC = () => {
           data-testid="sidebar-settings"
           onClick={() => setActiveView('settings')}
           aria-current={activeView === 'settings' ? 'page' : undefined}
+          style={
+            activeView === 'settings'
+              ? { backgroundColor: 'var(--accent-light)', color: 'var(--accent)' }
+              : undefined
+          }
           className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium cursor-pointer transition-colors ${
             activeView === 'settings'
-              ? 'bg-[#E0F2F1] text-[#087F83] dark:bg-[#163642] dark:text-[#38D0C5]'
+              ? 'font-semibold'
               : 'text-[#526782] dark:text-[#A8B8CE] hover:text-[#071A3A] dark:hover:text-[#EDF4FF] hover:bg-slate-100/70 dark:hover:bg-slate-800'
           }`}
         >
-          <Settings className="w-3.5 h-3.5" />
+          <Settings className="w-3.5 h-3.5" style={activeView === 'settings' ? { color: 'var(--accent)' } : undefined} />
           <span>Settings</span>
         </button>
 

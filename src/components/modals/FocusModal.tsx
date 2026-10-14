@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React from 'react';
 import { usePlanner } from '../../context/PlannerContext';
+import { useFocusSession } from '../../context/FocusContext';
 import { useDialogAccessibility } from '../ui/Modal';
 import {
   X,
@@ -12,87 +13,24 @@ import {
   Sparkles,
   Coffee,
 } from 'lucide-react';
-import { TaskItem } from '../../types/planner';
 
 export const FocusModal: React.FC = () => {
+  const { activeModal, setActiveModal } = usePlanner();
   const {
-    activeModal,
-    setActiveModal,
-    tasks,
-    toggleTaskCompletion,
-    rescheduleTask,
-    todayDate,
-  } = usePlanner();
+    formattedTimer,
+    isRunning,
+    isBreak,
+    toggleTimer,
+    resetTimer,
+    startBreak,
+    currentTask,
+    pendingTasks,
+    completeTask,
+    deferTaskTomorrow,
+  } = useFocusSession();
 
   const isOpen = activeModal === 'focus_mode';
   const { dialogRef } = useDialogAccessibility(isOpen, () => setActiveModal(null));
-
-  // Find next pending task (not completed, not archived)
-  const pendingTasks = useMemo(() => {
-    return tasks.filter((t) => !t.isArchived && t.status !== 'completed');
-  }, [tasks]);
-
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [timerSeconds, setTimerSeconds] = useState(25 * 60);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [isBreak, setIsBreak] = useState(false);
-
-  // Current task
-  const currentTask: TaskItem | undefined = pendingTasks[currentIndex] || pendingTasks[0];
-
-  // Timer countdown
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | null = null;
-    if (isTimerRunning && timerSeconds > 0) {
-      interval = setInterval(() => {
-        setTimerSeconds((prev) => prev - 1);
-      }, 1000);
-    } else if (timerSeconds === 0) {
-      setIsTimerRunning(false);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isTimerRunning, timerSeconds]);
-
-  // Format timer
-  const formatTimer = (sec: number) => {
-    const mins = Math.floor(sec / 60);
-    const remainingSecs = sec % 60;
-    return `${String(mins).padStart(2, '0')}:${String(remainingSecs).padStart(2, '0')}`;
-  };
-
-  const handleStartBreak = () => {
-    setIsBreak(true);
-    setTimerSeconds(5 * 60);
-    setIsTimerRunning(true);
-  };
-
-  const handleResetFocusTimer = () => {
-    setIsBreak(false);
-    setTimerSeconds(25 * 60);
-    setIsTimerRunning(false);
-  };
-
-  const handleCompleteTask = () => {
-    if (currentTask) {
-      toggleTaskCompletion(currentTask.id);
-    }
-    // Advance or stay at 0
-    if (currentIndex >= pendingTasks.length - 1) {
-      setCurrentIndex(0);
-    }
-  };
-
-  const handleDeferTomorrow = () => {
-    if (currentTask) {
-      const parts = todayDate.split('-');
-      const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-      d.setDate(d.getDate() + 1);
-      const tomorrow = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      rescheduleTask(currentTask.id, tomorrow);
-    }
-  };
 
   if (!isOpen) return null;
 
@@ -140,28 +78,31 @@ export const FocusModal: React.FC = () => {
         <div className="mb-6 flex flex-col items-center">
           <div
             aria-live="off"
-            aria-label={`Focus timer ${formatTimer(timerSeconds)}`}
-            className="text-5xl md:text-6xl font-mono font-bold text-[#071A3A] dark:text-[#EDF4FF] tracking-wider mb-3"
+            aria-label={`Focus timer ${formattedTimer}`}
+            data-testid="focus-modal-timer-display"
+            className="text-5xl md:text-6xl font-mono font-bold text-[#071A3A] dark:text-[#EDF4FF] tracking-wider mb-3 tabular-nums"
           >
-            {formatTimer(timerSeconds)}
+            {formattedTimer}
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <button
               type="button"
-              onClick={() => setIsTimerRunning(!isTimerRunning)}
-              aria-pressed={isTimerRunning}
+              data-testid="focus-modal-toggle-btn"
+              onClick={toggleTimer}
+              aria-pressed={isRunning}
               className={`min-h-[44px] px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors ${
-                isTimerRunning
+                isRunning
                   ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 hover:text-amber-950 dark:bg-amber-950/90 dark:text-amber-200 dark:border-amber-700/80 dark:hover:bg-amber-900 dark:hover:text-amber-100'
                   : 'bg-[#087F83] text-white border border-transparent hover:bg-[#06676A] dark:bg-[#38D0C5] dark:text-[#071A3A] dark:hover:bg-[#2BB5AB]'
               }`}
             >
-              {isTimerRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-              <span>{isTimerRunning ? 'Pause' : 'Start Timer'}</span>
+              {isRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              <span>{isRunning ? 'Pause' : 'Start Timer'}</span>
             </button>
             <button
               type="button"
-              onClick={handleResetFocusTimer}
+              data-testid="focus-modal-reset-btn"
+              onClick={resetTimer}
               aria-label="Reset timer to 25 minutes"
               className="min-w-[44px] min-h-[44px] p-2.5 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
             >
@@ -169,7 +110,8 @@ export const FocusModal: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={handleStartBreak}
+              data-testid="focus-modal-break-btn"
+              onClick={startBreak}
               className="min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Coffee className="w-4 h-4" />
@@ -180,7 +122,10 @@ export const FocusModal: React.FC = () => {
 
         {/* Task Card */}
         {currentTask ? (
-          <div className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-5 mb-6 text-left">
+          <div
+            data-testid="focus-modal-task-card"
+            className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-5 mb-6 text-left"
+          >
             <div className="flex items-center justify-between gap-2 mb-2">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#087F83] dark:text-[#38D0C5]">
                 {currentTask.category}
@@ -233,7 +178,8 @@ export const FocusModal: React.FC = () => {
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             type="button"
-            onClick={handleCompleteTask}
+            data-testid="focus-modal-complete-task-btn"
+            onClick={completeTask}
             disabled={!currentTask}
             className="w-full min-h-[44px] py-3 px-4 rounded-xl bg-[#087F83] text-white font-semibold text-sm hover:bg-[#06676A] dark:bg-[#38D0C5] dark:text-[#071A3A] dark:hover:bg-[#2BB5AB] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-sm"
           >
@@ -243,7 +189,8 @@ export const FocusModal: React.FC = () => {
 
           <button
             type="button"
-            onClick={handleDeferTomorrow}
+            data-testid="focus-modal-defer-task-btn"
+            onClick={deferTaskTomorrow}
             disabled={!currentTask}
             className="w-full min-h-[44px] py-3 px-4 rounded-xl border border-slate-300 dark:border-slate-700 text-[#071A3A] dark:text-[#EDF4FF] font-semibold text-sm hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer transition-colors"
           >

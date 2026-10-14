@@ -30,6 +30,8 @@ export interface HouseholdMember {
   color: string;
 }
 
+export type AccentColor = 'teal' | 'ocean' | 'plum' | 'ember';
+
 export interface UserSettings {
   ownerName: string;
   email: string;
@@ -42,6 +44,7 @@ export interface UserSettings {
   heightUnit: 'cm' | 'in';
   waterUnit: 'ml' | 'oz';
   theme: 'light' | 'dark' | 'system';
+  accentColor?: AccentColor;
   isSampleDataActive: boolean;
   hasCompletedSetup: boolean;
   budgetOpeningBalance?: number;
@@ -438,5 +441,16 @@ export interface CloudSyncState {
   lastSyncedAt?: string;
   lastSyncError?: string | null;
   entitlement?: CloudEntitlement;
+}
+
+export interface CreationFeedback {
+  id: string;
+  type: 'task' | 'expense' | 'workout' | 'weight' | 'water' | 'thought';
+  title: string;
+  category?: string;
+  dueDate?: string;
+  status?: string;
+  priority?: string;
+  createdAt: number;
 }
 

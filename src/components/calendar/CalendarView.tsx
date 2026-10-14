@@ -60,7 +60,7 @@ export const CalendarView: React.FC = () => {
     exportCalendarIcs,
   } = usePlanner();
 
-  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('week');
+  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
   const [selectedDate, setSelectedDate] = useState<string>(currentDate);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingCalendarEvent, setEditingCalendarEvent] = useState<CalendarEvent | null>(null);
@@ -558,6 +558,183 @@ export const CalendarView: React.FC = () => {
     return days;
   }, [selectedDate, currentDate, settings.weekStartsOn]);
 
+  // Memoized map of events by date for month grid display (Phase 06)
+  const monthEventsMap = useMemo(() => {
+    const map = new Map<string, Array<{ id: string; title: string; type: string; dotColor: string }>>();
+
+    // Tasks
+    if (filters.tasks) {
+      tasks.forEach((t) => {
+        if (!t.isArchived && t.dueDate) {
+          const arr = map.get(t.dueDate) || [];
+          arr.push({ id: t.id, title: t.title, type: 'Task', dotColor: 'bg-blue-500' });
+          map.set(t.dueDate, arr);
+        }
+      });
+    }
+
+    // Bills
+    if (filters.bills) {
+      bills.forEach((b) => {
+        if (b.dueDate) {
+          const arr = map.get(b.dueDate) || [];
+          arr.push({ id: b.id, title: b.title, type: 'Bill', dotColor: 'bg-rose-500' });
+          map.set(b.dueDate, arr);
+        }
+      });
+    }
+
+    // Workouts
+    if (filters.workouts) {
+      workouts.forEach((w) => {
+        if (w.date && !w.isRestDay) {
+          const arr = map.get(w.date) || [];
+          arr.push({ id: w.id, title: w.title, type: 'Workout', dotColor: 'bg-teal-500' });
+          map.set(w.date, arr);
+        }
+      });
+    }
+
+    // Calendar events
+    if (filters.events) {
+      calendarEvents.forEach((e) => {
+        if (e.type === 'birthday') {
+          monthGridDays.forEach((cell) => {
+            if (isBirthdayEventOnDate(e.date, cell.dateStr)) {
+              const arr = map.get(cell.dateStr) || [];
+              arr.push({ id: `${e.id}-${cell.dateStr}`, title: e.title, type: 'Birthday', dotColor: 'bg-indigo-500' });
+              map.set(cell.dateStr, arr);
+            }
+          });
+        } else if (e.date) {
+          const arr = map.get(e.date) || [];
+          arr.push({ id: e.id, title: e.title, type: e.type === 'free_time' ? 'Focus' : 'Event', dotColor: 'bg-indigo-500' });
+          map.set(e.date, arr);
+        }
+      });
+    }
+
+    // Routines
+    if (filters.routines) {
+      monthGridDays.forEach((cell) => {
+        routines.forEach((r) => {
+          if (isRoutineActiveOnDate(r, cell.dateStr)) {
+            const arr = map.get(cell.dateStr) || [];
+            arr.push({ id: `${r.id}-${cell.dateStr}`, title: r.title, type: 'Routine', dotColor: 'bg-purple-500' });
+            map.set(cell.dateStr, arr);
+          }
+        });
+      });
+    }
+
+    return map;
+  }, [filters, tasks, bills, workouts, calendarEvents, routines, monthGridDays]);
+
+  // Upcoming items across the next 7 days (reference frame-037.png)
+  const upcomingItems = useMemo(() => {
+    const list: Array<{
+      id: string;
+      title: string;
+      type: string;
+      date: string;
+      time: string;
+      dateLabel: string;
+      dotColor: string;
+      badgeColor: string;
+    }> = [];
+
+    const baseDate = selectedDate >= currentDate ? selectedDate : currentDate;
+
+    for (let i = 1; i <= 7; i++) {
+      const targetDate = shiftCalendarDate(baseDate, i);
+      const [y, m, d] = targetDate.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      const dateLabel = i === 1
+        ? 'Tomorrow'
+        : dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+      // Tasks
+      if (filters.tasks) {
+        tasks
+          .filter((t) => !t.isArchived && t.status !== 'completed' && t.dueDate === targetDate)
+          .forEach((t) => {
+            list.push({
+              id: t.id,
+              title: t.title,
+              type: 'Task',
+              date: targetDate,
+              time: t.dueTime || 'All day',
+              dateLabel,
+              dotColor: 'bg-blue-500',
+              badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300',
+            });
+          });
+      }
+
+      // Bills
+      if (filters.bills) {
+        bills
+          .filter((b) => !b.isPaid && b.dueDate === targetDate)
+          .forEach((b) => {
+            list.push({
+              id: b.id,
+              title: b.title,
+              type: 'Bill',
+              date: targetDate,
+              time: '18:00',
+              dateLabel,
+              dotColor: 'bg-rose-500',
+              badgeColor: 'bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300',
+            });
+          });
+      }
+
+      // Events
+      if (filters.events) {
+        calendarEvents
+          .filter((e) =>
+            e.type === 'birthday'
+              ? isBirthdayEventOnDate(e.date, targetDate)
+              : e.date === targetDate
+          )
+          .forEach((e) => {
+            list.push({
+              id: e.id,
+              title: e.title,
+              type: e.type === 'birthday' ? 'Birthday' : 'Event',
+              date: targetDate,
+              time: e.startTime || 'All day',
+              dateLabel,
+              dotColor: 'bg-indigo-500',
+              badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300',
+            });
+          });
+      }
+
+      // Workouts
+      if (filters.workouts) {
+        workouts
+          .filter((w) => !w.isCompleted && w.date === targetDate && !w.isRestDay)
+          .forEach((w) => {
+            list.push({
+              id: w.id,
+              title: w.title,
+              type: 'Workout',
+              date: targetDate,
+              time: w.startTime || '15:00',
+              dateLabel,
+              dotColor: 'bg-teal-500',
+              badgeColor: 'bg-teal-100 text-teal-700 dark:bg-teal-900/60 dark:text-teal-300',
+            });
+          });
+      }
+
+      if (list.length >= 8) break;
+    }
+
+    return list.slice(0, 5);
+  }, [selectedDate, currentDate, filters, tasks, bills, calendarEvents, workouts]);
+
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
       {/* Screen reader live announcement */}
@@ -791,27 +968,33 @@ export const CalendarView: React.FC = () => {
                   if (cell.isToday) formattedCellLabel += ', Today';
                   if (cell.isSelected) formattedCellLabel += ', Selected';
 
+                  const cellItems = monthEventsMap.get(cell.dateStr) || [];
                   return (
                     <button
                       key={idx}
                       type="button"
+                      data-calendar-date={cell.dateStr}
                       aria-label={formattedCellLabel}
                       aria-pressed={cell.isSelected}
                       aria-current={cell.isToday ? 'date' : undefined}
                       onClick={() => setSelectedDate(cell.dateStr)}
-                      className={`min-h-[85px] p-1.5 rounded-xl border text-left cursor-pointer transition-colors flex flex-col justify-between w-full min-w-0 ${
+                      className={`min-h-[92px] p-1.5 rounded-xl border text-left cursor-pointer transition-all flex flex-col justify-between w-full min-w-0 ${
                         cell.isSelected
-                          ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20'
+                          ? 'border-[#087F83] ring-2 ring-[#087F83]/50 bg-teal-50/50 dark:bg-teal-950/20 shadow-xs'
+                          : cell.isToday
+                          ? 'border-teal-300 dark:border-teal-700/80 bg-teal-50/20 dark:bg-teal-950/10'
                           : cell.isCurrentMonth
                           ? 'border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                          : 'border-transparent text-slate-300 dark:text-slate-700 bg-slate-50/30'
+                          : 'border-transparent text-slate-300 dark:text-slate-600 bg-slate-50/30 dark:bg-slate-900/20'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full">
                         <span
                           className={`text-xs font-semibold ${
                             cell.isToday
-                              ? 'w-5 h-5 rounded-full bg-[#087F83] text-white flex items-center justify-center font-bold'
+                              ? 'w-5 h-5 rounded-full bg-[#087F83] text-white flex items-center justify-center font-bold text-[11px] shadow-2xs'
+                              : cell.isSelected
+                              ? 'text-[#087F83] dark:text-[#38D0C5] font-bold'
                               : ''
                           }`}
                         >
@@ -819,28 +1002,36 @@ export const CalendarView: React.FC = () => {
                         </span>
                       </div>
 
-                      {/* Small dots preview for events */}
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {tasks.some((t) => !t.isArchived && t.dueDate === cell.dateStr) && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                      {/* Desktop readable event chips preview (Reference frame-037.png) */}
+                      <div className="hidden md:flex flex-col gap-1 mt-1 w-full overflow-hidden">
+                        {cellItems.slice(0, 2).map((item) => (
+                          <span
+                            key={item.id}
+                            className="text-[10px] leading-tight px-1.5 py-0.5 rounded truncate font-medium bg-slate-100 dark:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] border border-slate-200/60 dark:border-slate-700/60 flex items-center gap-1 w-full"
+                            title={`${item.title} (${item.type})`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${item.dotColor} shrink-0`} />
+                            <span className="truncate">{item.title}</span>
+                          </span>
+                        ))}
+                        {cellItems.length > 2 && (
+                          <span
+                            data-testid={`calendar-cell-overflow-${cell.dateStr}`}
+                            className="text-[9px] font-bold text-[#087F83] dark:text-[#38D0C5] px-1 hover:underline text-left leading-tight"
+                          >
+                            +{cellItems.length - 2} more
+                          </span>
                         )}
-                        {bills.some((b) => b.dueDate === cell.dateStr) && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                      </div>
+
+                      {/* Mobile compact colored dots preview */}
+                      <div className="md:hidden flex flex-wrap gap-1 mt-1">
+                        {cellItems.slice(0, 4).map((it) => (
+                          <span key={it.id} className={`w-1.5 h-1.5 rounded-full ${it.dotColor}`} />
+                        ))}
+                        {cellItems.length > 4 && (
+                          <span className="text-[8px] font-bold text-[#087F83] dark:text-[#38D0C5] leading-none">+</span>
                         )}
-                        {workouts.some((w) => w.date === cell.dateStr && !w.isRestDay) && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-                        )}
-                        {calendarEvents.some((e) =>
-                          e.type === 'birthday'
-                            ? isBirthdayEventOnDate(e.date, cell.dateStr)
-                            : e.date === cell.dateStr
-                        ) && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                        )}
-                        {filters.routines &&
-                          routines.some((r) => isRoutineActiveOnDate(r, cell.dateStr)) && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                          )}
                       </div>
                     </button>
                   );
@@ -1067,155 +1258,208 @@ export const CalendarView: React.FC = () => {
           )}
         </div>
 
-        {/* Selected Day Detail Panel (4 cols) */}
-        <div className="lg:col-span-4 bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-5">
-          <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
-            <div>
-              <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-                Selected day
-              </h3>
-              <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
-                {selectedDate}
-              </p>
+        {/* Right Column (4 cols): Selected Day & Coming Up (Reference frame-037.png) */}
+        <div className="lg:col-span-4 space-y-5">
+          {/* Selected Day Detail Panel */}
+          <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
+              <div>
+                <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                  Selected day
+                </h3>
+                <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
+                  {selectedDate}
+                </p>
+              </div>
+
+              <RingProgress
+                progress={selectedDayPct}
+                size={50}
+                strokeWidth={5}
+                color="#087F83"
+              >
+                <span className="text-xs font-bold font-mono">
+                  {selectedDayPct}%
+                </span>
+              </RingProgress>
             </div>
 
-            <RingProgress
-              progress={selectedDayPct}
-              size={50}
-              strokeWidth={5}
-              color="#087F83"
-            >
-              <span className="text-xs font-bold font-mono">
-                {selectedDayPct}%
-              </span>
-            </RingProgress>
-          </div>
+            <div className="text-xs text-[#526782] dark:text-[#A8B8CE] font-semibold">
+              {selectedDayCompleted} of {selectedDayTotal} complete
+            </div>
 
-          <div className="text-xs text-[#526782] dark:text-[#A8B8CE] font-semibold">
-            {selectedDayCompleted} of {selectedDayTotal} complete
-          </div>
-
-          {/* List of items */}
-          <div className="space-y-2 max-h-[460px] overflow-y-auto">
-            {selectedDayItems.length === 0 ? (
-              Object.values(filters).some((v) => !v) ? (
-                <FilterEmptyState
-                  title="No items match your active filters"
-                  description="One or more calendar filter categories are currently hidden. Reset filters to see all events and tasks."
-                  clearLabel="Enable all filters"
-                  onClearFilters={() =>
-                    setFilters({
-                      tasks: true,
-                      routines: true,
-                      bills: true,
-                      goals: true,
-                      meals: true,
-                      workouts: true,
-                      events: true,
-                    })
-                  }
-                />
+            {/* List of items */}
+            <div className="space-y-2 max-h-[460px] overflow-y-auto">
+              {selectedDayItems.length === 0 ? (
+                Object.values(filters).some((v) => !v) ? (
+                  <FilterEmptyState
+                    title="No items match your active filters"
+                    description="One or more calendar filter categories are currently hidden. Reset filters to see all events and tasks."
+                    clearLabel="Enable all filters"
+                    onClearFilters={() =>
+                      setFilters({
+                        tasks: true,
+                        routines: true,
+                        bills: true,
+                        goals: true,
+                        meals: true,
+                        workouts: true,
+                        events: true,
+                      })
+                    }
+                  />
+                ) : (
+                  <div className="p-6 text-center text-xs text-[#526782] dark:text-[#A8B8CE]">
+                    No items scheduled for this day.
+                  </div>
+                )
               ) : (
-                <div className="p-6 text-center text-xs text-[#526782] dark:text-[#A8B8CE]">
-                  No items scheduled for this day.
-                </div>
-              )
-            ) : (
-              selectedDayItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                >
-                  <div className="flex items-center gap-2.5 truncate">
-                    {item.onToggle && (
-                      <button
-                        type="button"
-                        role="checkbox"
-                        aria-checked={item.isCompleted}
-                        aria-label={`Mark "${item.title}" as ${item.isCompleted ? 'incomplete' : 'complete'}`}
-                        onClick={item.onToggle}
-                        className={`w-4 h-4 rounded-md shrink-0 flex items-center justify-center cursor-pointer micro-checkbox ${
-                          item.isCompleted
-                            ? 'bg-[#087F83] text-white'
-                            : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
-                        }`}
-                      >
-                        {item.isCompleted && <Check className="w-3 h-3 stroke-[3] motion-check-pop" />}
-                      </button>
-                    )}
-                    <div className="truncate">
-                      <div className="flex items-center gap-1.5 truncate">
-                        <span className={`text-xs font-semibold truncate transition-all duration-150 ${item.isCompleted ? 'line-through text-[#526782] dark:text-[#94A3B8]' : 'text-[#071A3A] dark:text-[#EDF4FF]'}`}>
-                          {item.title}
-                        </span>
-                        {conflictsSet.has(item.id) && (
-                          <span
-                            className="inline-flex items-center gap-0.5 text-[9px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 px-1 py-0.5 rounded border border-amber-300 dark:border-amber-800 shrink-0"
-                            title="Schedule overlap with another event or task"
-                          >
-                            <AlertTriangle className="w-2.5 h-2.5 text-amber-600" />
+                selectedDayItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 truncate">
+                      {item.onToggle && (
+                        <button
+                          type="button"
+                          role="checkbox"
+                          aria-checked={item.isCompleted}
+                          aria-label={`Mark "${item.title}" as ${item.isCompleted ? 'incomplete' : 'complete'}`}
+                          onClick={item.onToggle}
+                          className={`w-4 h-4 rounded-md shrink-0 flex items-center justify-center cursor-pointer micro-checkbox ${
+                            item.isCompleted
+                              ? 'bg-[#087F83] text-white'
+                              : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
+                          }`}
+                        >
+                          {item.isCompleted && <Check className="w-3 h-3 stroke-[3] motion-check-pop" />}
+                        </button>
+                      )}
+                      <div className="truncate">
+                        <div className="flex items-center gap-1.5 truncate">
+                          <span className={`text-xs font-semibold truncate transition-all duration-150 ${item.isCompleted ? 'line-through text-[#526782] dark:text-[#94A3B8]' : 'text-[#071A3A] dark:text-[#EDF4FF]'}`}>
+                            {item.title}
                           </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[10px] text-[#526782] dark:text-[#A8B8CE] font-mono">
-                        <span>{item.time}</span>
-                        {item.subtitle && (
-                          <span className="text-slate-500 dark:text-slate-400 font-sans truncate">
-                            · {item.subtitle}
-                          </span>
-                        )}
+                          {conflictsSet.has(item.id) && (
+                            <span
+                              className="inline-flex items-center gap-0.5 text-[9px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 px-1 py-0.5 rounded border border-amber-300 dark:border-amber-800 shrink-0"
+                              title="Schedule overlap with another event or task"
+                            >
+                              <AlertTriangle className="w-2.5 h-2.5 text-amber-600" />
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[10px] text-[#526782] dark:text-[#A8B8CE] font-mono">
+                          <span>{item.time}</span>
+                          {item.subtitle && (
+                            <span className="text-slate-500 dark:text-slate-400 font-sans truncate">
+                              · {item.subtitle}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {item.routineId && (
+                        <button
+                          type="button"
+                          onClick={() => setPreviewRoutineId(item.routineId!)}
+                          title="Preview recurring schedule"
+                          className="p-1 rounded text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 cursor-pointer"
+                        >
+                          <Repeat className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      {item.calendarEvent && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => openEditEventModal(item.calendarEvent!)}
+                            title="Edit event"
+                            aria-label={`Edit event "${item.title}"`}
+                            className="p-1 rounded text-[#526782] hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCalendarEvent(item.calendarEvent!)}
+                            title="Delete event"
+                            aria-label={`Delete event "${item.title}"`}
+                            className="p-1 rounded text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </>
+                      )}
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium shrink-0 ${item.badgeColor}`}>
+                        {item.type}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {item.routineId && (
-                      <button
-                        type="button"
-                        onClick={() => setPreviewRoutineId(item.routineId!)}
-                        title="Preview recurring schedule"
-                        className="p-1 rounded text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 cursor-pointer"
-                      >
-                        <Repeat className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                    {item.calendarEvent && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => openEditEventModal(item.calendarEvent!)}
-                          title="Edit event"
-                          aria-label={`Edit event "${item.title}"`}
-                          className="p-1 rounded text-[#526782] hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
-                        >
-                          <Edit2 className="w-3 h-3" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteCalendarEvent(item.calendarEvent!)}
-                          title="Delete event"
-                          aria-label={`Delete event "${item.title}"`}
-                          className="p-1 rounded text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </>
-                    )}
+                ))
+              )}
+            </div>
+
+            <button
+              onClick={() => openAddEntryModal(selectedDate)}
+              className="w-full py-2.5 rounded-xl border border-dashed border-[#087F83] text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold flex items-center justify-center gap-2 hover:bg-teal-50 dark:hover:bg-teal-950/40 transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add entry to this day</span>
+            </button>
+          </div>
+
+          {/* Coming Up Card (Reference frame-037.png) */}
+          <div data-testid="calendar-upcoming-card" className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
+              <div>
+                <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                  Coming up
+                </h3>
+                <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
+                  Next 7 days
+                </p>
+              </div>
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE]">
+                {upcomingItems.length}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              {upcomingItems.length === 0 ? (
+                <div className="p-4 text-center text-xs text-[#526782] dark:text-[#A8B8CE]">
+                  No upcoming items scheduled in the next 7 days.
+                </div>
+              ) : (
+                upcomingItems.map((item) => (
+                  <button
+                    key={`${item.id}-${item.date}`}
+                    type="button"
+                    onClick={() => setSelectedDate(item.date)}
+                    className="w-full text-left p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-between gap-3 group cursor-pointer"
+                    aria-label={`Jump to ${item.dateLabel}: ${item.title} (${item.type})`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className={`w-2 h-2 rounded-full ${item.dotColor} shrink-0`} />
+                      <div className="min-w-0">
+                        <div className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] truncate group-hover:text-[#087F83] dark:group-hover:text-[#38D0C5] transition-colors">
+                          {item.title}
+                        </div>
+                        <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] font-mono">
+                          {item.dateLabel} · {item.time}
+                        </div>
+                      </div>
+                    </div>
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium shrink-0 ${item.badgeColor}`}>
                       {item.type}
                     </span>
-                  </div>
-                </div>
-              ))
-            )}
+                  </button>
+                ))
+              )}
+            </div>
           </div>
-
-          <button
-            onClick={() => openAddEntryModal(selectedDate)}
-            className="w-full py-2.5 rounded-xl border border-dashed border-[#087F83] text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold flex items-center justify-center gap-2 hover:bg-teal-50 dark:hover:bg-teal-950/40 transition-colors cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add entry to this day</span>
-          </button>
         </div>
       </div>
 

@@ -1,0 +1,24 @@
+{
+  "phase": "05-capture-and-details",
+  "timestamp": "2026-10-14T18:09:13.720Z",
+  "screenshots": [
+    "01-quick-add-task-default.png",
+    "02-quick-add-task-progressive-expanded.png",
+    "03-quick-add-validation-error.png",
+    "04-quick-add-contextual-expense.png",
+    "05-capture-toast-with-undo.png",
+    "06-task-filter-disclosure-notice.png",
+    "07-contextual-detail-panel-desktop.png",
+    "08-contextual-detail-panel-mobile-390.png"
+  ],
+  "assertionsPassed": 18,
+  "assertionsFailed": 0,
+  "verifiedCategories": [
+    "task",
+    "expense",
+    "workout",
+    "weight",
+    "water",
+    "thought"
+  ]
+}

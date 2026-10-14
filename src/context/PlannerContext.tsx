@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import {
+  AccentColor,
   BillItem,
   BrainDumpItem,
   CalendarEvent,
   CloudSyncState,
   ConflictItem,
   CorruptDataQuarantine,
+  CreationFeedback,
   DailyHydrationTarget,
   DebtItem,
   EditionType,
@@ -58,6 +60,7 @@ import {
   SAMPLE_WEIGHT_PROFILES,
   SAMPLE_WEIGHT_RECORDS,
   SAMPLE_WORKOUTS,
+  generateRelativeSampleData,
 } from '../utils/sampleData';
 import {
   calculateCashFlow,
@@ -227,12 +230,12 @@ interface PlannerContextType {
   toggleHabitCheck: (id: string, date: string) => void;
 
   // Inbox Actions
-  addInboxItem: (text: string) => void;
+  addInboxItem: (text: string) => string;
   deleteInboxItem: (id: string) => void;
   convertInboxToTask: (inboxId: string, taskData: Omit<TaskItem, 'id' | 'createdAt'>) => void;
 
   // Money Actions
-  addTransaction: (tx: Omit<FinancialTransaction, 'id'>) => void;
+  addTransaction: (tx: Omit<FinancialTransaction, 'id'>) => string;
   updateTransaction: (id: string, updates: Partial<FinancialTransaction>) => void;
   deleteTransaction: (id: string) => void;
   addBill: (bill: Omit<BillItem, 'id' | 'isPaid'>) => void;
@@ -281,11 +284,11 @@ interface PlannerContextType {
 
   // Weight Actions
   addWeightProfile: (profile: Omit<WeightProfile, 'id'>) => boolean;
-  addWeightRecord: (record: Omit<WeightRecord, 'id'>) => void;
+  addWeightRecord: (record: Omit<WeightRecord, 'id'>) => string;
   deleteWeightRecord: (id: string) => void;
 
   // Hydration Actions
-  addWaterLog: (amountMl: number, timeStr?: string) => void;
+  addWaterLog: (amountMl: number, timeStr?: string) => string;
   undoLastWaterLog: () => void;
   deleteWaterLog: (id: string) => void;
   updateWaterTarget: (targetMl: number) => void;
@@ -321,6 +324,13 @@ interface PlannerContextType {
   preRestoreSnapshot: PreRestoreSnapshotInfo | null;
   rollbackLastRestore: () => boolean;
   generateStandaloneHtml: () => string;
+
+  // Capture & Details Feedback (Phase 05)
+  lastCreationFeedback: CreationFeedback | null;
+  setLastCreationFeedback: (feedback: CreationFeedback | null) => void;
+  undoLastCreation: () => void;
+  highlightedTaskId: string | null;
+  setHighlightedTaskId: (id: string | null) => void;
 }
 
 const PlannerContext = createContext<PlannerContextType | undefined>(undefined);
@@ -329,7 +339,10 @@ export const getRealTodayDate = (timeZone?: string, now?: Date): string => {
   return getCanonicalTodayDate(timeZone, now);
 };
 
-export const applyThemeToDocument = (theme: 'light' | 'dark' | 'system') => {
+export const applyThemeToDocument = (
+  theme: 'light' | 'dark' | 'system',
+  accent: AccentColor = 'teal'
+) => {
   if (typeof window === 'undefined') return;
   const isDark =
     theme === 'dark'
@@ -340,6 +353,9 @@ export const applyThemeToDocument = (theme: 'light' | 'dark' | 'system') => {
 
   const root = document.documentElement;
   const body = document.body;
+
+  const validAccent = ['teal', 'ocean', 'plum', 'ember'].includes(accent) ? accent : 'teal';
+  root.setAttribute('data-accent', validAccent);
 
   if (isDark) {
     root.classList.add('dark');
@@ -423,27 +439,29 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [preRestoreSnapshot, setPreRestoreSnapshot] = useState<PreRestoreSnapshotInfo | null>(() =>
     getPreRestoreSnapshot()
   );
+  const [lastCreationFeedback, setLastCreationFeedback] = useState<CreationFeedback | null>(null);
+  const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null);
 
   const settingsRef = useRef<UserSettings>(settings);
   useEffect(() => {
     settingsRef.current = settings;
   }, [settings]);
 
-  // Reactive theme application: explicit Light and Dark override system; only System follows it.
+  // Reactive theme and accent application
   useEffect(() => {
-    applyThemeToDocument(settings.theme || 'light');
+    applyThemeToDocument(settings.theme || 'light', settings.accentColor || 'teal');
 
     if (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia) {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const listener = () => {
-        applyThemeToDocument('system');
+        applyThemeToDocument('system', settings.accentColor || 'teal');
       };
       mediaQuery.addEventListener('change', listener);
       return () => {
         mediaQuery.removeEventListener('change', listener);
       };
     }
-  }, [settings.theme]);
+  }, [settings.theme, settings.accentColor]);
 
   // Midnight rollover check (every 30 seconds)
   useEffect(() => {
@@ -975,8 +993,11 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
       } else if (next.pinnedTools) {
         next.pinnedTools = migratePinnedTools(next.pinnedTools);
       }
-      if (newSettings.theme) {
-        applyThemeToDocument(newSettings.theme);
+      if (newSettings.theme !== undefined || newSettings.accentColor !== undefined) {
+        applyThemeToDocument(
+          newSettings.theme ?? prev.theme ?? 'light',
+          newSettings.accentColor ?? prev.accentColor ?? 'teal'
+        );
       }
       if (newSettings.timeZone && newSettings.timeZone !== prev.timeZone) {
         const freshToday = getRealTodayDate(newSettings.timeZone);
@@ -1472,13 +1493,14 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   // Inbox Actions
-  const addInboxItem = (text: string) => {
+  const addInboxItem = (text: string): string => {
     const item: BrainDumpItem = {
       id: `inbox-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       text: text.trim(),
       createdAt: new Date().toISOString(),
     };
     setInbox((prev) => [item, ...prev]);
+    return item.id;
   };
 
   const deleteInboxItem = (id: string) => {
@@ -1496,12 +1518,13 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   // Money Actions
-  const addTransaction = (tx: Omit<FinancialTransaction, 'id'>) => {
+  const addTransaction = (tx: Omit<FinancialTransaction, 'id'>): string => {
     const newTx: FinancialTransaction = {
       ...tx,
       id: `tx-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
     };
     setTransactions((prev) => [newTx, ...prev]);
+    return newTx.id;
   };
 
   const updateTransaction = (id: string, updates: Partial<FinancialTransaction>) => {
@@ -2134,12 +2157,13 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return true;
   };
 
-  const addWeightRecord = (record: Omit<WeightRecord, 'id'>) => {
+  const addWeightRecord = (record: Omit<WeightRecord, 'id'>): string => {
     const newRecord: WeightRecord = {
       ...record,
       id: `wr-${Date.now()}`,
     };
     setWeightRecords((prev) => [newRecord, ...prev]);
+    return newRecord.id;
   };
 
   const deleteWeightRecord = (id: string) => {
@@ -2147,7 +2171,7 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   // Hydration Actions
-  const addWaterLog = (amountMl: number, timeStr?: string) => {
+  const addWaterLog = (amountMl: number, timeStr?: string): string => {
     const finalTime = timeStr || getCurrentTimeStr();
     const newEntry: HydrationLogEntry = {
       id: `hl-${Date.now()}`,
@@ -2156,6 +2180,7 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
       amountMl,
     };
     setHydrationEntries((prev) => [newEntry, ...prev]);
+    return newEntry.id;
   };
 
   const undoLastWaterLog = () => {
@@ -2250,6 +2275,19 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return next;
     });
   };
+
+  const undoLastCreation = useCallback(() => {
+    if (!lastCreationFeedback) return;
+    const { id, type } = lastCreationFeedback;
+    if (type === 'task') deleteTask(id);
+    else if (type === 'expense') deleteTransaction(id);
+    else if (type === 'workout') deleteWorkoutSession(id);
+    else if (type === 'weight') deleteWeightRecord(id);
+    else if (type === 'water') deleteWaterLog(id);
+    else if (type === 'thought') deleteInboxItem(id);
+    setLastCreationFeedback(null);
+    setHighlightedTaskId((prev) => (prev === id ? null : prev));
+  }, [lastCreationFeedback]);
 
   // Household & Tool Customization Actions
   const addHouseholdMember = (name: string, color: string) => {
@@ -2401,7 +2439,7 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     cleanSettings.enabledTools = migrateEnabledTools(cleanSettings.enabledTools);
     cleanSettings.pinnedTools = migratePinnedTools(cleanSettings.pinnedTools);
-    applyThemeToDocument(cleanSettings.theme);
+    applyThemeToDocument(cleanSettings.theme, cleanSettings.accentColor || 'teal');
     const freshToday = getRealTodayDate(cleanSettings.timeZone);
     setTodayDate(freshToday);
     setCurrentDate(freshToday);
@@ -2421,7 +2459,7 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
       hasCompletedSetup: false,
       isSampleDataActive: false,
     });
-    applyThemeToDocument(freshSettings.theme);
+    applyThemeToDocument(freshSettings.theme, freshSettings.accentColor || 'teal');
     setSettings(freshSettings);
     settingsRef.current = freshSettings;
     currentRevisionRef.current = 1;
@@ -2440,25 +2478,27 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const snap = savePreRestoreSnapshot(createDataSnapshot(), currentRevisionRef.current);
     if (snap) setPreRestoreSnapshot(snap);
 
-    setTasks(SAMPLE_TASKS); tasksRef.current = SAMPLE_TASKS;
-    setRoutines(SAMPLE_ROUTINES); routinesRef.current = SAMPLE_ROUTINES;
-    setGoals(SAMPLE_GOALS); goalsRef.current = SAMPLE_GOALS;
-    setHabits(SAMPLE_HABITS); habitsRef.current = SAMPLE_HABITS;
-    setInbox(SAMPLE_BRAIN_DUMP); inboxRef.current = SAMPLE_BRAIN_DUMP;
-    setTransactions(SAMPLE_TRANSACTIONS); transactionsRef.current = SAMPLE_TRANSACTIONS;
-    setBills(SAMPLE_BILLS); billsRef.current = SAMPLE_BILLS;
-    setSavingsPots(SAMPLE_SAVINGS_POTS); savingsPotsRef.current = SAMPLE_SAVINGS_POTS;
-    setDebts(SAMPLE_DEBTS); debtsRef.current = SAMPLE_DEBTS;
-    setRecipes(SAMPLE_RECIPES); recipesRef.current = SAMPLE_RECIPES;
-    setPlannedMeals(SAMPLE_PLANNED_MEALS); plannedMealsRef.current = SAMPLE_PLANNED_MEALS;
-    setGroceries(SAMPLE_GROCERIES); groceriesRef.current = SAMPLE_GROCERIES;
-    setWorkouts(SAMPLE_WORKOUTS); workoutsRef.current = SAMPLE_WORKOUTS;
-    setWeightProfiles(SAMPLE_WEIGHT_PROFILES); weightProfilesRef.current = SAMPLE_WEIGHT_PROFILES;
+    const relative = generateRelativeSampleData(todayDate);
+
+    setTasks(relative.tasks); tasksRef.current = relative.tasks;
+    setRoutines(relative.routines); routinesRef.current = relative.routines;
+    setGoals(relative.goals); goalsRef.current = relative.goals;
+    setHabits(relative.habits); habitsRef.current = relative.habits;
+    setInbox(relative.inbox); inboxRef.current = relative.inbox;
+    setTransactions(relative.transactions); transactionsRef.current = relative.transactions;
+    setBills(relative.bills); billsRef.current = relative.bills;
+    setSavingsPots(relative.savingsPots); savingsPotsRef.current = relative.savingsPots;
+    setDebts(relative.debts); debtsRef.current = relative.debts;
+    setRecipes(relative.recipes); recipesRef.current = relative.recipes;
+    setPlannedMeals(relative.plannedMeals); plannedMealsRef.current = relative.plannedMeals;
+    setGroceries(relative.groceries); groceriesRef.current = relative.groceries;
+    setWorkouts(relative.workouts); workoutsRef.current = relative.workouts;
+    setWeightProfiles(relative.weightProfiles); weightProfilesRef.current = relative.weightProfiles;
     setSelectedProfileId('wp-1');
-    setWeightRecords(SAMPLE_WEIGHT_RECORDS); weightRecordsRef.current = SAMPLE_WEIGHT_RECORDS;
-    setHydrationEntries(SAMPLE_HYDRATION_LOG); hydrationEntriesRef.current = SAMPLE_HYDRATION_LOG;
-    setHydrationTargets(SAMPLE_HYDRATION_TARGETS); hydrationTargetsRef.current = SAMPLE_HYDRATION_TARGETS;
-    setCalendarEvents(SAMPLE_CALENDAR_EVENTS); calendarEventsRef.current = SAMPLE_CALENDAR_EVENTS;
+    setWeightRecords(relative.weightRecords); weightRecordsRef.current = relative.weightRecords;
+    setHydrationEntries(relative.hydrationEntries); hydrationEntriesRef.current = relative.hydrationEntries;
+    setHydrationTargets(relative.hydrationTargets); hydrationTargetsRef.current = relative.hydrationTargets;
+    setCalendarEvents(relative.calendarEvents); calendarEventsRef.current = relative.calendarEvents;
     setWeeklyReviews([]); weeklyReviewsRef.current = [];
     updateSettings({
       budgetOpeningBalance: INITIAL_SETTINGS.budgetOpeningBalance,
@@ -2691,6 +2731,11 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         preRestoreSnapshot,
         rollbackLastRestore,
         generateStandaloneHtml,
+        lastCreationFeedback,
+        setLastCreationFeedback,
+        undoLastCreation,
+        highlightedTaskId,
+        setHighlightedTaskId,
       }}
     >
       {children}

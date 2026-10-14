@@ -22,8 +22,10 @@ import {
   Pin,
   Plus,
   SlidersHorizontal,
+  Palette,
 } from 'lucide-react';
-import { EditionType } from '../../types/planner';
+import { EditionType, AccentColor } from '../../types/planner';
+import { SegmentedControl, SegmentedControlOption } from '../ui/SegmentedControl';
 import {
   AVAILABLE_CURRENCIES,
   AVAILABLE_TIMEZONES,
@@ -36,6 +38,24 @@ import {
   isModuleOrToolEnabled,
   isModulePinnedRaw,
 } from '../../utils/moduleRegistry';
+
+type SettingsTab = 'all' | 'general' | 'appearance' | 'household' | 'modules' | 'data';
+
+const SETTINGS_TABS: SegmentedControlOption<SettingsTab>[] = [
+  { id: 'all', label: 'All Settings' },
+  { id: 'general', label: 'General', icon: SlidersHorizontal },
+  { id: 'appearance', label: 'Appearance', icon: Palette },
+  { id: 'household', label: 'Household', icon: Users },
+  { id: 'modules', label: 'Modules', icon: Pin },
+  { id: 'data', label: 'Data & Storage', icon: Database },
+];
+
+const ACCENT_OPTIONS: { id: AccentColor; name: string; color: string; desc: string }[] = [
+  { id: 'teal', name: 'Teal', color: '#087F83', desc: 'Calm emerald-cyan mineral palette (Default)' },
+  { id: 'ocean', name: 'Ocean', color: '#1D6AE5', desc: 'Deep nautical blue, focused & clear' },
+  { id: 'plum', name: 'Plum', color: '#7E22CE', desc: 'Refined purple-violet, creative & thoughtful' },
+  { id: 'ember', name: 'Ember', color: '#D97706', desc: 'Warm amber-orange, energetic & warm' },
+];
 
 export const SettingsView: React.FC = () => {
   const {
@@ -122,9 +142,17 @@ export const SettingsView: React.FC = () => {
     setTimeout(() => setSavedFeedback(false), 2500);
   };
 
+  const [activeTab, setActiveTab] = useState<SettingsTab>('all');
+  const currentAccent: AccentColor = settings.accentColor || 'teal';
+
   const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
     updateSettings({ theme });
-    applyThemeToDocument(theme);
+    applyThemeToDocument(theme, currentAccent);
+  };
+
+  const handleAccentChange = (accent: AccentColor) => {
+    updateSettings({ accentColor: accent });
+    applyThemeToDocument(settings.theme, accent);
   };
 
   const handleExportCurrentBackup = () => {
@@ -178,8 +206,20 @@ export const SettingsView: React.FC = () => {
         )}
       </div>
 
+      {/* Local Section Navigation */}
+      <div className="overflow-x-auto pb-1 -mt-2">
+        <SegmentedControl<SettingsTab>
+          options={SETTINGS_TABS}
+          value={activeTab}
+          onChange={(tab) => setActiveTab(tab)}
+          ariaLabel="Settings sections"
+          idPrefix="settings-section-tab"
+        />
+      </div>
+
       {/* 1. General Preferences Form (Board 25) */}
-      <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-5">
+      {(activeTab === 'all' || activeTab === 'general') && (
+        <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A] gap-2">
           <div className="flex items-center gap-2">
             <User className="w-4 h-4 text-[#087F83]" />
@@ -375,9 +415,11 @@ export const SettingsView: React.FC = () => {
           </div>
         </form>
       </div>
+      )}
 
       {/* Household Members Manager */}
-      <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
+      {(activeTab === 'all' || activeTab === 'household') && (
+        <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
         <div className="flex items-center gap-2 pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
           <Users className="w-4 h-4 text-[#087F83]" />
           <div>
@@ -462,9 +504,12 @@ export const SettingsView: React.FC = () => {
           )}
         </div>
       </div>
+      )}
 
-      {/* Tool Customization & Pinned Favorites */}
-      <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
+      {/* Modules: Tool Customization & Pinned Favorites */}
+      {(activeTab === 'all' || activeTab === 'modules') && (
+        <>
+          <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="w-4 h-4 text-[#087F83]" />
@@ -612,230 +657,339 @@ export const SettingsView: React.FC = () => {
           })}
         </div>
       </div>
+      </>
+      )}
 
-      {/* 2. Appearance (Board 25) */}
-      <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
-        <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-          Appearance
-        </h3>
-        <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
-          Choose how Our Life Planner looks across light and dark modes.
-        </p>
+      {/* 2. Appearance & Accent Themes */}
+      {(activeTab === 'all' || activeTab === 'appearance') && (
+        <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-6">
+          <div>
+            <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+              Appearance &amp; Themes
+            </h3>
+            <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
+              Choose how Our Life Planner looks across light and dark modes, and select your preferred accent theme.
+            </p>
+          </div>
 
-        <div role="radiogroup" aria-label="Theme preference" className="grid grid-cols-3 gap-3">
-          {[
-            { id: 'light', label: 'Light', icon: Sun },
-            { id: 'dark', label: 'Dark', icon: Moon },
-            { id: 'system', label: 'System', icon: Monitor },
-          ].map((theme) => {
-            const Icon = theme.icon;
-            const isSelected = settings.theme === theme.id;
-            return (
-              <button
-                key={theme.id}
-                type="button"
-                role="radio"
-                aria-checked={isSelected}
-                aria-label={`${theme.label} mode`}
-                onClick={() => handleThemeChange(theme.id as any)}
-                className={`min-h-[44px] p-3.5 rounded-xl border flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer transition-all ${
-                  isSelected
-                    ? 'border-[#087F83] bg-teal-50 dark:bg-teal-950/50 text-[#087F83] dark:text-[#38D0C5]'
-                    : 'border-slate-200 dark:border-slate-700 text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-50 dark:hover:bg-slate-800'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{theme.label}</span>
-              </button>
-            );
-          })}
+          <div className="space-y-2">
+            <div className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
+              Color Mode
+            </div>
+            <div role="radiogroup" aria-label="Theme preference" className="grid grid-cols-3 gap-3">
+              {[
+                { id: 'light', label: 'Light', icon: Sun },
+                { id: 'dark', label: 'Dark', icon: Moon },
+                { id: 'system', label: 'System', icon: Monitor },
+              ].map((theme) => {
+                const Icon = theme.icon;
+                const isSelected = settings.theme === theme.id;
+                return (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    aria-label={`${theme.label} mode`}
+                    onClick={() => handleThemeChange(theme.id as any)}
+                    className={`min-h-[44px] p-3.5 rounded-xl border flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer transition-all ${
+                      isSelected
+                        ? 'border-[#087F83] bg-teal-50 dark:bg-teal-950/50 text-[#087F83] dark:text-[#38D0C5]'
+                        : 'border-slate-200 dark:border-slate-700 text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-50 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{theme.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Accent Color Theme Radiogroup */}
+          <div className="space-y-3 pt-4 border-t border-[#E2E8F0] dark:border-[#1E2D4A]">
+            <div>
+              <div className="block text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
+                Accent Color Theme
+              </div>
+              <p className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
+                Coordinated light and dark roles for navigation, primary buttons, charts, and focus highlights.
+              </p>
+            </div>
+
+            <div role="radiogroup" aria-label="Accent color theme" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {ACCENT_OPTIONS.map((accent) => {
+                const isSelected = currentAccent === accent.id;
+                return (
+                  <button
+                    key={accent.id}
+                    type="button"
+                    role="radio"
+                    data-testid={`settings-accent-${accent.id}`}
+                    aria-checked={isSelected}
+                    aria-label={`${accent.name} accent theme: ${accent.desc}`}
+                    onClick={() => handleAccentChange(accent.id)}
+                    className={`min-h-[48px] p-3 rounded-xl border flex items-center gap-3 text-xs font-semibold cursor-pointer transition-all ${
+                      isSelected
+                        ? 'border-[#087F83] bg-teal-50/70 dark:bg-teal-950/40 text-[#071A3A] dark:text-[#EDF4FF]'
+                        : 'border-slate-200 dark:border-slate-700 text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-50 dark:hover:bg-slate-800'
+                    }`}
+                    style={
+                      isSelected
+                        ? { borderColor: 'var(--accent)', backgroundColor: 'var(--accent-soft)' }
+                        : undefined
+                    }
+                  >
+                    <span
+                      className="w-5 h-5 rounded-full shrink-0 flex items-center justify-center shadow-xs transition-transform"
+                      style={{ backgroundColor: accent.color }}
+                    >
+                      {isSelected && <Check className="w-3 h-3 text-white" />}
+                    </span>
+                    <div className="text-left flex-1 truncate">
+                      <div className="font-bold text-[#071A3A] dark:text-[#EDF4FF] truncate">{accent.name}</div>
+                      <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] font-normal truncate">{accent.desc}</div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Accent Tokens Preview */}
+            <div className="mt-3 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/40 space-y-2">
+              <div className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-2">
+                <span>Theme tokens active ({currentAccent.toUpperCase()})</span>
+                <span
+                  className="px-2 py-0.5 rounded-md text-[10px] font-semibold"
+                  style={{ backgroundColor: 'var(--accent-light)', color: 'var(--accent)' }}
+                >
+                  Active badge
+                </span>
+              </div>
+              <p className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
+                Semantic warning, error, and success indicators maintain strict meanings. Accent color tints interactive surfaces, active indicators, and charts.
+              </p>
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold shadow-2xs transition-colors"
+                  style={{
+                    backgroundColor: 'var(--btn-primary-bg)',
+                    color: 'var(--btn-primary-fg)',
+                  }}
+                >
+                  Primary button
+                </button>
+                <button
+                  type="button"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors"
+                  style={{
+                    backgroundColor: 'var(--btn-tonal-bg)',
+                    color: 'var(--btn-tonal-fg)',
+                    borderColor: 'var(--btn-tonal-border)',
+                  }}
+                >
+                  Tonal button
+                </button>
+                <div className="flex-1 min-w-[120px] h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
+                  <div className="h-full rounded-full w-2/3" style={{ backgroundColor: 'var(--accent)' }} />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 3. Edition Mode & Downloadable HTML (Board 24 & Section 2) */}
-      <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
-        <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-          Product Edition & Offline Independence
-        </h3>
-        <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
-          Choose how you interact with Our Life Planner: in your web browser with local storage, or as an independent downloadable HTML file.
-        </p>
+      {(activeTab === 'all' || activeTab === 'general') && (
+        <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
+          <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+            Product Edition & Offline Independence
+          </h3>
+          <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
+            Choose how you interact with Our Life Planner: in your web browser with local storage, or as an independent downloadable HTML file.
+          </p>
 
-        <div role="radiogroup" aria-label="Product edition preference" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div role="radiogroup" aria-label="Product edition preference" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={settings.edition === 'online'}
+              aria-label="Web Browser Edition: Runs in your browser with private local device storage"
+              onClick={() => updateSettings({ edition: 'online' })}
+              className={`p-4 rounded-xl border text-left cursor-pointer transition-all ${
+                settings.edition === 'online'
+                  ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20'
+                  : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+              }`}
+            >
+              <div className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                Web Browser Edition
+              </div>
+              <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE] mt-0.5">
+                Runs in your web browser with private local browser storage.
+              </div>
+              <span className="inline-block mt-2 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+                Local browser storage
+              </span>
+            </button>
+
+            <button
+              type="button"
+              role="radio"
+              aria-checked={settings.edition === 'downloaded'}
+              aria-label="Standalone Offline Bundle: 100% independent single-file HTML app"
+              onClick={() => updateSettings({ edition: 'downloaded' })}
+              className={`p-4 rounded-xl border text-left cursor-pointer transition-all ${
+                settings.edition === 'downloaded'
+                  ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20'
+                  : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+              }`}
+            >
+              <div className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                Standalone Offline Bundle
+              </div>
+              <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE] mt-0.5">
+                100% independent. Works without an internet connection.
+              </div>
+              <span className="inline-block mt-2 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">
+                Self-contained file
+              </span>
+            </button>
+          </div>
+
           <button
             type="button"
-            role="radio"
-            aria-checked={settings.edition === 'online'}
-            aria-label="Web Browser Edition: Runs in your browser with private local device storage"
-            onClick={() => updateSettings({ edition: 'online' })}
-            className={`p-4 rounded-xl border text-left cursor-pointer transition-all ${
-              settings.edition === 'online'
-                ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20'
-                : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/40'
-            }`}
+            onClick={() => setActiveModal('download_offline')}
+            className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer transition-colors"
           >
-            <div className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-              Web Browser Edition
-            </div>
-            <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE] mt-0.5">
-              Runs in your web browser with private local browser storage.
-            </div>
-            <span className="inline-block mt-2 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
-              Local browser storage
-            </span>
-          </button>
-
-          <button
-            type="button"
-            role="radio"
-            aria-checked={settings.edition === 'downloaded'}
-            aria-label="Standalone Offline Bundle: 100% independent single-file HTML app"
-            onClick={() => updateSettings({ edition: 'downloaded' })}
-            className={`p-4 rounded-xl border text-left cursor-pointer transition-all ${
-              settings.edition === 'downloaded'
-                ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20'
-                : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/40'
-            }`}
-          >
-            <div className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-              Standalone Offline Bundle
-            </div>
-            <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE] mt-0.5">
-              100% independent. Works without an internet connection.
-            </div>
-            <span className="inline-block mt-2 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">
-              Self-contained file
-            </span>
+            <Download className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+            <span>Get independent downloadable HTML bundle</span>
           </button>
         </div>
-
-        <button
-          type="button"
-          onClick={() => setActiveModal('download_offline')}
-          className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer transition-colors"
-        >
-          <Download className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
-          <span>Get independent downloadable HTML bundle</span>
-        </button>
-      </div>
+      )}
 
       {/* 4. Data, Backup & Reset (Board 25 & 27) */}
-      <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
-        <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-          Data & Backup
-        </h3>
-        <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
-          Export versioned JSON backups, restore data safely, or manage planner resets.
-        </p>
+      {(activeTab === 'all' || activeTab === 'data') && (
+        <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
+          <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+            Data & Backup
+          </h3>
+          <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
+            Export versioned JSON backups, restore data safely, or manage planner resets.
+          </p>
 
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={() => setActiveModal('backup_restore')}
-            className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer"
-          >
-            <Database className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
-            <span>Backup & Restore Manager</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveModal('setup')}
-            className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer"
-          >
-            <Sparkles className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
-            <span>Re-run Setup Wizard</span>
-          </button>
-
-          {settings.isSampleDataActive ? (
+          <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={removeSampleData}
-              className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-300 dark:border-amber-800 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 cursor-pointer"
+              onClick={() => setActiveModal('backup_restore')}
+              className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer"
             >
-              <Trash2 className="w-4 h-4" />
-              <span>Remove sample data (keeps your records)</span>
+              <Database className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+              <span>Backup & Restore Manager</span>
             </button>
-          ) : (
+
             <button
               type="button"
-              onClick={() => setIsReloadDemoConfirmOpen(true)}
-              className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-teal-300 dark:border-teal-800 text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-50 dark:hover:bg-teal-950/40 cursor-pointer"
+              onClick={() => setActiveModal('setup')}
+              className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+              <span>Re-run Setup Wizard</span>
+            </button>
+
+            {settings.isSampleDataActive ? (
+              <button
+                type="button"
+                onClick={removeSampleData}
+                className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-300 dark:border-amber-800 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Remove sample data (keeps your records)</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsReloadDemoConfirmOpen(true)}
+                className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-teal-300 dark:border-teal-800 text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-50 dark:hover:bg-teal-950/40 cursor-pointer"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>Reload Demo / Sample Data</span>
+              </button>
+            )}
+
+            {preRestoreSnapshot && (
+              <button
+                type="button"
+                onClick={() => rollbackLastRestore()}
+                className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-indigo-300 dark:border-indigo-800 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 cursor-pointer"
+                title={`Restore snapshot saved at ${preRestoreSnapshot.savedAt}`}
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>Undo Last Restore / Demo Reload</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                setResetScope('full_erase');
+                setIsResetConfirmOpen(true);
+              }}
+              className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-rose-300 dark:border-rose-800 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
             >
               <RotateCcw className="w-4 h-4" />
-              <span>Reload Demo / Sample Data</span>
+              <span>Reset all planner data</span>
             </button>
-          )}
-
-          {preRestoreSnapshot && (
-            <button
-              type="button"
-              onClick={() => rollbackLastRestore()}
-              className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-indigo-300 dark:border-indigo-800 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 cursor-pointer"
-              title={`Restore snapshot saved at ${preRestoreSnapshot.savedAt}`}
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>Undo Last Restore / Demo Reload</span>
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={() => {
-              setResetScope('full_erase');
-              setIsResetConfirmOpen(true);
-            }}
-            className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-rose-300 dark:border-rose-800 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
-          >
-            <RotateCcw className="w-4 h-4" />
-            <span>Reset all planner data</span>
-          </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 5. Guide & Support Entry Points (Board 25 & 28) */}
-      <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
-        <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-          Guide & Support
-        </h3>
-        <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
-          In-app tutorials, getting-started instructions and contact assistance.
-        </p>
+      {(activeTab === 'all' || activeTab === 'general') && (
+        <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
+          <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+            Guide & Support
+          </h3>
+          <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
+            In-app tutorials, getting-started instructions and contact assistance.
+          </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => setActiveModal('guide')}
-            className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer flex items-center justify-between"
-          >
-            <div>
-              <div className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-                User Guide
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setActiveModal('guide')}
+              className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer flex items-center justify-between"
+            >
+              <div>
+                <div className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                  User Guide
+                </div>
+                <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
+                  Detailed walkthrough of all 15 tools
+                </div>
               </div>
-              <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
-                Detailed walkthrough of all 15 tools
-              </div>
-            </div>
-            <HelpCircle className="w-4 h-4 text-[#087F83]" />
-          </button>
+              <HelpCircle className="w-4 h-4 text-[#087F83]" />
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveModal('support')}
-            className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer flex items-center justify-between"
-          >
-            <div>
-              <div className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-                Contact Support
+            <button
+              type="button"
+              onClick={() => setActiveModal('support')}
+              className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer flex items-center justify-between"
+            >
+              <div>
+                <div className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                  Contact Support
+                </div>
+                <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
+                  Direct email contact, diagnostics &amp; recovery help
+                </div>
               </div>
-              <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
-                Direct email contact, diagnostics &amp; recovery help
-              </div>
-            </div>
-            <Mail className="w-4 h-4 text-[#087F83]" />
-          </button>
+              <Mail className="w-4 h-4 text-[#087F83]" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Reload Demo Confirmation Modal Safeguard (LP-04) */}
       <Modal

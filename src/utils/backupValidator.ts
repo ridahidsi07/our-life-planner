@@ -82,6 +82,7 @@ const VALID_TASK_STATUSES = new Set<TaskStatus>(['not_started', 'in_progress', '
 const VALID_ROUTINE_INTERVALS = new Set<RoutineInterval>(['daily', 'weekly', 'monthly', 'yearly', 'custom']);
 const VALID_BUDGET_PERIODS = new Set<BudgetPeriodType>(['monthly', 'weekly', 'paycheck', 'custom']);
 const VALID_THEMES = new Set(['light', 'dark', 'system']);
+const VALID_ACCENT_COLORS = new Set(['teal', 'ocean', 'plum', 'ember']);
 const VALID_EDITIONS = new Set(['online', 'downloaded']);
 const VALID_WEEK_STARTS = new Set(['Monday', 'Sunday']);
 const VALID_WEIGHT_UNITS = new Set(['kg', 'lb']);
@@ -211,6 +212,9 @@ export function validateBackupData(input: unknown): BackupValidationResult {
     }
     if (!VALID_THEMES.has(s.theme)) {
       errors.push('settings.theme must be "light", "dark", or "system".');
+    }
+    if (s.accentColor !== undefined && !VALID_ACCENT_COLORS.has(s.accentColor)) {
+      warnings.push(`settings.accentColor ("${String(s.accentColor)}") is invalid; falling back to "teal".`);
     }
     if (typeof s.isSampleDataActive !== 'boolean') {
       errors.push('settings.isSampleDataActive must be a boolean.');
@@ -865,6 +869,10 @@ export function validateBackupData(input: unknown): BackupValidationResult {
     ...(input.settings as UserSettings),
     ownerName: String(input.settings.ownerName).trim(),
     currencySymbol: getCurrencySymbol(input.settings.currency),
+    accentColor:
+      input.settings.accentColor && VALID_ACCENT_COLORS.has(input.settings.accentColor)
+        ? input.settings.accentColor
+        : 'teal',
     ...(Array.isArray(input.settings.enabledTools)
       ? { enabledTools: migrateEnabledTools(input.settings.enabledTools) }
       : {}),

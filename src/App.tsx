@@ -5,6 +5,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { PlannerProvider, usePlanner } from './context/PlannerContext';
+import { FocusProvider } from './context/FocusContext';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
@@ -41,6 +42,7 @@ import { SupportModal } from './components/modals/SupportModal';
 import { FocusModal } from './components/modals/FocusModal';
 import { WeeklyReviewModal } from './components/modals/WeeklyReviewModal';
 import { PwaInstallModal } from './components/modals/PwaInstallModal';
+import { CreationFeedbackToast } from './components/ui/CreationFeedbackToast';
 
 import { AlertCircle, AlertTriangle, Download, Sparkles, X } from 'lucide-react';
 
@@ -261,6 +263,9 @@ const PlannerAppContent: React.FC = () => {
         onCloseMore={() => setIsMobileDrawerOpen(false)}
       />
 
+      {/* Global Capture Feedback Toast */}
+      <CreationFeedbackToast />
+
       {/* Global Modals */}
       <ErrorBoundary compact onReset={() => setActiveModal(null)}>
         <QuickAddModal />
@@ -284,7 +289,9 @@ export default function App() {
   return (
     <ErrorBoundary>
       <PlannerProvider>
-        <PlannerAppContent />
+        <FocusProvider>
+          <PlannerAppContent />
+        </FocusProvider>
       </PlannerProvider>
     </ErrorBoundary>
   );

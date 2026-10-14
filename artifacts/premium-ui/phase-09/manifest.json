@@ -1,0 +1,25 @@
+{
+  "phase": "09",
+  "title": "Motion, Responsive Behavior & Complete States",
+  "verifiedAt": "2026-10-14T18:10:29.291Z",
+  "screenshots": [
+    "01-desktop-1440-today-dashboard.png",
+    "02-desktop-1280-above-the-fold.png",
+    "03-tablet-768-navigation-collapse.png",
+    "04-mobile-390-touch-viewport.png",
+    "05-mobile-320-no-overflow.png",
+    "06-tasks-filter-empty-state.png",
+    "07-reduced-motion-verified.png",
+    "08-sample-data-relative-dates.png"
+  ],
+  "responsiveViewportsVerified": [
+    "1440x900",
+    "1280x720",
+    "768x1024",
+    "390x844",
+    "320x568"
+  ],
+  "zeroHorizontalOverflow": true,
+  "reducedMotionCompliant": true,
+  "relativeSampleDatingVerified": true
+}

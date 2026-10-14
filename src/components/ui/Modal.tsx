@@ -138,11 +138,19 @@ export function useDialogAccessibility(
       }
     };
 
+    const prevOverflow = typeof document !== 'undefined' ? document.body.style.overflow : '';
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = 'hidden';
+    }
+
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       clearTimeout(timer);
       window.removeEventListener('keydown', handleKeyDown);
+      if (typeof document !== 'undefined') {
+        document.body.style.overflow = prevOverflow;
+      }
       const previous = previousFocusRef.current;
       if (previous && typeof previous.focus === 'function' && document.contains(previous)) {
         previous.focus();
