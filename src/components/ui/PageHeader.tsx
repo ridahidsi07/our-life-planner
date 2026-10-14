@@ -19,7 +19,10 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
     <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 ${className}`}>
       <div>
         <div className="flex items-center gap-2.5">
-          <h2 className="text-2xl font-bold tracking-tight text-[#14233B] dark:text-[#EDF4FF]">
+          <h2
+            tabIndex={-1}
+            className="text-2xl font-bold tracking-tight text-[#14233B] dark:text-[#EDF4FF] outline-none"
+          >
             {title}
           </h2>
           {badge}

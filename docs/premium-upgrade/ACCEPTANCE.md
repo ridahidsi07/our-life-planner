@@ -20,17 +20,17 @@ Use this as the completion contract for the implementation. All rows are initial
 | 12 | Chart inspection | 04 | Dates, units and legends are clear; tooltip/inspection works through pointer, keyboard and touch with a text alternative. | Pending |
 | 13 | Connected figures | 02–06 | Equivalent scopes agree after creation, completion, reopening, editing, filtering and deletion. | Pending |
 | 14 | Honest numeric motion | 04, 09 | Brief true old/new transitions; no arbitrary counts, zero-reset on routine navigation or repeated announcements. | Pending |
-| 15 | Optional Board | 03 | List/Board/Insights coexist; Board uses the four existing stored statuses. | Pending |
-| 16 | Complete drag/status operation | 03 | Lift/source/drop/cancel feedback works; status menu provides keyboard/touch equivalence; no lost or duplicate records. | Pending |
-| 17 | Scannable task cards | 03 | Title leads; metadata is restrained; no fictional comments/subtask progress is displayed. | Pending |
+| 15 | Optional Board | 03 | List/Board/Insights coexist; Board uses the four existing stored statuses. | **Complete** (`artifacts/premium-ui/phase-03/01-tasks-board-desktop-1440-light.png`) |
+| 16 | Complete drag/status operation | 03 | Lift/source/drop/cancel feedback works; status menu provides keyboard/touch equivalence; no lost or duplicate records. | **Complete** (`artifacts/premium-ui/phase-03/03-tasks-board-card-menu-open.png`, `04-tasks-board-drag-placeholder-active.png`) |
+| 17 | Scannable task cards | 03 | Title leads; metadata is restrained; no fictional comments/subtask progress is displayed. | **Complete** (`artifacts/premium-ui/phase-03/01-tasks-board-desktop-1440-light.png`) |
 | 18 | Shared contextual drawer | 05 | Existing shared drawer supports consistent detail/edit flows and returns focus/context correctly. | Pending |
 | 19 | Contextual Quick Add | 05 | Module actions open the relevant form; global categories remain; common capture is concise and validated. | Pending |
 | 20 | Visible save result | 05 | Success reflects real state/saving behavior; new item is identifiable; appropriate Undo actually restores the prior state. | Pending |
 | 21 | Informative calendar cells | 06 | Desktop labels and overflow action work; narrow layouts retain readable access to events. | Pending |
 | 22 | Synchronized agenda | 06 | Selected date, agenda, upcoming list and navigation/filter state agree. | Pending |
 | 23 | In-context focus | 07 | Compact and modal controls share one countdown/break session with correct navigation/refresh/background behavior. | Pending |
-| 24 | Relevant household UI | 03, 08 | Assignment/filters help households; solo use does not acquire an irrelevant team directory. | Pending |
-| 25 | Filter continuity | 03, 09 | Items keep identity; filtering/reordering is understandable and preserves appropriate focus/scroll. | Pending |
+| 24 | Relevant household UI | 03, 08 | Assignment/filters help households; solo use does not acquire an irrelevant team directory. | **Complete** (`artifacts/premium-ui/phase-03/05-tasks-board-quick-filter-high-priority.png`) |
+| 25 | Filter continuity | 03, 09 | Items keep identity; filtering/reordering is understandable and preserves appropriate focus/scroll. | **Complete** (`artifacts/premium-ui/phase-03/07-tasks-board-filter-empty-state.png`, `10-tasks-list-view-sync.png`) |
 | 26 | Coordinated transitions | 05, 09 | Stable shell, clean enter/exit, no invisible interactive overlays, flash or blocked rapid input. | Pending |
 | 27 | Complete accent system | 08 | Accent reaches all role-based UI, charts and special surfaces in light/dark; persists across refresh/backup restore. | Pending |
 | 28 | Semantic colors | 08 | Danger, warning, success, category and overdue meanings survive accent changes. | Pending |

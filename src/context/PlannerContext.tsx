@@ -21,6 +21,7 @@ import {
   SavingState,
   SavingsPot,
   TaskItem,
+  TaskStatus,
   UserSettings,
   WeightProfile,
   WeightRecord,
@@ -1135,9 +1136,22 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const updateTask = (id: string, updates: Partial<TaskItem>) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, ...updates } : t))
-    );
+    setTasks((prev) => {
+      const next = prev.map((t) => {
+        if (t.id !== id) return t;
+        const merged = { ...t, ...updates };
+        if (updates.status !== undefined) {
+          if (updates.status === 'completed' && !merged.completedAt) {
+            merged.completedAt = new Date().toISOString();
+          } else if (updates.status !== 'completed' && updates.completedAt === undefined) {
+            merged.completedAt = undefined;
+          }
+        }
+        return merged;
+      });
+      tasksRef.current = next;
+      return next;
+    });
   };
 
   const deleteTask = (id: string) => {
@@ -1158,17 +1172,20 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const toggleTaskCompletion = (id: string) => {
-    setTasks((prev) =>
-      prev.map((t) => {
+    setTasks((prev) => {
+      const next = prev.map((t): TaskItem => {
         if (t.id !== id) return t;
         const willBeCompleted = t.status !== 'completed';
+        const newStatus: TaskStatus = willBeCompleted ? 'completed' : 'not_started';
         return {
           ...t,
-          status: willBeCompleted ? 'completed' : 'not_started',
+          status: newStatus,
           completedAt: willBeCompleted ? new Date().toISOString() : undefined,
         };
-      })
-    );
+      });
+      tasksRef.current = next;
+      return next;
+    });
   };
 
   const archiveTask = (id: string) => {

@@ -18,12 +18,14 @@ import {
   Edit2,
   PieChart,
   List,
+  LayoutGrid,
   ChevronLeft,
   ChevronRight,
   Archive,
   RotateCcw,
 } from 'lucide-react';
 import { TaskItem, Priority, TaskStatus } from '../../types/planner';
+import { TasksBoardView } from './TasksBoardView';
 
 export const TasksView: React.FC = () => {
   const {
@@ -41,7 +43,8 @@ export const TasksView: React.FC = () => {
 
   const defaultOwner = settings.ownerName || 'Me';
 
-  const [activeTab, setActiveTab] = useState<'list' | 'insights'>('list');
+  const [activeTab, setActiveTab] = useState<'list' | 'board' | 'insights'>('list');
+  const [quickFilter, setQuickFilter] = useState<'all' | 'my_tasks' | 'high_priority' | 'due_this_week'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [assignedFilter, setAssignedFilter] = useState('Anyone');
@@ -68,7 +71,7 @@ export const TasksView: React.FC = () => {
   const [modalDescription, setModalDescription] = useState('');
   const [modalTitleError, setModalTitleError] = useState('');
 
-  const openCreateModal = () => {
+  const openCreateModal = (presetStatus: TaskStatus = 'not_started') => {
     setEditingTask(null);
     setModalTitle('');
     setModalTitleError('');
@@ -77,9 +80,16 @@ export const TasksView: React.FC = () => {
     setModalDueDate(currentDate);
     setModalDueTime('');
     setModalPriority('medium');
-    setModalStatus('not_started');
+    setModalStatus(presetStatus);
     setModalDescription('');
     setIsModalOpen(true);
+  };
+
+  const handleStatusChange = (taskId: string, newStatus: TaskStatus) => {
+    updateTask(taskId, {
+      status: newStatus,
+      completedAt: newStatus === 'completed' ? new Date().toISOString() : undefined,
+    });
   };
 
   const openEditModal = (task: TaskItem) => {
@@ -146,6 +156,14 @@ export const TasksView: React.FC = () => {
     [tasks]
   );
 
+  const weekDays = useMemo(() => {
+    return getWeekDaysForDate(currentDate, settings.weekStartsOn);
+  }, [currentDate, settings.weekStartsOn]);
+
+  const weekDatesSet = useMemo(() => {
+    return new Set(weekDays.map((d) => d.dateStr));
+  }, [weekDays]);
+
   // Filter tasks (excluding archived tasks from active views unless 'Archived' filter is chosen)
   const filteredTasks = useMemo(() => {
     return tasks.filter((t) => {
@@ -170,20 +188,50 @@ export const TasksView: React.FC = () => {
       if (selectedDateFilter !== 'all' && t.dueDate !== selectedDateFilter) {
         return false;
       }
+      if (quickFilter === 'my_tasks') {
+        const owner = settings.ownerName || defaultOwner;
+        if (t.assignedTo !== owner && t.assignedTo !== defaultOwner && t.assignedTo !== 'Me') {
+          return false;
+        }
+      }
+      if (quickFilter === 'high_priority') {
+        if (t.priority !== 'urgent' && t.priority !== 'high') {
+          return false;
+        }
+      }
+      if (quickFilter === 'due_this_week') {
+        if (!t.dueDate || !weekDatesSet.has(t.dueDate)) {
+          return false;
+        }
+      }
       return true;
     });
-  }, [tasks, searchQuery, categoryFilter, assignedFilter, priorityFilter, statusFilter, selectedDateFilter]);
+  }, [
+    tasks,
+    searchQuery,
+    categoryFilter,
+    assignedFilter,
+    priorityFilter,
+    statusFilter,
+    selectedDateFilter,
+    quickFilter,
+    settings.ownerName,
+    defaultOwner,
+    weekDatesSet,
+  ]);
 
   const activeFilterCount =
     (categoryFilter !== 'All' ? 1 : 0) +
     (priorityFilter !== 'All' ? 1 : 0) +
     (statusFilter !== 'All' ? 1 : 0) +
-    (selectedDateFilter !== 'all' ? 1 : 0);
+    (selectedDateFilter !== 'all' ? 1 : 0) +
+    (assignedFilter !== 'Anyone' ? 1 : 0) +
+    (quickFilter !== 'all' ? 1 : 0);
 
   // Reset to first page whenever search query or filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, categoryFilter, assignedFilter, priorityFilter, statusFilter, selectedDateFilter]);
+  }, [searchQuery, categoryFilter, assignedFilter, priorityFilter, statusFilter, selectedDateFilter, quickFilter]);
 
   // Bounded pagination: slices filteredTasks to avoid mounting thousands of DOM nodes simultaneously
   const totalPages = Math.max(1, Math.ceil(filteredTasks.length / pageSize));
@@ -197,9 +245,11 @@ export const TasksView: React.FC = () => {
   const handleClearFilters = () => {
     setSearchQuery('');
     setCategoryFilter('All');
+    setAssignedFilter('Anyone');
     setPriorityFilter('All');
     setStatusFilter('All');
     setSelectedDateFilter('all');
+    setQuickFilter('all');
   };
 
   // Overall Task Metrics (Calculated honestly from filtered data)
@@ -305,7 +355,10 @@ export const TasksView: React.FC = () => {
       {/* Top Header & New Task button */}
       <div className="card-surface p-5 flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+          <h2
+            tabIndex={-1}
+            className="text-xl font-bold text-[#071A3A] dark:text-[#EDF4FF] outline-none"
+          >
             Tasks
           </h2>
           <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
@@ -314,10 +367,12 @@ export const TasksView: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* List / Insights Tab Switch */}
+          {/* List / Board / Insights Tab Switch */}
           <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-[#526782]">
             <button
+              type="button"
               onClick={() => setActiveTab('list')}
+              data-testid="tasks-view-list-tab"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'list'
                   ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
@@ -328,7 +383,22 @@ export const TasksView: React.FC = () => {
               <span>List</span>
             </button>
             <button
+              type="button"
+              onClick={() => setActiveTab('board')}
+              data-testid="tasks-view-board-tab"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                activeTab === 'board'
+                  ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                  : 'hover:text-[#071A3A] dark:hover:text-[#EDF4FF]'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Board</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveTab('insights')}
+              data-testid="tasks-view-insights-tab"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'insights'
                   ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
@@ -341,7 +411,8 @@ export const TasksView: React.FC = () => {
           </div>
 
           <button
-            onClick={openCreateModal}
+            type="button"
+            onClick={() => openCreateModal()}
             data-testid="tasks-new-task-btn"
             className="btn-primary min-h-[44px] px-4 py-2"
           >
@@ -398,7 +469,7 @@ export const TasksView: React.FC = () => {
           <button
             type="button"
             data-testid="tasks-empty-cta"
-            onClick={openCreateModal}
+            onClick={() => openCreateModal()}
             className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -407,8 +478,11 @@ export const TasksView: React.FC = () => {
         </div>
       )}
 
-      {/* Desktop Metric Cards Row */}
-      <div className="hidden md:grid md:grid-cols-4 gap-4">
+      {/* List Planning Metrics & Week Strip (Visible in List View) */}
+      {activeTab === 'list' && (
+        <>
+          {/* Desktop Metric Cards Row */}
+          <div className="hidden md:grid md:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-[#152238] rounded-2xl p-4 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
           <div className="text-xs text-[#526782] dark:text-[#A8B8CE] font-medium">
             Total tasks
@@ -538,9 +612,67 @@ export const TasksView: React.FC = () => {
           })}
         </div>
       </div>
+    </>
+  )}
 
-      {/* List Tab View */}
-      {activeTab === 'list' && (
+  {/* Quick Filter Bar & Task Counter (Fernly Reference frame-019) */}
+  {tasks.length > 0 && activeTab !== 'insights' && (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+        <button
+          type="button"
+          onClick={() => setQuickFilter('all')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            quickFilter === 'all'
+              ? 'bg-[#071A3A] dark:bg-[#EDF4FF] text-white dark:text-[#071A3A] shadow-xs'
+              : 'bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] hover:text-[#071A3A] dark:hover:text-[#EDF4FF]'
+          }`}
+        >
+          All
+        </button>
+        <button
+          type="button"
+          onClick={() => setQuickFilter('my_tasks')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            quickFilter === 'my_tasks'
+              ? 'bg-[#071A3A] dark:bg-[#EDF4FF] text-white dark:text-[#071A3A] shadow-xs'
+              : 'bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] hover:text-[#071A3A] dark:hover:text-[#EDF4FF]'
+          }`}
+        >
+          My tasks
+        </button>
+        <button
+          type="button"
+          onClick={() => setQuickFilter('high_priority')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            quickFilter === 'high_priority'
+              ? 'bg-[#071A3A] dark:bg-[#EDF4FF] text-white dark:text-[#071A3A] shadow-xs'
+              : 'bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] hover:text-[#071A3A] dark:hover:text-[#EDF4FF]'
+          }`}
+        >
+          High priority
+        </button>
+        <button
+          type="button"
+          onClick={() => setQuickFilter('due_this_week')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            quickFilter === 'due_this_week'
+              ? 'bg-[#071A3A] dark:bg-[#EDF4FF] text-white dark:text-[#071A3A] shadow-xs'
+              : 'bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] hover:text-[#071A3A] dark:hover:text-[#EDF4FF]'
+          }`}
+        >
+          Due this week
+        </button>
+      </div>
+
+      <div className="text-xs text-[#526782] dark:text-[#A8B8CE] font-medium shrink-0">
+        <span className="font-semibold text-[#071A3A] dark:text-[#EDF4FF]">{filteredTasks.length}</span> task{filteredTasks.length === 1 ? '' : 's'} shown
+      </div>
+    </div>
+  )}
+
+      {/* Search & Filters Toolbar (Shared for List & Board Views) */}
+      {tasks.length > 0 && activeTab !== 'insights' && (
         <div className="card-surface p-4 md:p-5 space-y-4">
           {/* Mobile Search & Filters: Single control toggle */}
           <div className="md:hidden space-y-2">
@@ -717,7 +849,12 @@ export const TasksView: React.FC = () => {
               </button>
             </div>
           )}
+        </div>
+      )}
 
+      {/* List Tab View */}
+      {activeTab === 'list' && (
+        <div className="card-surface p-4 md:p-5 space-y-4">
           {/* Mobile Task Cards (All vital details visible together) */}
           <div className="md:hidden space-y-2.5">
             {filteredTasks.length === 0 ? (
@@ -1104,6 +1241,22 @@ export const TasksView: React.FC = () => {
             </div>
           )}
         </div>
+      )}
+
+      {/* Board Tab View */}
+      {activeTab === 'board' && (
+        <TasksBoardView
+          tasks={filteredTasks}
+          allTasksCount={tasks.length}
+          currentDate={currentDate}
+          onStatusChange={handleStatusChange}
+          onOpenEdit={openEditModal}
+          onDelete={handleDeleteTaskWithUndo}
+          onArchive={archiveTask}
+          onUnarchive={unarchiveTask}
+          onCreateInStatus={(status) => openCreateModal(status)}
+          onClearFilters={handleClearFilters}
+        />
       )}
 
       {/* Insights Tab View (Board 17) */}
