@@ -198,14 +198,14 @@ export const BackupRestoreModal: React.FC = () => {
                 aria-label="Copy backup JSON to clipboard"
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-[#071A3A] dark:text-[#EDF4FF] hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold cursor-pointer transition-colors"
               >
-                <FileText className="w-3.5 h-3.5 text-[#087F83] dark:text-[#38D0C5]" />
+                <FileText className="w-3.5 h-3.5 text-[var(--accent)]" />
                 <span>{copied ? 'Copied to clipboard!' : 'Copy JSON'}</span>
               </button>
               <button
                 type="button"
                 onClick={handleExport}
                 aria-label="Export backup: download versioned JSON file"
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer shadow-xs transition-colors"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer shadow-xs transition-colors"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Download JSON</span>
@@ -226,7 +226,7 @@ export const BackupRestoreModal: React.FC = () => {
               accept=".json"
               aria-label="Select backup JSON file to restore"
               onChange={handleFileSelect}
-              className="block w-full text-xs text-[#526782] dark:text-[#A8B8CE] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-teal-50 dark:file:bg-teal-950/60 file:text-[#087F83] dark:file:text-[#38D0C5] hover:file:bg-teal-100 cursor-pointer"
+              className="block w-full text-xs text-[#526782] dark:text-[#A8B8CE] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[var(--accent-soft)] file:text-[var(--accent)] hover:file:bg-[var(--accent-soft-hover)] cursor-pointer"
             />
 
             <details
@@ -248,12 +248,12 @@ export const BackupRestoreModal: React.FC = () => {
                   onChange={(e) => setPastedJson(e.target.value)}
                   placeholder="Paste backup JSON content here (must be a complete version '1.0.0' backup)..."
                   rows={4}
-                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-mono text-[#071A3A] dark:text-[#EDF4FF] focus:ring-2 focus:ring-[#087F83]"
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-mono text-[#071A3A] dark:text-[#EDF4FF] focus:ring-2 focus:ring-[var(--focus-ring)]"
                 />
                 <button
                   type="button"
                   onClick={handleParsePastedJson}
-                  className="px-3.5 py-1.5 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer"
                 >
                   Validate and preview backup
                 </button>
@@ -346,16 +346,16 @@ export const BackupRestoreModal: React.FC = () => {
 
             {/* Pre-Restore Safety Snapshot Recovery Section */}
             {preRestoreSnapshot && (
-              <div className="p-4 rounded-2xl bg-teal-50/60 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800/70 text-xs space-y-2.5">
+              <div className="p-4 rounded-2xl bg-[var(--accent-soft)] border border-[var(--border-color)] text-xs space-y-2.5">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-1.5 font-bold text-[#087F83] dark:text-[#38D0C5]">
+                  <div className="flex items-center gap-1.5 font-bold text-[var(--accent)]">
                     <ShieldCheck className="w-4 h-4" />
                     <span>Recoverable previous snapshot retained</span>
                   </div>
                   <button
                     type="button"
                     onClick={handleRollbackSnapshot}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] text-white text-[11px] font-semibold cursor-pointer transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] text-[11px] font-semibold cursor-pointer transition-colors"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Restore previous snapshot</span>

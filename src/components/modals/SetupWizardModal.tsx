@@ -260,9 +260,9 @@ export const SetupWizardModal: React.FC = () => {
               key={s}
               className={`h-1.5 rounded-full transition-all ${
                 s === step
-                  ? 'w-8 bg-[#087F83]'
+                  ? 'w-8 bg-[var(--btn-primary-bg)]'
                   : s < step
-                  ? 'w-4 bg-teal-400'
+                  ? 'w-4 bg-[var(--accent)] opacity-60'
                   : 'w-4 bg-slate-200 dark:bg-slate-700'
               }`}
             />
@@ -295,11 +295,11 @@ export const SetupWizardModal: React.FC = () => {
                 onClick={() => setEdition('online')}
                 className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
                   edition === 'online'
-                    ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20 shadow-xs'
+                    ? 'border-[var(--accent)] bg-[var(--accent-soft)] shadow-xs'
                     : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
                 }`}
               >
-                <Globe className="w-5 h-5 text-[#087F83] mb-2" />
+                <Globe className="w-5 h-5 text-[var(--accent)] mb-2" />
                 <div className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
                   Web Browser Mode
                 </div>
@@ -315,7 +315,7 @@ export const SetupWizardModal: React.FC = () => {
                 onClick={() => setEdition('downloaded')}
                 className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
                   edition === 'downloaded'
-                    ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20 shadow-xs'
+                    ? 'border-[var(--accent)] bg-[var(--accent-soft)] shadow-xs'
                     : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
                 }`}
               >
@@ -346,7 +346,7 @@ export const SetupWizardModal: React.FC = () => {
                   value={ownerName}
                   onChange={(e) => setOwnerName(e.target.value)}
                   placeholder="e.g. Alex"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium focus:outline-none focus:border-[#087F83]"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium focus:outline-none focus:border-[var(--focus-ring)]"
                 />
               </div>
 
@@ -363,7 +363,7 @@ export const SetupWizardModal: React.FC = () => {
                     aria-label="Currency"
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium focus:outline-none focus:border-[#087F83]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium focus:outline-none focus:border-[var(--focus-ring)]"
                   >
                     {AVAILABLE_CURRENCIES.map((c) => (
                       <option key={c.code} value={c.code}>
@@ -385,7 +385,7 @@ export const SetupWizardModal: React.FC = () => {
                     aria-label="Timezone and locale"
                     value={timeZone}
                     onChange={(e) => setTimeZone(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium focus:outline-none focus:border-[#087F83]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium focus:outline-none focus:border-[var(--focus-ring)]"
                   >
                     {AVAILABLE_TIMEZONES.map((tz) => (
                       <option key={tz.value} value={tz.value}>
@@ -407,7 +407,7 @@ export const SetupWizardModal: React.FC = () => {
                     aria-label="Week starts on"
                     value={weekStart}
                     onChange={(e) => setWeekStart(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium focus:outline-none focus:border-[#087F83]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium focus:outline-none focus:border-[var(--focus-ring)]"
                   >
                     <option value="Monday">Monday</option>
                     <option value="Sunday">Sunday</option>
@@ -419,7 +419,7 @@ export const SetupWizardModal: React.FC = () => {
             <div className="flex justify-end pt-2">
               <button
                 type="submit"
-                className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer shadow-xs transition-colors"
+                className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer shadow-xs transition-colors"
               >
                 <span>Choose Tools & Data</span>
                 <ArrowRight className="w-4 h-4" />
@@ -453,8 +453,8 @@ export const SetupWizardModal: React.FC = () => {
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
                       enabledTools.length === STARTER_ENABLED_MODULES.length &&
                       STARTER_ENABLED_MODULES.every((id) => enabledTools.includes(id))
-                        ? 'bg-[#087F83] text-white border-[#087F83]'
-                        : 'bg-slate-50 dark:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] border-slate-200 dark:border-slate-700 hover:border-[#087F83]'
+                        ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] border-[var(--btn-primary-bg)]'
+                        : 'bg-slate-50 dark:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] border-slate-200 dark:border-slate-700 hover:border-[var(--accent)]'
                     }`}
                   >
                     Core Starter (5)
@@ -469,8 +469,8 @@ export const SetupWizardModal: React.FC = () => {
                     }}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
                       enabledTools.length === DEFAULT_ENABLED_MODULES.length
-                        ? 'bg-[#087F83] text-white border-[#087F83]'
-                        : 'bg-slate-50 dark:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] border-slate-200 dark:border-slate-700 hover:border-[#087F83]'
+                        ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] border-[var(--btn-primary-bg)]'
+                        : 'bg-slate-50 dark:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] border-slate-200 dark:border-slate-700 hover:border-[var(--accent)]'
                     }`}
                   >
                     All Modules (10)
@@ -491,13 +491,13 @@ export const SetupWizardModal: React.FC = () => {
                       onClick={() => toggleTool(t.id)}
                       className={`p-2.5 rounded-xl border text-left flex items-start gap-2.5 transition-colors cursor-pointer ${
                         isChecked
-                          ? 'border-[#087F83] bg-teal-50/40 dark:bg-teal-950/20'
+                          ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
                           : 'border-slate-200 dark:border-slate-700 opacity-60'
                       }`}
                     >
                       <div
                         className={`w-4 h-4 rounded mt-0.5 flex items-center justify-center shrink-0 ${
-                          isChecked ? 'bg-[#087F83] text-white' : 'border border-slate-300 dark:border-slate-600'
+                          isChecked ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)]' : 'border border-slate-300 dark:border-slate-600'
                         }`}
                       >
                         {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
@@ -534,7 +534,7 @@ export const SetupWizardModal: React.FC = () => {
                     onClick={() => handleSelectStartChoice('keep')}
                     className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
                       startChoice === 'keep'
-                        ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20 shadow-xs'
+                        ? 'border-[var(--accent)] bg-[var(--accent-soft)] shadow-xs'
                         : 'border-slate-200 dark:border-slate-700'
                     }`}
                   >
@@ -556,11 +556,11 @@ export const SetupWizardModal: React.FC = () => {
                   onClick={() => handleSelectStartChoice('sample')}
                   className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
                     startChoice === 'sample'
-                      ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20 shadow-xs'
+                      ? 'border-[var(--accent)] bg-[var(--accent-soft)] shadow-xs'
                       : 'border-slate-200 dark:border-slate-700'
                   }`}
                 >
-                  <Sparkles className="w-5 h-5 text-[#087F83] mb-1.5" />
+                  <Sparkles className="w-5 h-5 text-[var(--accent)] mb-1.5" />
                   <div className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
                     Try Demo Data
                   </div>
@@ -577,7 +577,7 @@ export const SetupWizardModal: React.FC = () => {
                   onClick={() => handleSelectStartChoice('empty')}
                   className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
                     startChoice === 'empty'
-                      ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20 shadow-xs'
+                      ? 'border-[var(--accent)] bg-[var(--accent-soft)] shadow-xs'
                       : 'border-slate-200 dark:border-slate-700'
                   }`}
                 >
@@ -625,7 +625,7 @@ export const SetupWizardModal: React.FC = () => {
                       type="checkbox"
                       checked={confirmDestructiveChange}
                       onChange={(e) => setConfirmDestructiveChange(e.target.checked)}
-                      className="rounded border-amber-400 text-[#087F83] focus:ring-[#087F83]"
+                      className="rounded border-amber-400 text-[var(--accent)] focus:ring-[var(--focus-ring)]"
                     />
                     <span>
                       I understand this will {startChoice === 'sample' ? 'replace' : 'clear'} my current planner entries
@@ -646,7 +646,7 @@ export const SetupWizardModal: React.FC = () => {
               <button
                 type="submit"
                 disabled={requiresDestructiveConfirmation && !confirmDestructiveChange}
-                className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#087F83] disabled:opacity-50 text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer shadow-xs transition-colors"
+                className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[var(--btn-primary-bg)] disabled:opacity-50 text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer shadow-xs transition-colors"
               >
                 <span>Add First Commitments</span>
                 <ArrowRight className="w-4 h-4" />
@@ -662,8 +662,8 @@ export const SetupWizardModal: React.FC = () => {
               Items added here are scheduled for today and will immediately appear in your <strong>Next Up</strong> commitment on Today. Everything is stored privately and locally in your browser immediately upon launch.
             </div>
 
-            <div className="p-4 rounded-2xl bg-teal-50/50 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-900/60 space-y-3">
-              <div className="flex items-center gap-2 font-bold text-xs text-[#087F83] dark:text-[#38D0C5]">
+            <div className="p-4 rounded-2xl bg-[var(--accent-soft)] border border-[var(--border-color)] space-y-3">
+              <div className="flex items-center gap-2 font-bold text-xs text-[var(--accent)]">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Your First Task (Optional)</span>
               </div>
@@ -674,13 +674,13 @@ export const SetupWizardModal: React.FC = () => {
                   value={firstTaskTitle}
                   onChange={(e) => setFirstTaskTitle(e.target.value)}
                   placeholder="Leave blank to skip, or enter a task title"
-                  className="sm:col-span-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium focus:outline-none focus:border-[#087F83]"
+                  className="sm:col-span-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium focus:outline-none focus:border-[var(--focus-ring)]"
                 />
                 <select
                   aria-label="First task category"
                   value={firstTaskCategory}
                   onChange={(e) => setFirstTaskCategory(e.target.value)}
-                  className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium focus:outline-none focus:border-[#087F83]"
+                  className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium focus:outline-none focus:border-[var(--focus-ring)]"
                 >
                   <option value="Personal">Personal</option>
                   <option value="Work">Work</option>
@@ -702,13 +702,13 @@ export const SetupWizardModal: React.FC = () => {
                   value={firstRoutineTitle}
                   onChange={(e) => setFirstRoutineTitle(e.target.value)}
                   placeholder="Leave blank to skip, or enter a routine title"
-                  className="sm:col-span-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium focus:outline-none focus:border-[#087F83]"
+                  className="sm:col-span-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium focus:outline-none focus:border-[var(--focus-ring)]"
                 />
                 <select
                   aria-label="First routine category"
                   value={firstRoutineCategory}
                   onChange={(e) => setFirstRoutineCategory(e.target.value)}
-                  className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium focus:outline-none focus:border-[#087F83]"
+                  className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-medium focus:outline-none focus:border-[var(--focus-ring)]"
                 >
                   <option value="Health">Health</option>
                   <option value="Morning">Morning</option>
@@ -729,7 +729,7 @@ export const SetupWizardModal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleCompleteSetup}
-                className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer shadow-xs transition-colors"
+                className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer shadow-xs transition-colors"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Launch My Planner</span>

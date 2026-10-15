@@ -106,7 +106,7 @@ export const OfflineDownloadModal: React.FC = () => {
           You can download a self-contained HTML application that runs locally in any modern web browser (Edge, Chrome, Safari, Firefox) without requiring an internet connection or server.
         </p>
 
-        <div className="p-3.5 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 text-[#087F83] dark:text-[#38D0C5] space-y-1">
+        <div className="p-3.5 rounded-xl bg-[var(--accent-soft)] border border-[var(--border-color)] text-[var(--accent)] space-y-1">
           <div className="font-bold flex items-center gap-1.5">
             <ShieldCheck className="w-4 h-4" />
             <span>Guaranteed offline privacy</span>
@@ -180,7 +180,7 @@ export const OfflineDownloadModal: React.FC = () => {
             onClick={handleDownload}
             aria-label={`Download HTML app: independent offline planner (${OFFLINE_FILE_NAME})`}
             disabled={isDownloading}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
             <span>{isDownloading ? 'Packaging application…' : 'Download HTML app'}</span>

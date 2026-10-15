@@ -125,10 +125,10 @@ export const SupportModal: React.FC = () => {
     >
       <div className="space-y-4 text-xs text-[#071A3A] dark:text-[#EDF4FF]">
         {/* Direct Support Contact Card */}
-        <div className="p-4 rounded-2xl bg-teal-50/60 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-800/60 space-y-2.5">
+        <div className="p-4 rounded-2xl bg-[var(--accent-soft)] border border-[var(--border-color)] space-y-2.5">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="font-bold text-xs text-[#087F83] dark:text-[#38D0C5] flex items-center gap-1.5">
+              <div className="font-bold text-xs text-[var(--accent)] flex items-center gap-1.5">
                 <Mail className="w-4 h-4" />
                 <span>Direct Support Email</span>
               </div>
@@ -136,7 +136,7 @@ export const SupportModal: React.FC = () => {
                 {SUPPORT_EMAIL}
               </div>
               <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE] mt-0.5 flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-[#087F83]" />
+                <Clock className="w-3.5 h-3.5 text-[var(--accent)]" />
                 <span>Hours: Monday to Friday (replies by email)</span>
               </div>
             </div>
@@ -146,12 +146,12 @@ export const SupportModal: React.FC = () => {
                 type="button"
                 onClick={handleCopyEmail}
                 aria-label="Copy support email address"
-                className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-teal-300 dark:border-teal-700 bg-white dark:bg-[#152238] hover:bg-teal-50 text-[11px] font-semibold cursor-pointer transition-colors shadow-2xs"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-[var(--border-color)] bg-white dark:bg-[#152238] hover:bg-[var(--accent-soft)] text-[11px] font-semibold cursor-pointer transition-colors shadow-2xs"
               >
                 {copiedEmail ? (
                   <Check className="w-3.5 h-3.5 text-emerald-600" />
                 ) : (
-                  <Copy className="w-3.5 h-3.5 text-[#087F83]" />
+                  <Copy className="w-3.5 h-3.5 text-[var(--accent)]" />
                 )}
                 <span>{copiedEmail ? 'Copied!' : 'Copy Email'}</span>
               </button>
@@ -159,7 +159,7 @@ export const SupportModal: React.FC = () => {
               <a
                 href={directMailtoUrl}
                 onClick={() => setOpenedMailClientNotice(true)}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#087F83] text-white hover:bg-[#06676A] text-[11px] font-semibold cursor-pointer transition-colors shadow-2xs"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)] text-[11px] font-semibold cursor-pointer transition-colors shadow-2xs"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span>Email Support</span>
@@ -175,7 +175,7 @@ export const SupportModal: React.FC = () => {
         {/* Truthful Data Recovery & Self-Service Help Card */}
         <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
           <div className="font-bold text-xs text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-1.5">
-            <Database className="w-3.5 h-3.5 text-[#087F83] dark:text-[#38D0C5]" />
+            <Database className="w-3.5 h-3.5 text-[var(--accent)]" />
             <span>Need help with missing or overwritten planner data?</span>
           </div>
           <p className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
@@ -185,7 +185,7 @@ export const SupportModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveModal('backup_restore')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#152238] border border-slate-200 dark:border-slate-700 text-[11px] font-semibold text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-50/50 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#152238] border border-slate-200 dark:border-slate-700 text-[11px] font-semibold text-[var(--accent)] hover:bg-[var(--accent-soft)] cursor-pointer"
             >
               <Database className="w-3.5 h-3.5" />
               <span>Open Backup &amp; Restore Manager</span>
@@ -234,7 +234,7 @@ export const SupportModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="px-4 py-1.5 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer"
+                className="px-4 py-1.5 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer"
               >
                 Done
               </button>
@@ -356,7 +356,7 @@ export const SupportModal: React.FC = () => {
                   if (deliveryResult) setDeliveryResult(null);
                 }}
                 placeholder="Describe what you are experiencing or what you need assistance with..."
-                className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1220] text-xs focus:ring-2 focus:ring-[#087F83]"
+                className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1220] text-xs focus:ring-2 focus:ring-[var(--focus-ring)]"
               />
             </div>
 
@@ -366,7 +366,7 @@ export const SupportModal: React.FC = () => {
                   type="checkbox"
                   checked={includeDiagnostics}
                   onChange={(e) => setIncludeDiagnostics(e.target.checked)}
-                  className="rounded text-[#087F83] focus:ring-[#087F83]"
+                  className="rounded text-[var(--accent)] focus:ring-[var(--focus-ring)]"
                 />
                 <span className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
                   Include environment diagnostics (Browser, OS, Edition)
@@ -382,7 +382,7 @@ export const SupportModal: React.FC = () => {
                   {copiedPreparedMessage ? (
                     <Check className="w-3.5 h-3.5 text-emerald-600" />
                   ) : (
-                    <Copy className="w-3.5 h-3.5 text-[#087F83]" />
+                    <Copy className="w-3.5 h-3.5 text-[var(--accent)]" />
                   )}
                   <span>
                     {copiedPreparedMessage ? 'Copied Message & Diagnostics!' : 'Copy Prepared Message'}
@@ -392,7 +392,7 @@ export const SupportModal: React.FC = () => {
                 <a
                   href={composedMailtoUrl}
                   onClick={() => setOpenedMailClientNotice(true)}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#087F83] text-white hover:bg-[#06676A] text-xs font-semibold cursor-pointer shadow-xs transition-colors"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)] text-xs font-semibold cursor-pointer shadow-xs transition-colors"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   <span>Open in Email App</span>

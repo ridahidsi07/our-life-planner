@@ -113,7 +113,7 @@ export const ConflictModal: React.FC = () => {
           {/* Local version */}
           <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 flex flex-col justify-between space-y-3">
             <div className="space-y-3">
-              <div className="flex items-center gap-2 font-bold text-xs text-[#087F83] dark:text-[#38D0C5]">
+              <div className="flex items-center gap-2 font-bold text-xs text-[var(--accent)]">
                 <HardDrive className="w-4 h-4" />
                 <span>Current version (in this tab)</span>
               </div>
@@ -147,7 +147,7 @@ export const ConflictModal: React.FC = () => {
             <button
               type="button"
               onClick={() => handleResolve('local')}
-              className="w-full py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer"
+              className="w-full py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer"
             >
               {localButtonLabel}
             </button>

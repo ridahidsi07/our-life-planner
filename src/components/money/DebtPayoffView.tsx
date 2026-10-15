@@ -415,8 +415,11 @@ export const DebtPayoffView: React.FC = () => {
             </div>
 
             {/* You'll Save Banner */}
-            <div className="p-4 rounded-xl bg-gradient-to-br from-teal-500 to-[#087F83] text-white flex flex-col justify-between">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-teal-100 uppercase">
+            <div
+              className="p-4 rounded-xl text-white flex flex-col justify-between shadow-xs"
+              style={{ background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-hover, var(--accent)) 100%)' }}
+            >
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-white/90 uppercase">
                 <Zap className="w-4 h-4 text-amber-300" />
                 <span>You'll save</span>
               </div>
@@ -426,7 +429,7 @@ export const DebtPayoffView: React.FC = () => {
                 </div>
                 <div className="text-xs opacity-90">sooner</div>
               </div>
-              <div className="text-sm font-bold font-mono text-teal-100">
+              <div className="text-sm font-bold font-mono text-white/90">
                 {currencySymbol}{interestSaved.toFixed(2)} in interest
               </div>
             </div>
@@ -452,7 +455,7 @@ export const DebtPayoffView: React.FC = () => {
                 <span>{currencySymbol}{basePayment}/mo ({baselineSim.totalMonths} payments)</span>
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-teal-500" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)]" />
                 <span>{currencySymbol}{basePayment + extraPayment}/mo ({extraSim.totalMonths} payments)</span>
               </span>
             </div>
@@ -465,7 +468,7 @@ export const DebtPayoffView: React.FC = () => {
               return (
                 <div key={idx} className="flex-1 flex flex-col items-center gap-1">
                   <div
-                    className="w-full bg-[#087F83] rounded-t-xs transition-all"
+                    className="w-full bg-[var(--accent)] rounded-t-xs transition-all"
                     style={{ height: `${hPct}%` }}
                     title={`${pt.dateStr}: ${currencySymbol}${pt.totalBalance}`}
                   />

@@ -151,7 +151,7 @@ export const PwaInstallModal: React.FC = () => {
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] flex items-center justify-center shrink-0">
             <Smartphone className="w-5 h-5" />
           </div>
           <div>
@@ -215,7 +215,7 @@ export const PwaInstallModal: React.FC = () => {
                     data-testid="pwa-apply-update-btn"
                     onClick={handleApplyUpdate}
                     disabled={isBusy}
-                    className="px-2.5 py-1 rounded-lg bg-[#087F83] text-white text-[11px] font-semibold hover:bg-[#06676A] cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-[11px] font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer"
                   >
                     Apply Update
                   </button>
@@ -230,7 +230,7 @@ export const PwaInstallModal: React.FC = () => {
                       type="button"
                       data-testid="pwa-native-install-btn"
                       onClick={handleNativeInstall}
-                      className="px-2.5 py-1 rounded-lg bg-[#087F83] text-white text-[11px] font-semibold hover:bg-[#06676A] cursor-pointer"
+                      className="px-2.5 py-1 rounded-lg bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-[11px] font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer"
                     >
                       Install App Now
                     </button>
@@ -276,7 +276,7 @@ export const PwaInstallModal: React.FC = () => {
             onClick={() => setPlatform('ios')}
             className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
               platform === 'ios'
-                ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs'
                 : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
@@ -287,7 +287,7 @@ export const PwaInstallModal: React.FC = () => {
             onClick={() => setPlatform('android')}
             className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
               platform === 'android'
-                ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs'
                 : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
@@ -298,7 +298,7 @@ export const PwaInstallModal: React.FC = () => {
             onClick={() => setPlatform('desktop')}
             className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
               platform === 'desktop'
-                ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs'
                 : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
@@ -311,7 +311,7 @@ export const PwaInstallModal: React.FC = () => {
           {platform === 'ios' && (
             <div className="space-y-3">
               <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                <div className="w-6 h-6 rounded-full bg-teal-50 dark:bg-teal-950/60 text-[#087F83] font-bold text-xs flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] font-bold text-xs flex items-center justify-center shrink-0">
                   1
                 </div>
                 <div>
@@ -323,13 +323,13 @@ export const PwaInstallModal: React.FC = () => {
               </div>
 
               <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                <div className="w-6 h-6 rounded-full bg-teal-50 dark:bg-teal-950/60 text-[#087F83] font-bold text-xs flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] font-bold text-xs flex items-center justify-center shrink-0">
                   2
                 </div>
                 <div>
                   <div className="font-semibold mb-0.5 flex items-center gap-1.5">
                     <span>Tap the Share Button</span>
-                    <Share className="w-3.5 h-3.5 text-[#087F83]" />
+                    <Share className="w-3.5 h-3.5 text-[var(--accent)]" />
                   </div>
                   <div className="text-[#526782] dark:text-[#A8B8CE]">
                     Located at the bottom of Safari&apos;s toolbar on iPhone, or top-right on iPad.
@@ -338,13 +338,13 @@ export const PwaInstallModal: React.FC = () => {
               </div>
 
               <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                <div className="w-6 h-6 rounded-full bg-teal-50 dark:bg-teal-950/60 text-[#087F83] font-bold text-xs flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] font-bold text-xs flex items-center justify-center shrink-0">
                   3
                 </div>
                 <div>
                   <div className="font-semibold mb-0.5 flex items-center gap-1.5">
                     <span>Select &ldquo;Add to Home Screen&rdquo;</span>
-                    <PlusSquare className="w-3.5 h-3.5 text-[#087F83]" />
+                    <PlusSquare className="w-3.5 h-3.5 text-[var(--accent)]" />
                   </div>
                   <div className="text-[#526782] dark:text-[#A8B8CE]">
                     Scroll down the share sheet and tap &ldquo;Add to Home Screen&rdquo;, then tap &ldquo;Add&rdquo; in the top right.
@@ -357,7 +357,7 @@ export const PwaInstallModal: React.FC = () => {
           {platform === 'android' && (
             <div className="space-y-3">
               <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                <div className="w-6 h-6 rounded-full bg-teal-50 dark:bg-teal-950/60 text-[#087F83] font-bold text-xs flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] font-bold text-xs flex items-center justify-center shrink-0">
                   1
                 </div>
                 <div>
@@ -369,7 +369,7 @@ export const PwaInstallModal: React.FC = () => {
               </div>
 
               <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                <div className="w-6 h-6 rounded-full bg-teal-50 dark:bg-teal-950/60 text-[#087F83] font-bold text-xs flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] font-bold text-xs flex items-center justify-center shrink-0">
                   2
                 </div>
                 <div>
@@ -381,7 +381,7 @@ export const PwaInstallModal: React.FC = () => {
               </div>
 
               <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                <div className="w-6 h-6 rounded-full bg-teal-50 dark:bg-teal-950/60 text-[#087F83] font-bold text-xs flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] font-bold text-xs flex items-center justify-center shrink-0">
                   3
                 </div>
                 <div>
@@ -397,13 +397,13 @@ export const PwaInstallModal: React.FC = () => {
           {platform === 'desktop' && (
             <div className="space-y-3">
               <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                <div className="w-6 h-6 rounded-full bg-teal-50 dark:bg-teal-950/60 text-[#087F83] font-bold text-xs flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] font-bold text-xs flex items-center justify-center shrink-0">
                   1
                 </div>
                 <div>
                   <div className="font-semibold mb-0.5 flex items-center gap-1.5">
                     <span>Look for the Install Icon</span>
-                    <Download className="w-3.5 h-3.5 text-[#087F83]" />
+                    <Download className="w-3.5 h-3.5 text-[var(--accent)]" />
                   </div>
                   <div className="text-[#526782] dark:text-[#A8B8CE]">
                     In Chrome or Edge, click the computer/install icon located on the right side of the URL bar.
@@ -412,7 +412,7 @@ export const PwaInstallModal: React.FC = () => {
               </div>
 
               <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                <div className="w-6 h-6 rounded-full bg-teal-50 dark:bg-teal-950/60 text-[#087F83] font-bold text-xs flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] font-bold text-xs flex items-center justify-center shrink-0">
                   2
                 </div>
                 <div>
@@ -427,8 +427,8 @@ export const PwaInstallModal: React.FC = () => {
         </div>
 
         {/* Truthful Capabilities & Standalone Fallback Note */}
-        <div className="p-4 rounded-2xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900/60 text-xs mb-5 space-y-2.5">
-          <div className="flex items-center gap-2 font-bold text-[#087F83] dark:text-[#38D0C5]">
+        <div className="p-4 rounded-2xl bg-[var(--accent-soft)] border border-[var(--border-color)] text-xs mb-5 space-y-2.5">
+          <div className="flex items-center gap-2 font-bold text-[var(--accent)]">
             <CheckCircle2 className="w-4 h-4" />
             <span>What Home-Screen Installation Provides</span>
           </div>
@@ -446,7 +446,7 @@ export const PwaInstallModal: React.FC = () => {
             )}
           </ul>
 
-          <div className="pt-1 border-t border-teal-200/60 dark:border-teal-800/60 flex items-center justify-between gap-3">
+          <div className="pt-1 border-t border-[var(--border-color)] flex items-center justify-between gap-3">
             <span className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
               Want a permanent single-file copy that opens offline from any folder?
             </span>
@@ -454,7 +454,7 @@ export const PwaInstallModal: React.FC = () => {
               type="button"
               data-testid="pwa-open-standalone-download-btn"
               onClick={() => setActiveModal('download_offline')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#152238] border border-teal-300 dark:border-teal-700 text-[#087F83] dark:text-[#38D0C5] text-[11px] font-semibold hover:bg-teal-50 cursor-pointer shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#152238] border border-[var(--border-color)] text-[var(--accent)] text-[11px] font-semibold hover:bg-[var(--accent-soft)] cursor-pointer shrink-0"
             >
               <HardDriveDownload className="w-3.5 h-3.5" />
               <span>Standalone HTML</span>
@@ -465,7 +465,7 @@ export const PwaInstallModal: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveModal(null)}
-          className="w-full py-2.5 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer transition-colors"
+          className="w-full py-2.5 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer transition-colors"
         >
           Got it
         </button>

@@ -293,7 +293,7 @@ export const SearchModal: React.FC = () => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-[#071A3A] dark:text-[#EDF4FF] focus:ring-2 focus:ring-[#087F83] focus:outline-none"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-[#071A3A] dark:text-[#EDF4FF] focus:ring-2 focus:ring-[var(--focus-ring)] focus:outline-none"
           />
         </div>
 
@@ -359,14 +359,14 @@ export const SearchModal: React.FC = () => {
                           onClick={() => handleSelectResult(item)}
                           className={`w-full text-left py-2 px-2.5 flex items-center justify-between rounded-xl transition-all cursor-pointer group ${
                             isSelected
-                              ? 'bg-[#087F83]/10 dark:bg-[#38D0C5]/15 ring-1 ring-[#087F83] dark:ring-[#38D0C5]'
+                              ? 'bg-[var(--accent-soft)] ring-1 ring-[var(--focus-ring)]'
                               : 'hover:bg-slate-50 dark:hover:bg-slate-800/60'
                           }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <div className={`p-1.5 rounded-lg shrink-0 ${
                               isSelected
-                                ? 'bg-[#087F83] text-white dark:bg-[#38D0C5] dark:text-[#071A3A]'
+                                ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)]'
                                 : 'bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE]'
                             }`}>
                               <IconComp className="w-3.5 h-3.5" />
@@ -400,7 +400,7 @@ export const SearchModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setExpandedGroups((prev) => ({ ...prev, [type]: true }))}
-                      className="w-full text-center py-2 px-3 text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                      className="w-full text-center py-2 px-3 text-xs font-semibold text-[var(--accent)] bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                       aria-label={`Show ${remainingCount} more ${type} matches`}
                     >
                       <span>Show {remainingCount} more {type.toLowerCase()}</span>

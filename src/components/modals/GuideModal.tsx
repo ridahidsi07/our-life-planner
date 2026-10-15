@@ -68,9 +68,9 @@ export const GuideModal: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 flex items-center justify-between gap-3">
+          <div className="p-3 rounded-xl bg-[var(--accent-soft)] border border-[var(--border-color)] flex items-center justify-between gap-3">
             <div>
-              <div className="font-bold text-[#087F83] dark:text-[#38D0C5]">
+              <div className="font-bold text-[var(--accent)]">
                 Printable quick reference
               </div>
               <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
@@ -80,7 +80,7 @@ export const GuideModal: React.FC = () => {
             <button
               type="button"
               onClick={() => window.print()}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#087F83] text-white font-semibold text-xs hover:bg-[#06676A] shrink-0 cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] font-semibold text-xs hover:bg-[var(--btn-primary-hover-bg)] shrink-0 cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print / Save PDF</span>
@@ -147,7 +147,7 @@ export const GuideModal: React.FC = () => {
                   <td className="py-2 px-3 bg-slate-50/60 dark:bg-slate-800/20">
                     JSON Backup file export/import
                   </td>
-                  <td className="py-2 pl-3 text-teal-600 dark:text-teal-400 font-semibold">
+                  <td className="py-2 pl-3 text-[var(--accent)] font-semibold">
                     JSON Backup file export/import
                   </td>
                 </tr>
@@ -182,7 +182,7 @@ export const GuideModal: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
               <div className="flex items-center gap-1.5 font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-                <Smartphone className="w-4 h-4 text-teal-600" />
+                <Smartphone className="w-4 h-4 text-[var(--accent)]" />
                 iOS (iPhone / iPad)
               </div>
               <p className="text-[11px]">
@@ -191,7 +191,7 @@ export const GuideModal: React.FC = () => {
             </div>
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
               <div className="flex items-center gap-1.5 font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-                <Smartphone className="w-4 h-4 text-teal-600" />
+                <Smartphone className="w-4 h-4 text-[var(--accent)]" />
                 Android Phones & Tablets
               </div>
               <p className="text-[11px]">
@@ -200,7 +200,7 @@ export const GuideModal: React.FC = () => {
             </div>
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
               <div className="flex items-center gap-1.5 font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-                <Laptop className="w-4 h-4 text-teal-600" />
+                <Laptop className="w-4 h-4 text-[var(--accent)]" />
                 Desktop (Mac / Windows / Linux)
               </div>
               <p className="text-[11px]">
@@ -209,9 +209,9 @@ export const GuideModal: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 flex items-center justify-between gap-3">
+          <div className="p-3 rounded-xl bg-[var(--accent-soft)] border border-[var(--border-color)] flex items-center justify-between gap-3">
             <div>
-              <div className="font-bold text-[#087F83] dark:text-[#38D0C5]">
+              <div className="font-bold text-[var(--accent)]">
                 Install as a phone or desktop app
               </div>
               <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
@@ -221,7 +221,7 @@ export const GuideModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveModal('pwa_install')}
-              className="px-3 py-1.5 rounded-xl bg-[#087F83] text-white font-semibold text-xs hover:bg-[#06676A] shrink-0 cursor-pointer"
+              className="px-3 py-1.5 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] font-semibold text-xs hover:bg-[var(--btn-primary-hover-bg)] shrink-0 cursor-pointer"
             >
               Open install guide
             </button>
@@ -306,8 +306,8 @@ export const GuideModal: React.FC = () => {
           <p>
             Need assistance, have questions, or want to suggest an improvement? Our support team is ready to help you:
           </p>
-          <div className="p-3.5 rounded-xl bg-teal-50/60 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 space-y-2">
-            <div className="font-bold text-xs text-[#087F83] dark:text-[#38D0C5] flex items-center gap-1.5">
+          <div className="p-3.5 rounded-xl bg-[var(--accent-soft)] border border-[var(--border-color)] space-y-2">
+            <div className="font-bold text-xs text-[var(--accent)] flex items-center gap-1.5">
               <Mail className="w-4 h-4" />
               <span>Official Support Email</span>
             </div>
@@ -320,7 +320,7 @@ export const GuideModal: React.FC = () => {
             <div className="pt-1">
               <a
                 href={`mailto:${SUPPORT_EMAIL}?subject=Our%20Life%20Planner%20Support%20Request`}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent)] hover:underline"
               >
                 <span>Send direct email</span>
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -333,7 +333,7 @@ export const GuideModal: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveModal('support')}
-            className="px-3.5 py-1.5 rounded-xl bg-[#087F83] text-white font-semibold text-xs hover:bg-[#06676A] cursor-pointer"
+            className="px-3.5 py-1.5 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] font-semibold text-xs hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer"
           >
             Open support &amp; contact helper
           </button>
@@ -369,7 +369,7 @@ export const GuideModal: React.FC = () => {
               onClick={() => setActiveArticle(topic.id)}
               className={`w-full text-left p-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
                 activeArticle === topic.id
-                  ? 'bg-teal-50 dark:bg-teal-950/40 text-[#087F83] dark:text-[#38D0C5]'
+                  ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
                   : 'text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
             >
@@ -383,7 +383,7 @@ export const GuideModal: React.FC = () => {
           <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
             {articles[activeArticle]?.title}
           </h3>
-          <p className="text-xs text-[#087F83] dark:text-[#38D0C5] font-medium pb-2 border-b border-slate-100 dark:border-slate-800">
+          <p className="text-xs text-[var(--accent)] font-medium pb-2 border-b border-slate-100 dark:border-slate-800">
             {articles[activeArticle]?.subtitle}
           </p>
           <div className="pt-2">{articles[activeArticle]?.content}</div>

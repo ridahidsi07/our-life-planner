@@ -444,7 +444,7 @@ export const AccountModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIssuedRecoveryKey(null)}
-                  className="text-[10px] font-sans font-semibold text-[#087F83] hover:underline cursor-pointer"
+                  className="text-[10px] font-sans font-semibold text-[var(--accent)] hover:underline cursor-pointer"
                 >
                   I saved it
                 </button>
@@ -486,7 +486,7 @@ export const AccountModal: React.FC = () => {
                     }}
                     className={`px-3 py-1 rounded-lg text-[11px] font-semibold cursor-pointer ${
                       authTab === tab
-                        ? 'bg-[#087F83] text-white'
+                        ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)]'
                         : 'bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE]'
                     }`}
                   >
@@ -585,7 +585,7 @@ export const AccountModal: React.FC = () => {
                   <button
                     type="submit"
                     disabled={cloudLoading}
-                    className="px-4 py-1.5 rounded-xl bg-[#087F83] text-white font-semibold text-xs hover:bg-[#06676A] disabled:opacity-50 cursor-pointer"
+                    className="px-4 py-1.5 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] font-semibold text-xs hover:bg-[var(--btn-primary-hover-bg)] disabled:opacity-50 cursor-pointer"
                   >
                     {cloudLoading
                       ? 'Connecting…'
@@ -639,7 +639,7 @@ export const AccountModal: React.FC = () => {
                   type="button"
                   disabled={cloudLoading}
                   onClick={handleSyncNow}
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#087F83] text-white font-semibold text-xs hover:bg-[#06676A] disabled:opacity-50 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] font-semibold text-xs hover:bg-[var(--btn-primary-hover-bg)] disabled:opacity-50 cursor-pointer"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${cloudLoading ? 'animate-spin' : ''}`} />
                   <span>Sync Now</span>
@@ -708,7 +708,7 @@ export const AccountModal: React.FC = () => {
         >
           <summary className="font-bold text-xs text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer select-none flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <Database className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+              <Database className="w-4 h-4 text-[var(--accent)]" />
               <span>Advanced details: Browser storage &amp; record footprint (~{estimatedStorageKb} KB)</span>
             </span>
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
@@ -717,15 +717,15 @@ export const AccountModal: React.FC = () => {
           </summary>
 
           <div className="mt-3 space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-            <div className="p-3 rounded-xl bg-teal-50/70 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-900/60 space-y-1">
+            <div className="p-3 rounded-xl bg-[var(--accent-soft)] border border-[var(--border-color)] space-y-1">
               <div className="flex items-center gap-2">
-                <HardDrive className="w-3.5 h-3.5 text-[#087F83] dark:text-[#38D0C5]" />
-                <h4 className="font-bold text-xs text-[#087F83] dark:text-[#38D0C5]">
+                <HardDrive className="w-3.5 h-3.5 text-[var(--accent)]" />
+                <h4 className="font-bold text-xs text-[var(--accent)]">
                   Local-First Browser Storage (localStorage)
                 </h4>
               </div>
               <p className="text-[11px] text-[#526782] dark:text-[#A8B8CE] leading-relaxed">
-                All planner records are stored durably in this browser&apos;s local storage (<code className="text-[10px] font-mono bg-teal-100 dark:bg-teal-900 px-1 py-0.5 rounded">localStorage</code>). Unless you explicitly connect an Online Account above, zero personal data leaves your device.
+                All planner records are stored durably in this browser&apos;s local storage (<code className="text-[10px] font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">localStorage</code>). Unless you explicitly connect an Online Account above, zero personal data leaves your device.
               </p>
             </div>
 
@@ -769,7 +769,7 @@ export const AccountModal: React.FC = () => {
         {/* Backups & Multi-Device Transfer Guidance */}
         <div className="p-4 rounded-2xl bg-white dark:bg-[#152238] border border-slate-200 dark:border-slate-700/80 shadow-2xs space-y-3">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+            <ShieldCheck className="w-4 h-4 text-[var(--accent)]" />
             <h4 className="font-bold text-xs text-[#071A3A] dark:text-[#EDF4FF]">
               Offline Backups & Standalone Bundle
             </h4>
@@ -788,7 +788,7 @@ export const AccountModal: React.FC = () => {
               className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors cursor-pointer"
             >
               <div className="font-bold text-[11px] text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-1.5">
-                <Database className="w-3.5 h-3.5 text-[#087F83] dark:text-[#38D0C5]" />
+                <Database className="w-3.5 h-3.5 text-[var(--accent)]" />
                 <span>Backup & Restore</span>
               </div>
               <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] mt-1">
@@ -802,7 +802,7 @@ export const AccountModal: React.FC = () => {
               className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors cursor-pointer"
             >
               <div className="font-bold text-[11px] text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-[#087F83] dark:text-[#38D0C5]" />
+                <FileText className="w-3.5 h-3.5 text-[var(--accent)]" />
                 <span>Export JSON File</span>
               </div>
               <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] mt-1">
@@ -818,7 +818,7 @@ export const AccountModal: React.FC = () => {
               className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors cursor-pointer"
             >
               <div className="font-bold text-[11px] text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-1.5">
-                <Download className="w-3.5 h-3.5 text-[#087F83] dark:text-[#38D0C5]" />
+                <Download className="w-3.5 h-3.5 text-[var(--accent)]" />
                 <span>Standalone App</span>
               </div>
               <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] mt-1">

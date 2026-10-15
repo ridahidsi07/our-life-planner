@@ -49,6 +49,9 @@ const suites: TestSuite[] = [
   { name: 'Phase 08: Themes, Accents & Modules', command: 'npx tsx scripts/test-phase08-themes-and-modules.ts', category: 'Premium Upgrade' },
   { name: 'Phase 09: Polish, Motion & Responsive Matrix', command: 'npx tsx scripts/test-phase09-polish.ts', category: 'Premium Upgrade' },
   { name: 'Independent Review Corrections (R1–R8 Regressions)', command: 'npx tsx scripts/test-correction-pass-regressions.ts', category: 'Premium Upgrade' },
+
+  // 5. Apple-Inspired Color System & Neutral Design
+  { name: 'Apple-Inspired Color System & Neutral Surfaces', command: 'npx tsx scripts/test-apple-color-system.ts', category: 'Apple Color System' },
 ];
 
 console.log('================================================================');

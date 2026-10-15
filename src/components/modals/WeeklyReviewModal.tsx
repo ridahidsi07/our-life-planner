@@ -279,7 +279,7 @@ export const WeeklyReviewModal: React.FC = () => {
             <div
               key={s}
               className={`h-1.5 flex-1 rounded-full transition-colors ${
-                s <= step ? 'bg-[#087F83]' : 'bg-slate-200 dark:bg-slate-700'
+                s <= step ? 'bg-[var(--accent)]' : 'bg-slate-200 dark:bg-slate-700'
               }`}
             />
           ))}
@@ -288,7 +288,7 @@ export const WeeklyReviewModal: React.FC = () => {
         {/* Header & Reviewed Week Date Range Bar */}
         <div className="mb-5">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5 pr-8">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Weekly Review · Step {step} of 4</span>
             </div>
@@ -307,7 +307,7 @@ export const WeeklyReviewModal: React.FC = () => {
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
-              <Calendar className="w-3.5 h-3.5 text-[#087F83] dark:text-[#38D0C5] shrink-0" />
+              <Calendar className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
               <span className="font-semibold">
                 {reviewedWeek.label}
               </span>
@@ -360,9 +360,9 @@ export const WeeklyReviewModal: React.FC = () => {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div
                   data-testid="weekly-review-tasks-metric"
-                  className="p-4 rounded-2xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900/60 text-center"
+                  className="p-4 rounded-2xl bg-[var(--accent-soft)] border border-[var(--border-color)] text-center"
                 >
-                  <Award className="w-6 h-6 text-[#087F83] dark:text-[#38D0C5] mx-auto mb-1" />
+                  <Award className="w-6 h-6 text-[var(--accent)] mx-auto mb-1" />
                   <div
                     data-testid="weekly-review-completed-tasks-count"
                     className="text-2xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF]"
@@ -370,7 +370,7 @@ export const WeeklyReviewModal: React.FC = () => {
                     {completedTasksCount}
                   </div>
                   <div className="text-xs text-[#526782] dark:text-[#A8B8CE]">Tasks Completed</div>
-                  <div className="text-[10px] text-[#087F83] dark:text-[#38D0C5] font-medium mt-0.5">
+                  <div className="text-[10px] text-[var(--accent)] font-medium mt-0.5">
                     {reviewedWeek.shortLabel}
                   </div>
                 </div>
@@ -427,7 +427,7 @@ export const WeeklyReviewModal: React.FC = () => {
                   }}
                   placeholder="What worked well this week? What gave you energy or peace of mind?"
                   rows={4}
-                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-[#071A3A] dark:text-[#EDF4FF] focus:outline-none focus:border-[#087F83]"
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-[#071A3A] dark:text-[#EDF4FF] focus:outline-none focus:border-[var(--focus-ring)]"
                 />
               </div>
 
@@ -435,7 +435,7 @@ export const WeeklyReviewModal: React.FC = () => {
               {weeklyReviews.length > 0 && (
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/70">
                   <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#526782] dark:text-[#A8B8CE] mb-2">
-                    <History className="w-3.5 h-3.5 text-[#087F83] dark:text-[#38D0C5]" />
+                    <History className="w-3.5 h-3.5 text-[var(--accent)]" />
                     <span>Saved Weekly Reviews ({weeklyReviews.length})</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -448,8 +448,8 @@ export const WeeklyReviewModal: React.FC = () => {
                           onClick={() => handleSwitchWeek(rev.weekStartDate)}
                           className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-colors cursor-pointer ${
                             isCurrent
-                              ? 'bg-[#087F83] text-white font-semibold'
-                              : 'bg-white dark:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] border border-slate-200 dark:border-slate-700 hover:border-[#087F83]'
+                              ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] font-semibold'
+                              : 'bg-white dark:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] border border-slate-200 dark:border-slate-700 hover:border-[var(--accent)]'
                           }`}
                         >
                           {rev.weekStartDate} – {rev.weekEndDate}
@@ -465,8 +465,8 @@ export const WeeklyReviewModal: React.FC = () => {
           {step === 2 && (
             <div className="space-y-3">
               {overdueTasks.length === 0 ? (
-                <div className="p-6 rounded-2xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900 text-center">
-                  <CheckCircle2 className="w-8 h-8 text-[#087F83] dark:text-[#38D0C5] mx-auto mb-2" />
+                <div className="p-6 rounded-2xl bg-[var(--accent-soft)] border border-[var(--border-color)] text-center">
+                  <CheckCircle2 className="w-8 h-8 text-[var(--status-success-text)] mx-auto mb-2" />
                   <div className="font-bold text-sm text-[#071A3A] dark:text-[#EDF4FF]">
                     Zero overdue tasks!
                   </div>
@@ -500,7 +500,7 @@ export const WeeklyReviewModal: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => rescheduleTask(t.id, todayDate)}
-                            className="px-2.5 py-1 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-100 text-[11px] font-semibold cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] hover:bg-[var(--accent-soft-hover)] text-[11px] font-semibold cursor-pointer"
                           >
                             Today
                           </button>
@@ -536,7 +536,7 @@ export const WeeklyReviewModal: React.FC = () => {
                   <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
                     Money Check-In
                   </span>
-                  <span className="text-xs font-mono font-bold text-[#087F83] dark:text-[#38D0C5]">
+                  <span className="text-xs font-mono font-bold text-[var(--accent)]">
                     {currencySymbol}{cashFlow.leftToSpend.toFixed(0)} left to spend
                   </span>
                 </div>
@@ -550,7 +550,7 @@ export const WeeklyReviewModal: React.FC = () => {
                   <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
                     Active Habits ({reviewedWeek.shortLabel})
                   </span>
-                  <span className="text-[11px] font-mono text-[#087F83] dark:text-[#38D0C5]">
+                  <span className="text-[11px] font-mono text-[var(--accent)]">
                     {weekMetrics.totalHabitCheckInsCount} check-ins this week
                   </span>
                 </div>
@@ -595,7 +595,7 @@ export const WeeklyReviewModal: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <label
                         htmlFor={`weekly-review-intention-${idx}`}
-                        className="w-6 h-6 rounded-full bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] font-bold text-xs flex items-center justify-center shrink-0 cursor-pointer"
+                        className="w-6 h-6 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] font-bold text-xs flex items-center justify-center shrink-0 cursor-pointer"
                       >
                         <span>{idx + 1}</span>
                         <span className="sr-only">Intention {idx + 1} for next week</span>
@@ -612,7 +612,7 @@ export const WeeklyReviewModal: React.FC = () => {
                           persistReviewDraft({ nextIntentions: updated });
                         }}
                         placeholder={`Priority #${idx + 1}`}
-                        className="flex-1 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-[#071A3A] dark:text-[#EDF4FF] focus:outline-none focus:border-[#087F83]"
+                        className="flex-1 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-[#071A3A] dark:text-[#EDF4FF] focus:outline-none focus:border-[var(--focus-ring)]"
                       />
                       {linkedTask ? (
                         <span
@@ -628,7 +628,7 @@ export const WeeklyReviewModal: React.FC = () => {
                             type="button"
                             data-testid={`weekly-review-link-task-btn-${idx}`}
                             onClick={() => handleLinkSinglePriority(idx)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-100 text-[11px] font-semibold shrink-0 cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[var(--accent-soft)] border border-[var(--border-color)] text-[var(--accent)] hover:bg-[var(--accent-soft-hover)] text-[11px] font-semibold shrink-0 cursor-pointer"
                           >
                             <ListTodo className="w-3.5 h-3.5" />
                             <span>Add Task</span>
@@ -642,13 +642,13 @@ export const WeeklyReviewModal: React.FC = () => {
 
               {/* Option to turn all entered priorities into linked next-week tasks on Complete Review */}
               <div className="pt-2">
-                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-teal-50/60 dark:bg-teal-950/30 border border-teal-200/70 dark:border-teal-900/60">
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[var(--accent-soft)] border border-[var(--border-color)]">
                   <input
                     id="weekly-review-create-linked-tasks"
                     type="checkbox"
                     checked={createTasksOnComplete}
                     onChange={(e) => setCreateTasksOnComplete(e.target.checked)}
-                    className="mt-0.5 rounded border-slate-300 text-[#087F83] focus:ring-[#087F83] cursor-pointer"
+                    className="mt-0.5 rounded border-slate-300 text-[var(--accent)] focus:ring-[var(--focus-ring)] cursor-pointer"
                   />
                   <label
                     htmlFor="weekly-review-create-linked-tasks"
@@ -692,7 +692,7 @@ export const WeeklyReviewModal: React.FC = () => {
                 persistReviewDraft();
                 setStep((prev) => (prev + 1) as 1 | 2 | 3 | 4);
               }}
-              className="px-5 py-2.5 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90 flex items-center gap-1.5 cursor-pointer transition-colors shadow-sm"
+              className="px-5 py-2.5 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors shadow-sm"
             >
               <span>Next Step</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -701,7 +701,7 @@ export const WeeklyReviewModal: React.FC = () => {
             <button
               type="button"
               onClick={handleCompleteReview}
-              className="px-5 py-2.5 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90 flex items-center gap-1.5 cursor-pointer transition-colors shadow-sm"
+              className="px-5 py-2.5 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors shadow-sm"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>Complete Review</span>

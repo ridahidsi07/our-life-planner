@@ -146,12 +146,12 @@ export const TasksThroughputChart: React.FC<TasksThroughputChartProps> = ({
 
         {/* Legend */}
         <div className="flex items-center gap-4 text-xs font-medium">
-          <div className="flex items-center gap-1.5 text-[var(--accent)]">
-            <span className="w-3.5 h-0.5 bg-[var(--accent)] rounded-full" />
+          <div className="flex items-center gap-1.5 text-[var(--chart-current,var(--accent))]">
+            <span className="w-3.5 h-0.5 bg-[var(--chart-current,var(--accent))] rounded-full" />
             <span>This period</span>
           </div>
-          <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
-            <span className="w-3.5 h-0.5 border-b border-dashed border-slate-400 dark:border-slate-500" />
+          <div className="flex items-center gap-1.5 text-[var(--chart-previous,#94A3B8)]">
+            <span className="w-3.5 h-0.5 border-b border-dashed border-[var(--chart-previous,#94A3B8)]" />
             <span>Previous</span>
           </div>
         </div>
@@ -231,7 +231,7 @@ export const TasksThroughputChart: React.FC<TasksThroughputChartProps> = ({
             <path
               d={prevPeriodPath}
               fill="none"
-              stroke="#94A3B8"
+              stroke="var(--chart-previous, #94A3B8)"
               strokeWidth="1.75"
               strokeDasharray="4 4"
               strokeLinecap="round"
@@ -245,7 +245,7 @@ export const TasksThroughputChart: React.FC<TasksThroughputChartProps> = ({
             <path
               d={thisPeriodPath}
               fill="none"
-              stroke="var(--accent)"
+              stroke="var(--chart-current, var(--accent))"
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"

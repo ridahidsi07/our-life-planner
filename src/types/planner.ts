@@ -30,7 +30,7 @@ export interface HouseholdMember {
   color: string;
 }
 
-export type AccentColor = 'teal' | 'ocean' | 'plum' | 'ember';
+export type AccentColor = 'teal' | 'ocean' | 'plum' | 'ember' | 'apple';
 
 export interface UserSettings {
   ownerName: string;

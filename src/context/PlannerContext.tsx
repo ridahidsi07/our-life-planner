@@ -354,7 +354,7 @@ export const applyThemeToDocument = (
   const root = document.documentElement;
   const body = document.body;
 
-  const validAccent = ['teal', 'ocean', 'plum', 'ember'].includes(accent) ? accent : 'teal';
+  const validAccent = ['teal', 'ocean', 'plum', 'ember', 'apple'].includes(accent) ? accent : 'teal';
   root.setAttribute('data-accent', validAccent);
 
   if (isDark) {
@@ -365,8 +365,8 @@ export const applyThemeToDocument = (
     if (body) {
       body.classList.add('dark');
       body.classList.remove('light');
-      body.style.backgroundColor = '#0B1220';
-      body.style.color = '#EDF4FF';
+      body.style.backgroundColor = validAccent === 'apple' ? '#000000' : '#0B1220';
+      body.style.color = validAccent === 'apple' ? '#F5F5F7' : '#EDF4FF';
     }
   } else {
     root.classList.remove('dark');
@@ -376,8 +376,8 @@ export const applyThemeToDocument = (
     if (body) {
       body.classList.remove('dark');
       body.classList.add('light');
-      body.style.backgroundColor = '#F3F8FC';
-      body.style.color = '#071A3A';
+      body.style.backgroundColor = validAccent === 'apple' ? '#F5F5F7' : '#F3F8FC';
+      body.style.color = validAccent === 'apple' ? '#1D1D1F' : '#071A3A';
     }
   }
 };

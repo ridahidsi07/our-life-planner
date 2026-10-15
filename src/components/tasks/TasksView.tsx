@@ -521,7 +521,7 @@ export const TasksView: React.FC = () => {
             <button
               type="button"
               onClick={handleUndoDeleteTask}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#38D0C5] text-[#071A3A] text-xs font-bold hover:bg-[#2BB5AB] transition-colors cursor-pointer"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-bold hover:bg-[var(--btn-primary-hover-bg)] transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Undo delete</span>

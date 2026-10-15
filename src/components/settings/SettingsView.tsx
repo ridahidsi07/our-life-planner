@@ -51,7 +51,8 @@ const SETTINGS_TABS: SegmentedControlOption<SettingsTab>[] = [
 ];
 
 const ACCENT_OPTIONS: { id: AccentColor; name: string; color: string; desc: string }[] = [
-  { id: 'teal', name: 'Teal', color: '#087F83', desc: 'Calm emerald-cyan mineral palette (Default)' },
+  { id: 'apple', name: 'Apple-inspired', color: '#0071E3', desc: 'Calm neutral canvas with Apple website blue actions' },
+  { id: 'teal', name: 'Teal', color: '#087F83', desc: 'Calm emerald-cyan mineral palette' },
   { id: 'ocean', name: 'Ocean', color: '#1D6AE5', desc: 'Deep nautical blue, focused & clear' },
   { id: 'plum', name: 'Plum', color: '#7E22CE', desc: 'Refined purple-violet, creative & thoughtful' },
   { id: 'ember', name: 'Ember', color: '#D97706', desc: 'Warm amber-orange, energetic & warm' },

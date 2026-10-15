@@ -40,6 +40,9 @@
     --btn-warning-fg: #78350F;
     --btn-warning-hover-bg: #FDE68A;
     --btn-warning-border: #FCD34D;
+    --status-success-text: #059669;
+    --status-warning-text: #D97706;
+    --status-danger-text: #DC2626;
     color-scheme: light;
   }
 
@@ -80,6 +83,9 @@
     --btn-warning-fg: #FDE68A;
     --btn-warning-hover-bg: rgba(146, 64, 14, 0.85);
     --btn-warning-border: rgba(245, 158, 11, 0.45);
+    --status-success-text: #34D399;
+    --status-warning-text: #FBBF24;
+    --status-danger-text: #F87171;
     color-scheme: dark;
   }
 
@@ -237,6 +243,239 @@ html[data-accent="ember"][data-theme="dark"],
   --btn-tonal-fg: #FDBA74;
   --btn-tonal-hover-bg: rgba(124, 45, 18, 0.85);
   --btn-tonal-border: rgba(251, 146, 60, 0.35);
+}
+
+/* ==========================================================================
+   APPLE-INSPIRED THEME (Exact Website & HIG Specifications)
+   ========================================================================== */
+
+/* Apple-inspired Light */
+:root[data-accent="apple"],
+html[data-accent="apple"],
+html[data-accent="apple"].light,
+html[data-accent="apple"][data-theme="light"],
+[data-accent="apple"]:not(.dark) {
+  --canvas: #F5F5F7;
+  --surface: #FFFFFF;
+  --surface-elevated: #FFFFFF;
+  --surface-subtle: #FAFAFC;
+  --surface-muted: #E8E8ED;
+  --text-primary: #1D1D1F;
+  --text-secondary: #6E6E73;
+  --text-muted: #6E6E73;
+  --accent: #0066CC;
+  --accent-hover: #0066CC;
+  --accent-light: rgba(0, 102, 204, 0.08);
+  --accent-subtle: rgba(0, 102, 204, 0.08);
+  --accent-soft: rgba(0, 102, 204, 0.08);
+  --accent-soft-hover: rgba(0, 102, 204, 0.12);
+  --accent-deep: #1D1D1F;
+  --border-color: #D2D2D7;
+  --border-subtle: #E8E8ED;
+  --border-strong: #86868B;
+  --focus-ring: #0066CC;
+  --btn-primary-bg: #0071E3;
+  --btn-primary-fg: #FFFFFF;
+  --btn-primary-hover-bg: #0076DF;
+  --btn-primary-active-bg: #006EDB;
+  --btn-tonal-bg: rgba(0, 102, 204, 0.08);
+  --btn-tonal-fg: #0066CC;
+  --btn-tonal-hover-bg: rgba(0, 102, 204, 0.12);
+  --btn-tonal-border: #86868B;
+  --chart-current: #0066CC;
+  --chart-previous: #86868B;
+  --status-success-text: #008009;
+  --status-warning-text: #B64400;
+  --status-danger-text: #E30000;
+
+  /* Native system color swatches (light) */
+  --apple-red: #FF383C;
+  --apple-orange: #FF8D28;
+  --apple-yellow: #FFCC00;
+  --apple-green: #34C759;
+  --apple-mint: #00C8B3;
+  --apple-teal: #00C3D0;
+  --apple-cyan: #00C0E8;
+  --apple-blue: #0088FF;
+  --apple-indigo: #6155F5;
+  --apple-purple: #CB30E0;
+  --apple-pink: #FF2D55;
+  --apple-brown: #AC7F5E;
+}
+
+/* Apple-inspired Dark */
+html[data-accent="apple"].dark,
+html[data-accent="apple"][data-theme="dark"],
+.dark[data-accent="apple"],
+[data-accent="apple"] .dark {
+  --canvas: #000000;
+  --surface: #161617;
+  --surface-elevated: #1D1D1F;
+  --surface-subtle: #1D1D1F;
+  --surface-muted: #333336;
+  --text-primary: #F5F5F7;
+  --text-secondary: #A1A1A6;
+  --text-muted: #A1A1A6;
+  --accent: #2997FF;
+  --accent-hover: #2997FF;
+  --accent-light: rgba(41, 151, 255, 0.12);
+  --accent-subtle: rgba(41, 151, 255, 0.12);
+  --accent-soft: rgba(41, 151, 255, 0.12);
+  --accent-soft-hover: rgba(41, 151, 255, 0.18);
+  --accent-deep: #161617;
+  --border-color: #424245;
+  --border-subtle: #333336;
+  --border-strong: #86868B;
+  --focus-ring: #2997FF;
+  --btn-primary-bg: #0071E3;
+  --btn-primary-fg: #FFFFFF;
+  --btn-primary-hover-bg: #0076DF;
+  --btn-primary-active-bg: #006EDB;
+  --btn-tonal-bg: rgba(41, 151, 255, 0.12);
+  --btn-tonal-fg: #2997FF;
+  --btn-tonal-hover-bg: rgba(41, 151, 255, 0.18);
+  --btn-tonal-border: #86868B;
+  --chart-current: #2997FF;
+  --chart-previous: #A1A1A6;
+  --status-success-text: #30D158;
+  --status-warning-text: #FF9230;
+  --status-danger-text: #FF6165;
+
+  /* Native system color swatches (dark) */
+  --apple-red: #FF4245;
+  --apple-orange: #FF9230;
+  --apple-yellow: #FFD600;
+  --apple-green: #30D158;
+  --apple-mint: #00DAC3;
+  --apple-teal: #00D2E0;
+  --apple-cyan: #3CD3FE;
+  --apple-blue: #0091FF;
+  --apple-indigo: #6D7CFF;
+  --apple-purple: #DB34F2;
+  --apple-pink: #FF375F;
+  --apple-brown: #B78A66;
+}
+
+/* Apple-inspired increased contrast (prefers-contrast: more) */
+@media (prefers-contrast: more) {
+  :root[data-accent="apple"],
+  html[data-accent="apple"],
+  html[data-accent="apple"].light {
+    --accent: #1E6EF4;
+    --border-color: #86868B;
+    --border-strong: #424245;
+    --text-secondary: #424245;
+    --status-success-text: #008932;
+    --status-warning-text: #C55300;
+    --status-danger-text: #E9152D;
+  }
+
+  html[data-accent="apple"].dark,
+  html[data-accent="apple"][data-theme="dark"],
+  .dark[data-accent="apple"],
+  [data-accent="apple"] .dark {
+    --accent: #5CB8FF;
+    --border-color: #86868B;
+    --border-strong: #D2D2D7;
+    --text-secondary: #D2D2D7;
+    --status-success-text: #4AD968;
+    --status-warning-text: #FFA056;
+    --status-danger-text: #FF6165;
+  }
+}
+
+/* Apple-inspired Windows / OS forced-colors */
+@media (forced-colors: active) {
+  html[data-accent="apple"] {
+    --canvas: Canvas;
+    --surface: Canvas;
+    --surface-elevated: Canvas;
+    --surface-subtle: Canvas;
+    --surface-muted: Canvas;
+    --text-primary: CanvasText;
+    --text-secondary: CanvasText;
+    --text-muted: CanvasText;
+    --accent: Highlight;
+    --accent-hover: Highlight;
+    --border-color: ButtonBorder;
+    --border-subtle: ButtonBorder;
+    --border-strong: ButtonBorder;
+    --focus-ring: Highlight;
+    --btn-primary-bg: Highlight;
+    --btn-primary-fg: HighlightText;
+    --btn-primary-hover-bg: Highlight;
+    --btn-primary-active-bg: Highlight;
+    --btn-tonal-bg: Canvas;
+    --btn-tonal-fg: CanvasText;
+    --btn-tonal-border: ButtonBorder;
+    --chart-current: Highlight;
+    --chart-previous: CanvasText;
+  }
+}
+
+/* Apple-inspired Featured Card: Quiet neutral / dark tone */
+html[data-accent="apple"] .card-featured {
+  background: #1D1D1F;
+  color: #F5F5F7;
+  border: 1px solid #424245;
+  box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.15);
+}
+html[data-accent="apple"].dark .card-featured,
+html[data-accent="apple"][data-theme="dark"] .card-featured,
+.dark[data-accent="apple"] .card-featured,
+[data-accent="apple"] .dark .card-featured {
+  background: #161617;
+  color: #F5F5F7;
+  border: 1px solid #333336;
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.45);
+}
+
+/* Apple-inspired Scoped Utility Class Adaptations */
+html[data-accent="apple"] .bg-white {
+  background-color: var(--surface);
+}
+html[data-accent="apple"].dark .dark\:bg-\[\#152238\],
+html[data-accent="apple"][data-theme="dark"] .dark\:bg-\[\#152238\],
+.dark[data-accent="apple"] .dark\:bg-\[\#152238\],
+[data-accent="apple"] .dark .dark\:bg-\[\#152238\] {
+  background-color: var(--surface);
+}
+html[data-accent="apple"].dark .dark\:bg-\[\#0B1220\],
+html[data-accent="apple"][data-theme="dark"] .dark\:bg-\[\#0B1220\],
+.dark[data-accent="apple"] .dark\:bg-\[\#0B1220\],
+[data-accent="apple"] .dark .dark\:bg-\[\#0B1220\] {
+  background-color: var(--canvas);
+}
+html[data-accent="apple"].dark .dark\:border-\[\#1E2D4A\],
+html[data-accent="apple"][data-theme="dark"] .dark\:border-\[\#1E2D4A\],
+.dark[data-accent="apple"] .dark\:border-\[\#1E2D4A\],
+[data-accent="apple"] .dark .dark\:border-\[\#1E2D4A\] {
+  border-color: var(--border-color);
+}
+html[data-accent="apple"].dark .dark\:text-\[\#EDF4FF\],
+html[data-accent="apple"][data-theme="dark"] .dark\:text-\[\#EDF4FF\],
+.dark[data-accent="apple"] .dark\:text-\[\#EDF4FF\],
+[data-accent="apple"] .dark .dark\:text-\[\#EDF4FF\] {
+  color: var(--text-primary);
+}
+html[data-accent="apple"].dark .dark\:text-\[\#A8B8CE\],
+html[data-accent="apple"][data-theme="dark"] .dark\:text-\[\#A8B8CE\],
+.dark[data-accent="apple"] .dark\:text-\[\#A8B8CE\],
+[data-accent="apple"] .dark .dark\:text-\[\#A8B8CE\] {
+  color: var(--text-secondary);
+}
+html[data-accent="apple"] .text-\[\#071A3A\],
+html[data-accent="apple"] .text-\[\#14233B\] {
+  color: var(--text-primary);
+}
+html[data-accent="apple"] .text-\[\#526782\],
+html[data-accent="apple"] .text-\[\#59677B\],
+html[data-accent="apple"] .text-\[\#475569\] {
+  color: var(--text-secondary);
+}
+html[data-accent="apple"] .border-\[\#E2E8F0\],
+html[data-accent="apple"] .border-\[\#E2E7EF\] {
+  border-color: var(--border-color);
 }
 
 /* Visible, high-contrast keyboard focus indicator across both themes (LP-13 / LP-14) */
@@ -405,6 +644,9 @@ textarea:focus-visible,
 .btn-primary:hover {
   background-color: var(--btn-primary-hover-bg);
 }
+.btn-primary:active {
+  background-color: var(--btn-primary-active-bg, var(--btn-primary-hover-bg));
+}
 
 .btn-secondary {
   display: inline-flex;
@@ -444,6 +686,9 @@ textarea:focus-visible,
   transition: background-color 0.15s ease;
 }
 .btn-tonal:hover {
+  background-color: var(--btn-tonal-hover-bg);
+}
+.btn-tonal:active {
   background-color: var(--btn-tonal-hover-bg);
 }
 

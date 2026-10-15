@@ -60,7 +60,7 @@ export const FocusModal: React.FC = () => {
         </button>
 
         {/* Header Tag */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold mb-4">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] text-xs font-semibold mb-4">
           <Sparkles className="w-3.5 h-3.5" />
           <span>Focus Mode</span>
         </div>
@@ -93,7 +93,7 @@ export const FocusModal: React.FC = () => {
               className={`min-h-[44px] px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors ${
                 isRunning
                   ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 hover:text-amber-950 dark:bg-amber-950/90 dark:text-amber-200 dark:border-amber-700/80 dark:hover:bg-amber-900 dark:hover:text-amber-100'
-                  : 'bg-[#087F83] text-white border border-transparent hover:bg-[#06676A] dark:bg-[#38D0C5] dark:text-[#071A3A] dark:hover:bg-[#2BB5AB]'
+                  : 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] border border-transparent hover:bg-[var(--btn-primary-hover-bg)]'
               }`}
             >
               {isRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -127,7 +127,7 @@ export const FocusModal: React.FC = () => {
             className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-5 mb-6 text-left"
           >
             <div className="flex items-center justify-between gap-2 mb-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#087F83] dark:text-[#38D0C5]">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--accent)]">
                 {currentTask.category}
               </span>
               <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium capitalize">
@@ -163,8 +163,8 @@ export const FocusModal: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="w-full bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900 rounded-2xl p-6 mb-6">
-            <CheckCircle2 className="w-8 h-8 text-[#087F83] dark:text-[#38D0C5] mx-auto mb-2" />
+          <div className="w-full bg-[var(--accent-soft)] border border-[var(--border-color)] rounded-2xl p-6 mb-6">
+            <CheckCircle2 className="w-8 h-8 text-[var(--status-success-text)] mx-auto mb-2" />
             <div className="font-bold text-sm text-[#071A3A] dark:text-[#EDF4FF]">
               All pending tasks complete!
             </div>
@@ -181,7 +181,7 @@ export const FocusModal: React.FC = () => {
             data-testid="focus-modal-complete-task-btn"
             onClick={completeTask}
             disabled={!currentTask}
-            className="w-full min-h-[44px] py-3 px-4 rounded-xl bg-[#087F83] text-white font-semibold text-sm hover:bg-[#06676A] dark:bg-[#38D0C5] dark:text-[#071A3A] dark:hover:bg-[#2BB5AB] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-sm"
+            className="w-full min-h-[44px] py-3 px-4 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] font-semibold text-sm hover:bg-[var(--btn-primary-hover-bg)] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-sm"
           >
             <CheckCircle2 className="w-4 h-4" />
             <span>Done · Next Action</span>
