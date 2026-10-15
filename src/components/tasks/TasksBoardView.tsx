@@ -221,7 +221,7 @@ export const TasksBoardView: React.FC<TasksBoardViewProps> = ({
               aria-label={`${column.label} stage, ${columnTasks.length} tasks`}
               className={`flex flex-col rounded-2xl bg-slate-100/70 dark:bg-slate-900/40 border transition-all duration-150 ${
                 isOver
-                  ? 'border-[#087F83] ring-2 ring-[#087F83]/30 bg-teal-50/50 dark:bg-teal-950/20'
+                  ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/30 bg-[var(--accent-subtle)]'
                   : 'border-slate-200/60 dark:border-slate-800/60'
               } ${isHiddenOnMobile ? 'hidden md:flex' : 'flex'}`}
               onDragOver={handleColumnDragOver}
@@ -250,7 +250,7 @@ export const TasksBoardView: React.FC<TasksBoardViewProps> = ({
                   onClick={() => onCreateInStatus(column.id)}
                   aria-label={`Add task to ${column.label}`}
                   title={`Add task to ${column.label}`}
-                  className="p-1 rounded-lg text-[#526782] dark:text-[#A8B8CE] hover:text-[#087F83] dark:hover:text-[#38D0C5] hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="p-1 rounded-lg text-[#526782] dark:text-[#A8B8CE] hover:text-[var(--accent)] hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
@@ -265,7 +265,7 @@ export const TasksBoardView: React.FC<TasksBoardViewProps> = ({
                   <div
                     className={`h-40 rounded-xl border-2 border-dashed flex flex-col items-center justify-center p-4 text-center transition-colors ${
                       isOver
-                        ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20 text-[#087F83]'
+                        ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent)]'
                         : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500'
                     }`}
                   >

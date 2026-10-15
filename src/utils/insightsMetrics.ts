@@ -1,4 +1,5 @@
 import { TaskItem, Priority } from '../types/planner';
+import { getRealTodayDate } from './recurrence';
 
 export type InsightsRange = '7D' | '30D' | '90D';
 
@@ -17,12 +18,13 @@ export interface DailyThroughputPoint {
 }
 
 export interface MetricComparison {
-  currentValue: number;
-  previousValue: number;
-  delta: number;
-  percentChange: number | null; // null if previous was 0
+  currentValue: number | null;
+  previousValue: number | null;
+  delta: number | null;
+  percentChange: number | null; // null if previous was 0 or either is null
   formattedChange: string;
   isPositive: boolean;
+  isNegative: boolean;
   isNeutral: boolean;
 }
 
@@ -37,12 +39,14 @@ export interface InsightsSummary {
   dailyVelocity: number;
   previousVelocity: number;
   velocityMetric: MetricComparison;
-  onTimeRate: number; // percentage 0-100
-  previousOnTimeRate: number;
+  onTimeRate: number | null; // percentage 0-100 or null if no eligible completions in period
+  previousOnTimeRate: number | null;
   onTimeMetric: MetricComparison;
+  eligibleOnTimeCount: number;
   activeBacklogCount: number;
   urgentHighBacklogCount: number;
   overdueBacklogCount: number;
+  unknownHistoryCount: number;
   throughputPoints: DailyThroughputPoint[];
   maxDailyCount: number;
   categoryDistribution: Record<string, { count: number; percentage: number; color: string }>;
@@ -107,23 +111,41 @@ export function getInsightsRanges(currentDate: string, range: InsightsRange): {
 }
 
 /**
- * Extract completion date (YYYY-MM-DD) from a task
+ * Extract completion date (YYYY-MM-DD) from a task.
+ * Note: Never infers from dueDate or createdAt. Only valid completedAt timestamps
+ * are interpreted in the configured timezone.
  */
-export function getTaskCompletionDate(task: TaskItem): string | null {
+export function getTaskCompletionDate(task: TaskItem, timeZone?: string): string | null {
   if (task.status !== 'completed') return null;
-  if (task.completedAt) {
-    return task.completedAt.slice(0, 10);
-  }
-  // Fallback for legacy records without completedAt
-  if (task.dueDate) return task.dueDate;
-  if (task.createdAt) return task.createdAt.slice(0, 10);
-  return null;
+  if (!task.completedAt || typeof task.completedAt !== 'string') return null;
+
+  const parsed = new Date(task.completedAt);
+  if (isNaN(parsed.getTime())) return null;
+
+  return getRealTodayDate(timeZone, parsed);
 }
 
 /**
  * Calculate metric comparison between two periods
  */
-export function calculateComparison(current: number, previous: number, formatAsPercentage = false): MetricComparison {
+export function calculateComparison(
+  current: number | null,
+  previous: number | null,
+  formatAsPercentage = false
+): MetricComparison {
+  if (current === null || previous === null) {
+    return {
+      currentValue: current,
+      previousValue: previous,
+      delta: null,
+      percentChange: null,
+      formattedChange: '—',
+      isPositive: false,
+      isNegative: false,
+      isNeutral: true,
+    };
+  }
+
   const delta = current - previous;
   let percentChange: number | null = null;
 
@@ -135,7 +157,7 @@ export function calculateComparison(current: number, previous: number, formatAsP
   if (previous === 0 && current === 0) {
     formattedChange = '0.0%';
   } else if (previous === 0 && current > 0) {
-    formattedChange = `+${current}`;
+    formattedChange = `+${current}${formatAsPercentage ? '%' : ''}`;
   } else if (percentChange !== null) {
     const sign = percentChange > 0 ? '+' : '';
     formattedChange = `${sign}${percentChange}%`;
@@ -148,6 +170,7 @@ export function calculateComparison(current: number, previous: number, formatAsP
     percentChange,
     formattedChange,
     isPositive: delta > 0,
+    isNegative: delta < 0,
     isNeutral: delta === 0,
   };
 }
@@ -158,22 +181,28 @@ export function calculateComparison(current: number, previous: number, formatAsP
 export function computeInsights(
   tasks: TaskItem[],
   currentDate: string,
-  range: InsightsRange
+  range: InsightsRange = '30D',
+  timeZone?: string
 ): InsightsSummary {
   const { currentRange, previousRange } = getInsightsRanges(currentDate, range);
 
   // Active non-archived tasks
   const activeTasks = tasks.filter((t) => !t.isArchived);
 
-  // Identify completed tasks in current period
+  // Count legacy or invalid completion records with unknown history
+  const unknownHistoryCount = activeTasks.filter(
+    (t) => t.status === 'completed' && !getTaskCompletionDate(t, timeZone)
+  ).length;
+
+  // Identify completed tasks in current period using valid completedAt
   const completedInCurrent = activeTasks.filter((t) => {
-    const compDate = getTaskCompletionDate(t);
+    const compDate = getTaskCompletionDate(t, timeZone);
     return compDate !== null && compDate >= currentRange.startDate && compDate <= currentRange.endDate;
   });
 
-  // Completed tasks in previous period
+  // Completed tasks in previous period using valid completedAt
   const completedInPrevious = activeTasks.filter((t) => {
-    const compDate = getTaskCompletionDate(t);
+    const compDate = getTaskCompletionDate(t, timeZone);
     return compDate !== null && compDate >= previousRange.startDate && compDate <= previousRange.endDate;
   });
 
@@ -190,23 +219,24 @@ export function computeInsights(
   // Of completed tasks in period that have a dueDate, was compDate <= dueDate?
   const completedWithDue = completedInCurrent.filter((t) => Boolean(t.dueDate));
   const onTimeCount = completedWithDue.filter((t) => {
-    const compDate = getTaskCompletionDate(t);
+    const compDate = getTaskCompletionDate(t, timeZone);
     return compDate !== null && t.dueDate && compDate <= t.dueDate;
   }).length;
 
+  // If no eligible completed tasks with due dates in period, rate is null (unavailable), not 100%
   const onTimeRate =
-    completedWithDue.length > 0 ? Math.round((onTimeCount / completedWithDue.length) * 100) : 100;
+    completedWithDue.length > 0 ? Math.round((onTimeCount / completedWithDue.length) * 100) : null;
 
   const prevCompletedWithDue = completedInPrevious.filter((t) => Boolean(t.dueDate));
   const prevOnTimeCount = prevCompletedWithDue.filter((t) => {
-    const compDate = getTaskCompletionDate(t);
+    const compDate = getTaskCompletionDate(t, timeZone);
     return compDate !== null && t.dueDate && compDate <= t.dueDate;
   }).length;
 
   const previousOnTimeRate =
     prevCompletedWithDue.length > 0
       ? Math.round((prevOnTimeCount / prevCompletedWithDue.length) * 100)
-      : 100;
+      : null;
 
   const onTimeMetric = calculateComparison(onTimeRate, previousOnTimeRate, true);
 
@@ -230,10 +260,10 @@ export function computeInsights(
     const prevDate = addDaysToIso(previousRange.startDate, i);
 
     const thisCount = completedInCurrent.filter(
-      (t) => getTaskCompletionDate(t) === thisDate
+      (t) => getTaskCompletionDate(t, timeZone) === thisDate
     ).length;
     const prevCount = completedInPrevious.filter(
-      (t) => getTaskCompletionDate(t) === prevDate
+      (t) => getTaskCompletionDate(t, timeZone) === prevDate
     ).length;
 
     if (thisCount > maxDailyCount) maxDailyCount = thisCount;
@@ -254,28 +284,30 @@ export function computeInsights(
     });
   }
 
-  // Category distribution of all active tasks
+  // Category distribution of all active tasks (R2 fix)
+  // Aggregate every eligible task exactly once, supporting custom/imported strings
   const standardCategories = ['Personal', 'Career', 'Health', 'Finances', 'Relationships'];
   const categoryCounts: Record<string, number> = {};
   for (const cat of standardCategories) {
-    categoryCounts[cat] = activeTasks.filter((t) => t.category === cat).length;
+    categoryCounts[cat] = 0;
   }
-  // Catch any custom categories
   for (const t of activeTasks) {
-    if (t.category && !categoryCounts[t.category]) {
-      categoryCounts[t.category] = (categoryCounts[t.category] || 0) + 1;
-    }
+    const cat = t.category && t.category.trim() ? t.category.trim() : 'Other';
+    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
   }
 
-  const totalCatTasks = activeTasks.length || 1;
+  const totalCatTasks = activeTasks.length;
   const categoryDistribution: Record<string, { count: number; percentage: number; color: string }> = {};
 
   for (const [cat, count] of Object.entries(categoryCounts)) {
-    categoryDistribution[cat] = {
-      count,
-      percentage: Math.round((count / totalCatTasks) * 100),
-      color: CATEGORY_COLORS[cat] || CATEGORY_COLORS.Other,
-    };
+    // Retain standard categories (for matrix table) and custom categories with count > 0
+    if (count > 0 || standardCategories.includes(cat)) {
+      categoryDistribution[cat] = {
+        count,
+        percentage: totalCatTasks > 0 ? Math.round((count / totalCatTasks) * 100) : 0,
+        color: CATEGORY_COLORS[cat] || CATEGORY_COLORS.Other,
+      };
+    }
   }
 
   // Stored Status Counts
@@ -300,9 +332,11 @@ export function computeInsights(
     onTimeRate,
     previousOnTimeRate,
     onTimeMetric,
+    eligibleOnTimeCount: completedWithDue.length,
     activeBacklogCount,
     urgentHighBacklogCount,
     overdueBacklogCount,
+    unknownHistoryCount,
     throughputPoints,
     maxDailyCount,
     categoryDistribution,

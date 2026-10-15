@@ -395,7 +395,7 @@ export const TasksView: React.FC = () => {
       </div>
 
       {/* Top Header & New Task button */}
-      <div className="card-surface p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="card-surface p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
           <h2
             tabIndex={-1}
@@ -408,7 +408,7 @@ export const TasksView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2.5 w-full md:w-auto">
           {/* List / Board / Insights Tab Switch */}
           <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-[#526782]">
             <button
@@ -417,7 +417,7 @@ export const TasksView: React.FC = () => {
               data-testid="tasks-view-list-tab"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'list'
-                  ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                  ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs'
                   : 'hover:text-[#071A3A] dark:hover:text-[#EDF4FF]'
               }`}
             >
@@ -430,7 +430,7 @@ export const TasksView: React.FC = () => {
               data-testid="tasks-view-board-tab"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'board'
-                  ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                  ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs'
                   : 'hover:text-[#071A3A] dark:hover:text-[#EDF4FF]'
               }`}
             >
@@ -443,7 +443,7 @@ export const TasksView: React.FC = () => {
               data-testid="tasks-view-insights-tab"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'insights'
-                  ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                  ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs'
                   : 'hover:text-[#071A3A] dark:hover:text-[#EDF4FF]'
               }`}
             >
@@ -483,7 +483,7 @@ export const TasksView: React.FC = () => {
               type="button"
               onClick={handleRevealHiddenTask}
               data-testid="reveal-hidden-task-btn"
-              className="px-3 py-1.5 rounded-lg bg-[#087F83] text-white font-semibold hover:bg-[#06676A] transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-[var(--accent)] text-[var(--accent-foreground)] font-semibold hover:opacity-90 transition-colors cursor-pointer"
             >
               Show task
             </button>
@@ -555,7 +555,7 @@ export const TasksView: React.FC = () => {
             type="button"
             data-testid="tasks-empty-cta"
             onClick={() => openCreateModal()}
-            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>Create your first task</span>
@@ -600,7 +600,7 @@ export const TasksView: React.FC = () => {
             <div className="text-xs text-[#526782] dark:text-[#A8B8CE] font-medium">
               Completion
             </div>
-            <div className="text-2xl font-bold font-mono text-[#087F83] dark:text-[#38D0C5] mt-1">
+            <div className="text-2xl font-bold font-mono text-[var(--accent)] mt-1">
               {completionPct}%
             </div>
           </div>
@@ -608,7 +608,7 @@ export const TasksView: React.FC = () => {
             progress={completionPct}
             size={44}
             strokeWidth={4.5}
-            color="#087F83"
+            color="var(--accent)"
           />
         </div>
       </div>
@@ -630,7 +630,7 @@ export const TasksView: React.FC = () => {
           </div>
           <div className="px-1">
             <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] font-medium">Rate</div>
-            <div className="text-base font-bold font-mono text-[#087F83] dark:text-[#38D0C5] mt-0.5">{completionPct}%</div>
+            <div className="text-base font-bold font-mono text-[var(--accent)] mt-0.5">{completionPct}%</div>
           </div>
         </div>
       </div>
@@ -643,7 +643,7 @@ export const TasksView: React.FC = () => {
               Weekly dates
             </span>
             {selectedDateFilter !== 'all' && (
-              <span className="text-[10px] font-semibold text-[#087F83] dark:text-[#38D0C5]">
+              <span className="text-[10px] font-semibold text-[var(--accent)]">
                 Filtered ({selectedDateFilter})
               </span>
             )}
@@ -651,7 +651,7 @@ export const TasksView: React.FC = () => {
           {selectedDateFilter !== 'all' && (
             <button
               onClick={() => setSelectedDateFilter('all')}
-              className="text-[11px] font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline cursor-pointer"
+              className="text-[11px] font-semibold text-[var(--accent)] hover:underline cursor-pointer"
             >
               All dates
             </button>
@@ -672,9 +672,9 @@ export const TasksView: React.FC = () => {
                 onClick={() => setSelectedDateFilter(isSelected ? 'all' : d.iso)}
                 className={`flex flex-col items-center justify-center py-1.5 px-0.5 rounded-lg transition-all cursor-pointer min-w-0 ${
                   isSelected
-                    ? 'bg-[#087F83] text-white font-bold shadow-xs'
+                    ? 'bg-[var(--accent)] text-[var(--accent-foreground)] font-bold shadow-xs'
                     : isToday
-                    ? 'bg-teal-50 dark:bg-teal-950/40 text-[#087F83] dark:text-[#38D0C5] border border-teal-200 dark:border-teal-800'
+                    ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent-muted)]'
                     : 'text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
                 title={`${d.name} (${d.iso})`}
@@ -780,14 +780,14 @@ export const TasksView: React.FC = () => {
                 aria-label="Toggle task filters"
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors cursor-pointer shrink-0 ${
                   isMobileFilterOpen || activeFilterCount > 0
-                    ? 'bg-teal-50 dark:bg-teal-950/50 border-[#087F83] text-[#087F83] dark:text-[#38D0C5]'
+                    ? 'bg-[var(--accent-subtle)] border-[var(--accent)] text-[var(--accent)]'
                     : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-[#526782] dark:text-[#A8B8CE]'
                 }`}
               >
                 <Filter className="w-3.5 h-3.5" />
                 <span>Filters</span>
                 {activeFilterCount > 0 && (
-                  <span className="w-4 h-4 rounded-full bg-[#087F83] text-white text-[10px] flex items-center justify-center font-bold">
+                  <span className="w-4 h-4 rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] text-[10px] flex items-center justify-center font-bold">
                     {activeFilterCount}
                   </span>
                 )}
@@ -802,7 +802,7 @@ export const TasksView: React.FC = () => {
                   {activeFilterCount > 0 && (
                     <button
                       onClick={handleClearFilters}
-                      className="text-[11px] text-[#087F83] dark:text-[#38D0C5] hover:underline cursor-pointer"
+                      className="text-[11px] text-[var(--accent)] hover:underline cursor-pointer"
                     >
                       Reset filters
                     </button>
@@ -916,7 +916,7 @@ export const TasksView: React.FC = () => {
           {(archivedCount > 0 || statusFilter === 'Archived') && (
             <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 text-xs">
               <div className="flex items-center gap-2 text-[#526782] dark:text-[#A8B8CE]">
-                <Archive className="w-3.5 h-3.5 text-[#087F83]" />
+                <Archive className="w-3.5 h-3.5 text-[var(--accent)]" />
                 <span>
                   {statusFilter === 'Archived'
                     ? `Viewing ${archivedCount} archived task${archivedCount === 1 ? '' : 's'}`
@@ -928,7 +928,7 @@ export const TasksView: React.FC = () => {
                 onClick={() =>
                   setStatusFilter(statusFilter === 'Archived' ? 'All' : 'Archived')
                 }
-                className="font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline cursor-pointer"
+                className="font-semibold text-[var(--accent)] hover:underline cursor-pointer"
               >
                 {statusFilter === 'Archived' ? 'Back to active tasks' : 'View archived'}
               </button>
@@ -967,7 +967,7 @@ export const TasksView: React.FC = () => {
                     data-task-id={task.id}
                     className={`p-3 rounded-xl bg-white dark:bg-[#152238] border shadow-2xs flex items-start gap-3 transition-all duration-300 ${
                       isHighlighted
-                        ? 'border-[#087F83] ring-2 ring-[#087F83] bg-teal-50/70 dark:bg-teal-950/40'
+                        ? 'border-[var(--accent)] ring-2 ring-[var(--accent)] bg-[var(--accent-subtle)]'
                         : 'border-[#E2E8F0] dark:border-[#1E2D4A]'
                     }`}
                   >
@@ -979,8 +979,8 @@ export const TasksView: React.FC = () => {
                       onClick={() => toggleTaskCompletion(task.id)}
                       className={`w-5 h-5 mt-0.5 rounded-md flex items-center justify-center shrink-0 cursor-pointer micro-checkbox ${
                         task.status === 'completed'
-                          ? 'bg-[#087F83] text-white'
-                          : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
+                          ? 'bg-[var(--accent)] text-[var(--accent-foreground)]'
+                          : 'border border-slate-300 dark:border-slate-600 hover:border-[var(--accent)]'
                       }`}
                       aria-label={`Mark task "${task.title}" as ${task.status === 'completed' ? 'incomplete' : 'complete'}`}
                     >
@@ -1008,7 +1008,7 @@ export const TasksView: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => unarchiveTask(task.id)}
-                              className="px-2 py-0.5 rounded-md bg-teal-50 dark:bg-teal-950/50 text-[#087F83] dark:text-[#38D0C5] text-[10px] font-semibold cursor-pointer"
+                              className="px-2 py-0.5 rounded-md bg-[var(--accent-subtle)] text-[var(--accent)] text-[10px] font-semibold cursor-pointer"
                               aria-label={`Restore archived task "${task.title}"`}
                               title="Restore task"
                             >
@@ -1144,7 +1144,7 @@ export const TasksView: React.FC = () => {
                         key={task.id}
                         data-task-id={task.id}
                         className={`hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group ${
-                          isHighlighted ? 'bg-teal-50/70 dark:bg-teal-950/40 ring-2 ring-[#087F83]' : ''
+                          isHighlighted ? 'bg-[var(--accent-subtle)] ring-2 ring-[var(--accent)]' : ''
                         }`}
                       >
                         <td className="py-3 px-3">
@@ -1156,8 +1156,8 @@ export const TasksView: React.FC = () => {
                             onClick={() => toggleTaskCompletion(task.id)}
                             className={`w-4.5 h-4.5 rounded-md flex items-center justify-center cursor-pointer micro-checkbox ${
                               task.status === 'completed'
-                                ? 'bg-[#087F83] text-white shadow-2xs'
-                                : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
+                                ? 'bg-[var(--accent)] text-[var(--accent-foreground)] shadow-2xs'
+                                : 'border border-slate-300 dark:border-slate-600 hover:border-[var(--accent)]'
                             }`}
                           >
                             {task.status === 'completed' && (
@@ -1233,7 +1233,7 @@ export const TasksView: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => unarchiveTask(task.id)}
-                                className="px-2 py-1 rounded-md bg-teal-50 dark:bg-teal-950/50 text-[#087F83] dark:text-[#38D0C5] text-[10px] font-semibold hover:bg-teal-100 cursor-pointer"
+                                className="px-2 py-1 rounded-md bg-[var(--accent-subtle)] text-[var(--accent)] text-[10px] font-semibold hover:opacity-80 cursor-pointer"
                                 aria-label={`Restore archived task "${task.title}"`}
                                 title="Restore task"
                               >
@@ -1357,7 +1357,10 @@ export const TasksView: React.FC = () => {
       {/* Insights Tab View (Phase 04 Analytics & Throughput) */}
       {activeTab === 'insights' && (
         <TasksInsightsView
-          tasks={tasks}
+          tasks={filteredTasks}
+          allTasksCount={tasks.length}
+          onClearFilters={handleClearFilters}
+          timeZone={settings.timeZone}
           currentDate={currentDate}
           onToggleTaskCompletion={toggleTaskCompletion}
         />

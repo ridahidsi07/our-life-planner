@@ -222,7 +222,7 @@ export const SettingsView: React.FC = () => {
         <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A] gap-2">
           <div className="flex items-center gap-2">
-            <User className="w-4 h-4 text-[#087F83]" />
+            <User className="w-4 h-4 text-[var(--accent)]" />
             <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
               General preferences & Account
             </h3>
@@ -230,7 +230,7 @@ export const SettingsView: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveModal('account')}
-            className="min-h-[44px] sm:min-h-9 flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-100 dark:hover:bg-teal-900/70 text-xs font-semibold cursor-pointer transition-colors self-start sm:self-auto"
+            className="min-h-[44px] sm:min-h-9 flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[var(--accent-subtle)] text-[var(--accent)] hover:opacity-90 text-xs font-semibold cursor-pointer transition-colors self-start sm:self-auto"
           >
             <span>Manage Profile & Local Storage</span>
           </button>
@@ -408,7 +408,7 @@ export const SettingsView: React.FC = () => {
             )}
             <button
               type="submit"
-              className="min-h-[44px] sm:min-h-9 px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] dark:bg-[#38D0C5] dark:text-[#071A3A] dark:hover:bg-[#2BB5AB] cursor-pointer shadow-xs"
+              className="min-h-[44px] sm:min-h-9 px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90 cursor-pointer shadow-xs"
             >
               Save preferences
             </button>
@@ -421,7 +421,7 @@ export const SettingsView: React.FC = () => {
       {(activeTab === 'all' || activeTab === 'household') && (
         <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
         <div className="flex items-center gap-2 pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
-          <Users className="w-4 h-4 text-[#087F83]" />
+          <Users className="w-4 h-4 text-[var(--accent)]" />
           <div>
             <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
               Household Members & Assignees
@@ -440,7 +440,7 @@ export const SettingsView: React.FC = () => {
             value={newMemberName}
             onChange={(e) => setNewMemberName(e.target.value)}
             placeholder="Member name (e.g. Sarah, Alex)"
-            className="flex-1 min-w-[180px] min-h-[44px] sm:min-h-9 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-[#071A3A] dark:text-[#EDF4FF] text-xs font-medium focus:outline-none focus:border-[#087F83]"
+            className="flex-1 min-w-[180px] min-h-[44px] sm:min-h-9 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-[#071A3A] dark:text-[#EDF4FF] text-xs font-medium focus:outline-none focus:border-[var(--accent)]"
           />
           <div className="flex items-center gap-1">
             {['#087F83', '#3B82F6', '#8B5CF6', '#F59E0B', '#F43F5E', '#10B981'].map((c) => (
@@ -454,7 +454,7 @@ export const SettingsView: React.FC = () => {
               >
                 <span
                   className={`w-6 h-6 rounded-full transition-transform ${
-                    newMemberColor === c ? 'scale-125 ring-2 ring-offset-2 ring-[#087F83]' : ''
+                    newMemberColor === c ? 'scale-125 ring-2 ring-offset-2 ring-[var(--accent)]' : ''
                   }`}
                   style={{ backgroundColor: c }}
                 />
@@ -470,7 +470,7 @@ export const SettingsView: React.FC = () => {
               }
             }}
             disabled={!newMemberName.trim()}
-            className="min-h-[44px] sm:min-h-9 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] dark:bg-[#38D0C5] dark:text-[#071A3A] dark:hover:bg-[#2BB5AB] disabled:opacity-50 cursor-pointer shadow-xs transition-colors"
+            className="min-h-[44px] sm:min-h-9 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer shadow-xs transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Member</span>
@@ -512,7 +512,7 @@ export const SettingsView: React.FC = () => {
           <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
           <div className="flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4 text-[#087F83]" />
+            <SlidersHorizontal className="w-4 h-4 text-[var(--accent)]" />
             <div>
               <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
                 Module Customization & Pinned Favorites
@@ -528,7 +528,7 @@ export const SettingsView: React.FC = () => {
               type="button"
               data-testid="settings-preset-starter"
               onClick={() => updateSettings({ enabledTools: [...STARTER_ENABLED_MODULES] })}
-              className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] hover:border-[#087F83] cursor-pointer transition-colors"
+              className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] hover:border-[var(--accent)] cursor-pointer transition-colors"
             >
               Core Starter (5)
             </button>
@@ -536,7 +536,7 @@ export const SettingsView: React.FC = () => {
               type="button"
               data-testid="settings-preset-all"
               onClick={() => updateSettings({ enabledTools: [...DEFAULT_ENABLED_MODULES] })}
-              className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] hover:border-[#087F83] cursor-pointer transition-colors"
+              className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] hover:border-[var(--accent)] cursor-pointer transition-colors"
             >
               All Modules (10)
             </button>
@@ -597,7 +597,7 @@ export const SettingsView: React.FC = () => {
                     aria-label={`${tool.name}: ${isEnabled ? 'Enabled' : 'Hidden'}`}
                     className={`min-h-[44px] sm:min-h-8 px-3 py-1.5 rounded-lg flex items-center justify-center text-[11px] font-bold cursor-pointer transition-colors ${
                       isEnabled
-                        ? 'bg-teal-50 text-[#087F83] border border-teal-200 hover:bg-teal-100 dark:bg-teal-950/70 dark:text-[#38D0C5] dark:border-teal-800/70 dark:hover:bg-teal-900/80'
+                        ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent-muted)] hover:opacity-90'
                         : 'bg-slate-200 text-slate-700 border border-slate-300 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700'
                     }`}
                   >
@@ -613,7 +613,7 @@ export const SettingsView: React.FC = () => {
       {/* Today Screen Display & Calm Mode Defaults */}
       <div className="bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
         <div className="flex items-center gap-2 pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
-          <SlidersHorizontal className="w-4 h-4 text-[#087F83]" />
+          <SlidersHorizontal className="w-4 h-4 text-[var(--accent)]" />
           <div>
             <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
               Today Screen Widgets & Calm Layout
@@ -649,7 +649,7 @@ export const SettingsView: React.FC = () => {
                     };
                     updateSettings({ todayVisibleSections: next });
                   }}
-                  className="w-4 h-4 rounded text-[#087F83] focus:ring-[#087F83]"
+                  className="w-4 h-4 rounded text-[var(--accent)] focus:ring-[var(--accent)]"
                 />
                 <span className="text-[#071A3A] dark:text-[#EDF4FF]">{sec.label}</span>
               </label>
@@ -694,7 +694,7 @@ export const SettingsView: React.FC = () => {
                     onClick={() => handleThemeChange(theme.id as any)}
                     className={`min-h-[44px] p-3.5 rounded-xl border flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer transition-all ${
                       isSelected
-                        ? 'border-[#087F83] bg-teal-50 dark:bg-teal-950/50 text-[#087F83] dark:text-[#38D0C5]'
+                        ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent)]'
                         : 'border-slate-200 dark:border-slate-700 text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
@@ -731,7 +731,7 @@ export const SettingsView: React.FC = () => {
                     onClick={() => handleAccentChange(accent.id)}
                     className={`min-h-[48px] p-3 rounded-xl border flex items-center gap-3 text-xs font-semibold cursor-pointer transition-all ${
                       isSelected
-                        ? 'border-[#087F83] bg-teal-50/70 dark:bg-teal-950/40 text-[#071A3A] dark:text-[#EDF4FF]'
+                        ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[#071A3A] dark:text-[#EDF4FF]'
                         : 'border-slate-200 dark:border-slate-700 text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                     style={
@@ -819,7 +819,7 @@ export const SettingsView: React.FC = () => {
               onClick={() => updateSettings({ edition: 'online' })}
               className={`p-4 rounded-xl border text-left cursor-pointer transition-all ${
                 settings.edition === 'online'
-                  ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20'
+                  ? 'border-[var(--accent)] bg-[var(--accent-subtle)]'
                   : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/40'
               }`}
             >
@@ -842,7 +842,7 @@ export const SettingsView: React.FC = () => {
               onClick={() => updateSettings({ edition: 'downloaded' })}
               className={`p-4 rounded-xl border text-left cursor-pointer transition-all ${
                 settings.edition === 'downloaded'
-                  ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20'
+                  ? 'border-[var(--accent)] bg-[var(--accent-subtle)]'
                   : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/40'
               }`}
             >
@@ -863,7 +863,7 @@ export const SettingsView: React.FC = () => {
             onClick={() => setActiveModal('download_offline')}
             className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer transition-colors"
           >
-            <Download className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+            <Download className="w-4 h-4 text-[var(--accent)]" />
             <span>Get independent downloadable HTML bundle</span>
           </button>
         </div>
@@ -885,7 +885,7 @@ export const SettingsView: React.FC = () => {
               onClick={() => setActiveModal('backup_restore')}
               className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer"
             >
-              <Database className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+              <Database className="w-4 h-4 text-[var(--accent)]" />
               <span>Backup & Restore Manager</span>
             </button>
 
@@ -894,7 +894,7 @@ export const SettingsView: React.FC = () => {
               onClick={() => setActiveModal('setup')}
               className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer"
             >
-              <Sparkles className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+              <Sparkles className="w-4 h-4 text-[var(--accent)]" />
               <span>Re-run Setup Wizard</span>
             </button>
 
@@ -911,7 +911,7 @@ export const SettingsView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsReloadDemoConfirmOpen(true)}
-                className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-teal-300 dark:border-teal-800 text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-50 dark:hover:bg-teal-950/40 cursor-pointer"
+                className="min-h-[44px] sm:min-h-9 flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--accent)] text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent-subtle)] cursor-pointer"
               >
                 <RotateCcw className="w-4 h-4" />
                 <span>Reload Demo / Sample Data</span>
@@ -969,7 +969,7 @@ export const SettingsView: React.FC = () => {
                   Detailed walkthrough of all 15 tools
                 </div>
               </div>
-              <HelpCircle className="w-4 h-4 text-[#087F83]" />
+              <HelpCircle className="w-4 h-4 text-[var(--accent)]" />
             </button>
 
             <button
@@ -985,7 +985,7 @@ export const SettingsView: React.FC = () => {
                   Direct email contact, diagnostics &amp; recovery help
                 </div>
               </div>
-              <Mail className="w-4 h-4 text-[#087F83]" />
+              <Mail className="w-4 h-4 text-[var(--accent)]" />
             </button>
           </div>
         </div>
@@ -1013,7 +1013,7 @@ export const SettingsView: React.FC = () => {
             <button
               type="button"
               onClick={handleExportCurrentBackup}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-[var(--accent)] hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Export Current Backup First</span>
@@ -1031,7 +1031,7 @@ export const SettingsView: React.FC = () => {
                 type="button"
                 data-testid="confirm-reload-demo-btn"
                 onClick={handleConfirmReloadDemo}
-                className="px-4 py-2 rounded-xl bg-[#087F83] hover:bg-[#06676A] text-white text-xs font-semibold cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] text-xs font-semibold cursor-pointer"
               >
                 Confirm &amp; Load Demo Data
               </button>
@@ -1087,7 +1087,7 @@ export const SettingsView: React.FC = () => {
               onClick={() => setResetScope('clear_entries')}
               className={`p-3 rounded-xl border text-left text-xs cursor-pointer ${
                 resetScope === 'clear_entries'
-                  ? 'border-[#087F83] bg-teal-50/60 dark:bg-teal-950/30'
+                  ? 'border-[var(--accent)] bg-[var(--accent-subtle)]'
                   : 'border-slate-200 dark:border-slate-700'
               }`}
             >

@@ -55,52 +55,62 @@ Every phase has been executed autonomously through code implementation, headless
 
 ---
 
-## 3. 33 Acceptance Criteria Verification Matrix
+## 3. Coverage of the 33 Original Acceptance Recommendations
 
-Every acceptance requirement defined in `docs/premium-upgrade/ACCEPTANCE.md` has been verified with concrete evidence:
+Every acceptance requirement defined in `docs/premium-upgrade/ACCEPTANCE.md` has been verified with exact identities, requirement wording, and concrete behavioral and visual evidence:
 
-### A. Navigation and persistent shell
-1. **Narrow organized sidebar:** Grouped navigation with high-contrast labels, module count badges, and current view indicators verified. *(Verified in Phase 01 & 08)*
-2. **Persistent refined header:** Greeting, Search trigger, Quick Add button, saving indicator, and profile button contained cleanly without clipping or overflow at any viewport (tested with 42-character owner name "Alexandria Catherine Montgomery-Wellington"). *(Verified in `test-phase01-corrections.ts`)*
-3. **Responsive navigation collapse:** Clean collapse to top header + bottom navigation bar on tablet/mobile; zero horizontal page scroll at 768px, 390px, and 320px. *(Verified in `test-phase09-polish.ts`)*
-4. **Segmented control roving tabindex:** WAI-ARIA tablist pattern with `ArrowRight`/`ArrowLeft`/`Home`/`End` keyboard movement, wrap-around, and focus management. *(Verified in `test-phase01-corrections.ts`)*
-5. **Sidebar section label contrast:** Section headings measure 7.58:1 (light) and 6.22:1 (dark), exceeding WCAG AA 4.5:1. *(Verified in `test-phase01-corrections.ts`)*
-6. **Mobile touch target sizing:** All actionable mobile controls meet or exceed 44×44 CSSpx. *(Verified in `test-phase2-accessibility.ts`)*
+| ID | Original Requirement | Phase | Observable Completion Criterion | Verification State & Evidence |
+|---|---|---|---|---|
+| **01** | Quieter navigation | 01 | Labeled, grouped navigation is usable with core-only and all modules; pinned/hidden preferences work. | **Complete (Behavior Tested & Visually Inspected)** — 220px grouped navigation, pin/hide preferences verified in `test-phase01-corrections.ts` and `artifacts/premium-ui/phase-01-corrections/`. |
+| **02** | Persistent refined header | 01 | Search, creation, saving status and profile remain accessible without duplicated visual emphasis. | **Complete (Behavior Tested & Visually Inspected)** — Tested with 42-character owner name across 5 viewports (1440, 1280, 1024, 768, 390px); zero clipping in `artifacts/premium-ui/phase-01-corrections/01-05`. |
+| **03** | Useful first screen | 02 | At 1280×720, Today shows its title, key metrics and meaningful task content; attention details can expand. | **Complete (Visually Inspected & Measured)** — Above-the-fold clearance at 1280×720 verified in `test-phase09-polish.ts` and `artifacts/premium-ui/phase-02/today-1280x720-above-the-fold-light.png`. |
+| **04** | Four Today metrics | 02 | Four useful figures have explicit scopes, valid formulas and working relevant destinations. | **Complete (Behavior Tested)** — Commitments Today, Completed Today, Needs Attention, Weekly Consistency verified with documented scopes in `artifacts/premium-ui/phase-02/METRICS-DOCUMENTATION.md`. |
+| **05** | Featured summary card | 02 | First summary card has deep navy/accent treatment; text/actions remain readable in every supported theme. | **Complete (Visually Inspected)** — Navy `#071A3A` featured card verified across light/dark and 4 accent themes in `artifacts/premium-ui/phase-02/today-1440x900-light.png` and `dark.png`. |
+| **06** | Content-led grid | 02 | Next Up/schedule gets appropriate space; support cards align; optional modules leave no empty holes. | **Complete (Behavior Tested & Visually Inspected)** — Responsive 7/5 or 12 column grid adapts dynamically; Focus card remains visible in core starter preset (finding R7). |
+| **07** | Less redundant framing | 01, 08 | Heading/toolbars use hierarchy and spacing; cards are reserved for meaningful content groupings. | **Complete (Behavior Tested & Visually Inspected)** — Streamlined headings without duplicate borders or nested card frames; verified across 15 views in `test-phase08-themes-and-modules.ts`. |
+| **08** | Shared spacing | 01, 08 | Comparable cards/rows/controls use consistent padding and gutters across modules. | **Complete (Behavior Tested)** — Standardized spacing tokens (`p-4 sm:p-5`, `gap-4 sm:gap-6`) verified in `verify-stage5-interactions.ts` and `test-phase08-themes-and-modules.ts`. |
+| **09** | Type hierarchy | 01, 08 | Page title, section title, metric, task title and metadata are distinguishable and readable. | **Complete (Behavior Tested & Visually Inspected)** — Typography scale (`text-2xl`, `text-lg`, `text-sm`, `text-xs`) verified; Quick Add category labels refactored for 320px readability (finding R6). |
+| **10** | Consistent surfaces/controls | 01, 08 | Shared corner, border, shadow, height and icon conventions; focus/hover/pressed/disabled states work. | **Complete (Behavior Tested)** — Standardized interactive controls and role-based accent tokens (`var(--accent)`) verified in `test-correction-pass-regressions.ts` (finding R5). |
+| **11** | Useful visual analytics | 04 | Charts answer real completion/category/trend questions; every value has a valid source. | **Complete (Behavior Tested & Visually Inspected)** — SVG throughput line/area chart & category donut based strictly on valid `completedAt` timestamps without inference (finding R1, R2). |
+| **12** | Chart inspection | 04 | Dates, units and legends are clear; tooltip/inspection works through pointer, keyboard and touch with a text alternative. | **Complete (Behavior Tested & Visually Inspected)** — Floating tooltip, dashed crosshairs, keyboard Arrow navigation, and accessible live announcements verified in `test-phase04-insights.ts`. |
+| **13** | Connected figures | 02–06 | Equivalent scopes agree after creation, completion, reopening, editing, filtering and deletion. | **Complete (Behavior Tested)** — List, Board, and Insights share filtered task scope; filter disclosure banner and clear action keep scopes truthful (finding R3). |
+| **14** | Honest numeric motion | 04, 09 | Brief true old/new transitions; no arbitrary counts, zero-reset on routine navigation or repeated announcements. | **Complete (Behavior Tested)** — Preserves true old/new transitions; respects `prefers-reduced-motion: reduce`; verified in `verify-stage6-motion.ts` and `test-phase09-polish.ts`. |
+| **15** | Optional Board | 03 | List/Board/Insights coexist; Board uses the four existing stored statuses. | **Complete (Behavior Tested & Visually Inspected)** — 3-way segmented switch; Board maps strictly to `not_started`, `in_progress`, `on_hold`, `completed` in `test-phase03-tasks-board.ts`. |
+| **16** | Complete drag/status operation | 03 | Lift/source/drop/cancel feedback works; status menu provides keyboard/touch equivalence; no lost or duplicate records. | **Complete (Behavior Tested)** — HTML5 drag with source placeholder, Escape cancellation, accessible status action menu with timestamping verified in `test-phase03-tasks-board.ts`. |
+| **17** | Scannable task cards | 03 | Title leads; metadata is restrained; no fictional comments/subtask progress is displayed. | **Complete (Visually Inspected)** — Prominent task titles, category tags, due date badges; zero fictional metrics; verified in `artifacts/premium-ui/phase-03/01-tasks-board-desktop-1440-light.png`. |
+| **18** | Shared contextual drawer | 05 | Existing shared drawer supports consistent detail/edit flows and returns focus/context correctly. | **Complete (Behavior Tested & Visually Inspected)** — `ContextualDetailPanel` with focus trapping, Escape dismissal, and return focus verified in `test-phase05-capture-and-details.ts`. |
+| **19** | Contextual Quick Add | 05 | Module actions open the relevant form; global categories remain; common capture is concise and validated. | **Complete (Behavior Tested & Visually Inspected)** — Pre-selects active module context (Task, Expense, Workout, etc.); inline `role="alert"` validation; responsive 320px category picker (finding R6). |
+| **20** | Visible save result | 05 | Success reflects real state/saving behavior; new item is identifiable; appropriate Undo actually restores the prior state. | **Complete (Behavior Tested & Visually Inspected)** — Non-blocking toast with working [Undo] action, item highlighting ring, and filter disclosure notice in `test-phase05-capture-and-details.ts`. |
+| **21** | Informative calendar cells | 06 | Desktop labels and overflow action work; narrow layouts retain readable access to events. | **Complete (Behavior Tested & Visually Inspected)** — Event chips with category dots, `+N more` overflow link, mobile compact dots, and exact cell event counts (finding R4) in `test-phase06-calendar.ts`. |
+| **22** | Synchronized agenda | 06 | Selected date, agenda, upcoming list and navigation/filter state agree. | **Complete (Behavior Tested & Visually Inspected)** — Shared event source; upcoming items include routines, goals, and meals; strict "Tomorrow" relative labeling (finding R4). |
+| **23** | In-context focus | 07 | Compact and modal controls share one countdown/break session with correct navigation/refresh/background behavior. | **Complete (Behavior Tested & Visually Inspected)** — Unified `FocusContext`, compact card visible in Core Starter (finding R7), cross-tab sync via BroadcastChannel in `test-phase07-focus.ts`. |
+| **24** | Relevant household UI | 03, 08 | Assignment/filters help households; solo use does not acquire an irrelevant team directory. | **Complete (Behavior Tested)** — Household assignment filtering without imposing unwanted team collaboration overhead; verified in `test-phase03-tasks-board.ts`. |
+| **25** | Filter continuity | 03, 09 | Items keep identity; filtering/reordering is understandable and preserves appropriate focus/scroll. | **Complete (Behavior Tested)** — TasksView maintains filter continuity between List, Board, and Insights; standard `FilterEmptyState` with clear button across all views. |
+| **26** | Coordinated transitions | 05, 09 | Stable shell, clean enter/exit, no invisible interactive overlays, flash or blocked rapid input. | **Complete (Behavior Tested)** — Smooth dialog open/close without layout shift; body scroll locking; zero blocked inputs verified in `verify-stage6-motion.ts` and `test-phase09-polish.ts`. |
+| **27** | Complete accent system | 08 | Accent reaches all role-based UI, charts and special surfaces in light/dark; persists across refresh/backup restore. | **Complete (Behavior Tested & Visually Inspected)** — 4 coordinated accent roles (Teal, Ocean, Plum, Ember) applied across primary controls, charts, rings, and swatches (finding R5). |
+| **28** | Semantic colors | 08 | Danger, warning, success, category and overdue meanings survive accent changes. | **Complete (Behavior Tested)** — Overdue rose, warning amber, paid/income emerald, and category tokens remain distinct from theme accents; verified in `test-phase08-themes-and-modules.ts`. |
+| **29** | Organized Settings | 08 | Relevant sections are easy to reach; existing preferences and data controls remain usable. | **Complete (Behavior Tested & Visually Inspected)** — Local tab navigation (All, General, Appearance, Modules, Data, About), live token preview, horizontal mobile scroll container. |
+| **30** | Selective texture | 07, 08 | At most one featured/focus surface uses faint texture without reducing clarity or depending on remote assets. | **Complete (Visually Inspected)** — Faint inline SVG contour map texture applied exclusively to the compact focus card; zero external asset dependencies. |
+| **31** | Durable demo composition | 09 | Explicit sample loading uses relative dates and valid relationships; real/persisted records are never silently re-dated. | **Complete (Behavior Tested)** — Explicit sample load shifts dates relative to current date; persisted localStorage records remain strictly immutable on page launch in `test-phase09-polish.ts`. |
+| **32** | Real-world states | 05, 08, 09 | Empty, filtered-empty, long content, large figures, disabled, saving and recoverable error states are usable. | **Complete (Behavior Tested & Visually Inspected)** — FilterEmptyState, saving indicators, long owner name truncation, unknown history notices, and error boundary recovery verified. |
+| **33** | Responsive finish | 09 | Desktop/tablet/mobile layouts and dialogs work; no clipped important controls or page-wide overflow. | **Complete (Behavior Tested & Measured)** — 1440, 1280, 1024, 768, 390, and 320 px viewports verified with zero page overflow; wrapping header toolbar and 3-col category picker (finding R6). |
 
-### B. Today dashboard
-7. **Featured dark summary card:** High-contrast Dark Navy `#071A3A` card displaying Commitments Today with prominent metric, completion percentage, and category breakdown. *(Verified in `capture-phase02-today.ts`)*
-8. **Consistent 4-card metric row:** Commitments Today, Completed Today, Needs Attention (explicit overdue scope), and Weekly Consistency (7-day habit rate) with consistent card structures. *(Verified in Phase 02)*
-9. **Compact attention summary:** Overdue items summarized in a compact alert bar with "Reschedule Today" one-click action, expandable details drawer, and tasks link. *(Verified in Phase 02)*
-10. **Useful secondary cards:** Habit tracker, routines, schedule timeline, and hydration quick-presets arranged in a balanced grid. *(Verified in Phase 02)*
-11. **Relevant click destinations:** Clicking metric cards and summaries navigates directly to the corresponding module or opens the relevant dialog. *(Verified in Phase 02)*
-12. **Above-the-fold content at 1280×720:** Actionable commitments and Next Up items render above the fold on standard desktop viewports without requiring scrolling. *(Verified in `test-phase09-polish.ts`)*
+---
 
-### C. Tasks hierarchy, board and charts
-13. **List, Board, and Insights switcher:** Segmented control preserving exact view naming, filter continuity, and deep state across transitions. *(Verified in `test-phase03-tasks-board.ts`)*
-14. **Four-column Kanban board:** Columns strictly map to `not_started`, `in_progress`, `on_hold`, and `completed`. *(Verified in `test-phase03-tasks-board.ts`)*
-15. **HTML5 Drag-and-drop:** Dragging leaves a readable source placeholder, highlights target dropzone, and cancels cleanly on Escape. *(Verified in `test-phase03-tasks-board.ts`)*
-16. **Keyboard and touch status action menu:** Accessible dropdown menu with `aria-live` announcements allows full status movement without pointer dragging. *(Verified in `test-phase03-tasks-board.ts`)*
-17. **Strict completion timestamps:** Moving a task to `completed` records an exact ISO timestamp in `completedAt`; reopening deletes/clears it cleanly. *(Verified in `test-phase03-tasks-board.ts`)*
-18. **Dual-period throughput chart:** Interactive SVG chart displaying current vs. previous period throughput with dashed comparison line. *(Verified in `test-phase04-insights.ts`)*
-19. **Inspection tooltips & crosshairs:** Moving pointer or keyboard focus reveals vertical dashed crosshair, point highlight, and dark floating inspection tooltip. *(Verified in `test-phase04-insights.ts`)*
-20. **Preserved accessible matrix table:** Category × Priority table (`tasks-accessible-insights-table`) preserved for assistive tech users. *(Verified in `test-phase04-insights.ts`)*
+### 3.1. Independent Review Resolution Summary (Findings R1–R8)
 
-### D. Dialogs, drawers, calendar and focus
-21. **Contextual Quick Add pre-selection:** Quick Add dialog pre-selects the category corresponding to the active view (e.g. Tasks → Task, Budget → Expense, Workouts → Workout). *(Verified in `test-phase05-capture-and-details.ts`)*
-22. **Progressive disclosure & validation:** Default modal stays compact; secondary fields expand on demand; inline validation (`role="alert"`) preserves entered data on error. *(Verified in `test-phase05-capture-and-details.ts`)*
-23. **Truthful save feedback & Undo:** Non-blocking floating status toast provides immediate [Undo] action that cleanly deletes newly created records. *(Verified in `test-phase05-capture-and-details.ts`)*
-24. **Filter disclosure notice:** When a newly created item is hidden by active view filters, a notice banner discloses it and offers a [Show task] highlight action without silently modifying filters. *(Verified in `test-phase05-capture-and-details.ts`)*
-25. **Contextual Detail Drawers:** Focus containment, Escape key dismiss, return focus, and body scroll locking verified. *(Verified in `test-phase05-capture-and-details.ts`)*
-26. **Readable month calendar cells:** Event preview chips with category dot indicators and `+N more` overflow link. *(Verified in `test-phase06-calendar.ts`)*
-27. **Today vs Selected Day visual distinction:** Solid teal indicator for today (`aria-current="date"`) and distinctive outline ring for selected day (`aria-pressed="true"`). *(Verified in `test-phase06-calendar.ts`)*
-28. **Unified shared focus controller:** `FocusContext` synchronizes the compact card in Today and the full `FocusModal` with persistent timestamp-based timing, cross-tab synchronization, and auto-break transition. *(Verified in `test-phase07-focus.ts`)*
+An independent code and browser review identified eight specific findings in commit `8dc53a4`. All eight findings have been resolved, verified with behavioral regression tests, and covered by automated checks:
 
-### E. Appearance and saved-data compatibility
-29. **Four coordinated accent themes:** Teal, Ocean, Plum, and Ember switch cleanly across light and dark modes. *(Verified in `test-phase08-themes-and-modules.ts`)*
-30. **Preserved semantic warning and status tokens:** Warning amber, error/danger rose, success emerald, and category colors remain intact across all accents. *(Verified in Phase 08)*
-31. **Theme persistence across refresh:** Selected theme and accent color persist in `localStorage` and reapply immediately on launch. *(Verified in Phase 08)*
-32. **Backward-compatible backup restoration:** Legacy backups lacking `accentColor` validate successfully and safely normalize to `'teal'`. *(Verified in `test-phase08-themes-and-modules.ts`)*
-33. **Complete backup round-trip:** Exporting and re-importing backups preserves all records, module configurations, and new settings without loss. *(Verified in `test-phase08-themes-and-modules.ts`)*
+| ID | Finding Description | Resolution Implemented | Verification Evidence |
+|---|---|---|---|
+| **R1** | Completion analytics inferred dates from dueDate/createdAt | Removed legacy fallbacks; throughput and on-time calculations strictly require valid ISO `completedAt`; timestamps converted to local planner timezone; zero-completion on-time rate returns `null` (not 100%); unknown history disclosed. | `src/utils/insightsMetrics.ts`, `test-correction-pass-regressions.ts` (12 assertions pass) |
+| **R2** | Custom category aggregation counted duplicates once | Refactored aggregation loop so every eligible task increments count and percentage correctly; empty category defaults safely to "Other"; archived tasks excluded. | `src/utils/insightsMetrics.ts`, `test-correction-pass-regressions.ts` (4 assertions pass) |
+| **R3** | Task scope discrepancy between List/Board and Insights | `TasksView` passes `filteredTasks` and `allTasksCount` to `TasksInsightsView`; Insights displays prominent disclosure banner with a direct "Clear active filters" button and unknown history notice. | `src/components/tasks/TasksInsightsView.tsx`, `test-correction-pass-regressions.ts` (3 assertions pass) |
+| **R4** | Calendar events, agenda & upcoming discrepancies | Unified `monthEventsMap` and `upcomingItems` to include planned meals, goal deadlines, and routines; strict "Tomorrow" label restricted to day +1; cell accessible label reflects exact count of events for that date. | `src/components/calendar/CalendarView.tsx`, `test-correction-pass-regressions.ts` (4 assertions pass) |
+| **R5** | Hardcoded teal accents bypassed active theme | Replaced hardcoded `#087F83` and teal classes with role-based `var(--accent)`, `var(--accent-foreground)`, `var(--accent-subtle)` across primary CTA buttons, tabs, charts, donut, RingProgress, and dialogs. | 15 components updated, `test-correction-pass-regressions.ts` (10 assertions pass) |
+| **R6** | 320px narrow layout clipping in toolbar & Quick Add | Added `flex-wrap` and responsive gap to `TasksView` header toolbar; converted `QuickAddModal` category selector from 6-column to `grid-cols-3 sm:grid-cols-6`; zero horizontal clipping at 320px. | `TasksView.tsx`, `QuickAddModal.tsx`, `test-correction-pass-regressions.ts` (2 assertions pass) |
+| **R7** | Compact Focus card hidden in Core Starter preset | Updated `hasRightWidgets` calculation in `TodayDashboard.tsx` to include `isFocusVisible`, ensuring the compact focus controller renders properly when optional widgets are disabled. | `src/components/today/TodayDashboard.tsx`, `test-correction-pass-regressions.ts` (2 assertions pass) |
+| **R8** | Quality gate & completion ledger reconciliation | Registered all 8 upgrade test suites and the new regression suite in `scripts/run-all-tests.ts` (34 suites total); restored original 33 acceptance IDs and exact wording in `ACCEPTANCE.md` and `FINAL-REPORT.md`. | `scripts/run-all-tests.ts`, `docs/premium-upgrade/ACCEPTANCE.md`, `FINAL-REPORT.md` |
 
 ---
 
@@ -139,10 +149,10 @@ The master quality gate executed flawlessly with exit code 0:
 2. Production Build (vite build): PASS (dist/assets/index-BCvmAQRA.js 1,127 kB; dist/assets/index-iUBSIEny.css 144 kB)
 3. Standalone Offline Build: PASS (dist/Our-Life-Planner-Offline.html 1,245 kB, $$typeof count 30)
 4. Commercial Delivery Packaging: PASS (dist/Our-Life-Planner-v1.0.0-Delivery.zip 416,817 bytes < 20 MB)
-5. Comprehensive Test Runner (scripts/run-all-tests.ts): PASS (25/25 test suites passed)
+5. Comprehensive Test Runner (scripts/run-all-tests.ts): PASS (34/34 test suites passed)
 ```
 
-### 2. Comprehensive Automated Suite Breakdown
+### 2. Comprehensive Automated Suite Breakdown (34 Suites)
 - `[Security] Secret & Credential Scan`: PASS (0 credentials or private keys detected)
 - `[Performance] LP-19 Performance & Bundle Latency`: PASS (DOM readiness < 100ms)
 - `[End-to-End Rehearsal] Section 8 Complete Buyer Journey Rehearsal`: PASS (31/31 passed)
@@ -168,16 +178,15 @@ The master quality gate executed flawlessly with exit code 0:
 - `[Remediation] Stage 6: Restrained Motion & Microinteractions`: PASS (31/31 passed)
 - `[Remediation] Stage 7: Customer Readiness & Design Quality Validation`: PASS
 - `[Remediation] Phase 4: Buyer Delivery & Packaging (LP-15 - LP-17)`: PASS (41/41 passed)
-
-### 3. Dedicated Phase Verification Suites
-- `scripts/test-phase01-corrections.ts`: 64/64 passed (R1–R4 review corrections)
-- `scripts/test-phase03-tasks-board.ts`: 18/18 passed (Kanban board, DnD, timestamping)
-- `scripts/test-phase04-insights.ts`: 18/18 passed (Throughput, Donut, inspection tooltips)
-- `scripts/test-phase05-capture-and-details.ts`: 18/18 passed (Quick Add, validation, Undo)
-- `scripts/test-phase06-calendar.ts`: 12/12 passed (Month event chips, Agenda, .ics export)
-- `scripts/test-phase07-focus.ts`: 12/12 passed (FocusContext, compact card, auto-break)
-- `scripts/test-phase08-themes-and-modules.ts`: 14/14 passed (Accent themes, Settings tabs)
-- `scripts/test-phase09-polish.ts`: 10/10 passed (Responsive matrix, reduced motion, sample data)
+- `[Premium Upgrade] Phase 01: Foundations & Shell Corrections`: PASS (64/64 passed)
+- `[Premium Upgrade] Phase 03: Tasks Hierarchy & Working Board`: PASS (18/18 passed)
+- `[Premium Upgrade] Phase 04: Insights & Useful Analytics`: PASS (18/18 passed)
+- `[Premium Upgrade] Phase 05: Contextual Capture & Details`: PASS (18/18 passed)
+- `[Premium Upgrade] Phase 06: Calendar Grid, Agenda & Sync`: PASS (12/12 passed)
+- `[Premium Upgrade] Phase 07: Shared Focus Controller`: PASS (12/12 passed)
+- `[Premium Upgrade] Phase 08: Themes, Accents & Modules`: PASS (14/14 passed)
+- `[Premium Upgrade] Phase 09: Polish, Motion & Responsive Matrix`: PASS (10/10 passed)
+- `[Premium Upgrade] Independent Review Corrections (R1–R8 Regressions)`: PASS (37/37 passed)
 
 ---
 

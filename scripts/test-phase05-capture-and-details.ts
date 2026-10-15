@@ -471,7 +471,7 @@ async function main() {
 
     const revealedCheck = await evalJs(`
       (() => {
-        const highlightedItem = document.querySelector('[class*="ring-[#087F83]"]');
+        const highlightedItem = document.querySelector('[class*="ring-[var(--accent)]"], [class*="ring-[#087F83]"]');
         const statusSelect = document.querySelector('select[aria-label="Filter tasks by status"]');
         return {
           isHighlighted: Boolean(highlightedItem),

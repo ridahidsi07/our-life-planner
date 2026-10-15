@@ -14,7 +14,7 @@ export const RingProgress: React.FC<RingProgressProps> = ({
   progress,
   size = 54,
   strokeWidth = 5,
-  color = '#087F83',
+  color = 'var(--accent, #087F83)',
   trackColor,
   children,
   className = '',

@@ -141,7 +141,7 @@ export const DebtPayoffView: React.FC = () => {
 
         <button
           onClick={openCreateModal}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Add debt</span>
@@ -152,7 +152,7 @@ export const DebtPayoffView: React.FC = () => {
       {debts.length === 0 && (
         <div
           data-testid="debts-empty-hero"
-          className="bg-teal-50/70 dark:bg-teal-950/30 rounded-2xl p-6 border border-teal-200 dark:border-teal-800/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
+          className="bg-[var(--accent-subtle)] rounded-2xl p-6 border border-[var(--accent-muted)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
         >
           <div className="space-y-1">
             <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
@@ -166,7 +166,7 @@ export const DebtPayoffView: React.FC = () => {
             type="button"
             data-testid="debts-empty-cta"
             onClick={openCreateModal}
-            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>Add your first debt</span>
@@ -252,7 +252,7 @@ export const DebtPayoffView: React.FC = () => {
                 progress={overallMetrics.pct}
                 size={64}
                 strokeWidth={6}
-                color="#087F83"
+                color="var(--accent)"
               >
                 <span className="text-xs font-bold font-mono">
                   {overallMetrics.pct}%
@@ -311,7 +311,7 @@ export const DebtPayoffView: React.FC = () => {
               onClick={() => setStrategy('snowball')}
               className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 strategy === 'snowball'
-                  ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                  ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs'
                   : ''
               }`}
             >
@@ -321,7 +321,7 @@ export const DebtPayoffView: React.FC = () => {
               onClick={() => setStrategy('avalanche')}
               className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 strategy === 'avalanche'
-                  ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                  ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs'
                   : ''
               }`}
             >
@@ -401,11 +401,11 @@ export const DebtPayoffView: React.FC = () => {
             </div>
 
             {/* With Extra */}
-            <div className="p-4 rounded-xl bg-teal-50/60 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800">
-              <span className="text-[11px] font-bold text-[#087F83] dark:text-[#38D0C5] uppercase">
+            <div className="p-4 rounded-xl bg-[var(--accent-subtle)] border border-[var(--accent-muted)]">
+              <span className="text-[11px] font-bold text-[var(--accent)] uppercase">
                 With extra ({currencySymbol}{basePayment + extraPayment} / mo)
               </span>
-              <div className="text-xl font-bold font-mono text-[#087F83] dark:text-[#38D0C5] mt-1">
+              <div className="text-xl font-bold font-mono text-[var(--accent)] mt-1">
                 {extraSim.totalMonths} payments
               </div>
               <div className="text-xs text-[#526782] dark:text-[#A8B8CE] mt-1 space-y-0.5">
@@ -630,7 +630,7 @@ export const DebtPayoffView: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+              className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90"
             >
               Save debt
             </button>

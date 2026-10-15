@@ -1,0 +1,243 @@
+- complementary:
+  - generic: Our Life Planner
+  - generic: A little more room for life
+  - generic: Plan
+  - button "Today":
+    - generic: Today
+  - button "Calendar":
+    - generic: Calendar
+  - button "Tasks 9":
+    - generic: Tasks 9
+  - button "Routines":
+    - generic: Routines
+  - button "Inbox":
+    - generic: Inbox
+  - generic: Growth
+  - button "Goals":
+    - generic: Goals
+  - button "Habits":
+    - generic: Habits
+  - generic: Money
+  - button "Budget & bills":
+    - generic: Budget & bills
+  - button "Savings":
+    - generic: Savings
+  - button "Debt payoff":
+    - generic: Debt payoff
+  - generic: Food
+  - button "Meals":
+    - generic: Meals
+  - button "Groceries":
+    - generic: Groceries
+  - generic: Health
+  - button "Workouts":
+    - generic: Workouts
+  - button "Weight":
+    - generic: Weight
+  - button "Water":
+    - generic: Water
+  - button "Focus":
+    - generic: Focus
+  - button "App Install":
+    - generic: App Install
+  - button "Manage profile and storage for Alexandria Catherine Montgomery-Wellington":
+    - generic: A
+    - generic: Alexandria Catherine Montgomery-Wellington
+    - generic: Profile & Storage
+  - button "Backup & Restore":
+    - generic: Backup & Restore
+  - button "Settings":
+    - generic: Settings
+  - generic: Saved locally
+- banner:
+  - heading "Good evening, Alexandria Catherine Montgomery-Wellington." [level=1]
+  - paragraph: Wednesday, October 14, 2026
+  - button "Search planner":
+    - generic: Search planner…
+    - generic: ⌘K
+  - button "Quick add item":
+    - generic: Quick add
+  - 'button "Storage status: All changes saved locally to this device"':
+    - generic: Saved locally
+  - button "Profile and local storage for Alexandria Catherine Montgomery-Wellington":
+    - generic: A
+- status "Demo mode active":
+  - generic: Demo Mode
+  - generic: Exploring with sample records. Any personal items you add are preserved.
+  - button "Remove sample data"
+  - button "Dismiss demo banner":
+- main:
+  - generic: "Tasks list updated: 3 tasks total, 1 completed, 0 overdue."
+  - heading "Tasks" [level=2]
+  - paragraph: Stay organized and get things done.
+  - button "List":
+    - generic: List
+  - button "Board":
+    - generic: Board
+  - button "Insights" [active]:
+    - generic: Insights
+  - button "New task":
+    - generic: New task
+  - heading "Task Throughput & Completion Trends" [level=3]
+  - paragraph: 2026-09-15 – 2026-10-14 (vs. 2026-08-16 – 2026-09-14)
+  - tablist "Insights time range":
+    - tab "7D"
+    - tab "30D" [selected]
+    - tab "90D"
+  - generic: Tasks completed
+  - generic: "3"
+  - generic: ^ +3
+  - generic: vs previous 30D
+  - generic: Daily velocity
+  - generic: 0.1 / day
+  - generic: ^ +0.1
+  - generic: vs previous 30D
+  - generic: On-time delivery
+  - generic: 100%
+  - generic: 0%
+  - generic: vs previous 30D
+  - generic: Active backlog
+  - generic: "9"
+  - generic: 4 high/urgent · 2 overdue
+  - region "Throughput chart. Use left and right arrow keys to inspect daily task completions.":
+    - heading "Throughput" [level=3]
+    - paragraph: Tasks completed per day, against the previous period
+    - generic: This period
+    - generic: Previous
+    - img "Throughput trend line chart":
+      - generic: "0"
+      - generic: "1"
+      - generic: "3"
+      - generic: "4"
+      - generic: Sep 15
+      - generic: Sep 21
+      - generic: Sep 27
+      - generic: Oct 3
+      - generic: Oct 9
+      - generic: Oct 14
+  - heading "Tasks by category" [level=3]
+  - paragraph: Distribution across life domains
+  - img "Category distribution donut chart":
+    - 'button "Personal: 6 tasks (50%)"'
+    - 'button "Career: 3 tasks (25%)"'
+    - 'button "Health: 1 tasks (8%)"'
+    - 'button "Finances: 1 tasks (8%)"'
+    - 'button "Relationships: 1 tasks (8%)"'
+  - generic: "12"
+  - generic: Total tasks
+  - generic: Personal
+  - generic: "6"
+  - generic: (50%)
+  - generic: Career
+  - generic: "3"
+  - generic: (25%)
+  - generic: Health
+  - generic: "1"
+  - generic: (8%)
+  - generic: Finances
+  - generic: "1"
+  - generic: (8%)
+  - generic: Relationships
+  - generic: "1"
+  - generic: (8%)
+  - heading "Tasks by status" [level=3]
+  - generic: 12 total active tasks
+  - 'generic "Not started: 5"'
+  - 'generic "In progress: 3"'
+  - 'generic "On hold: 1"'
+  - 'generic "Completed: 3"'
+  - generic: Not started
+  - generic: "5"
+  - generic: In progress
+  - generic: "3"
+  - generic: On hold
+  - generic: "1"
+  - generic: Completed
+  - generic: "3"
+  - heading "Outstanding priorities by category" [level=3]
+  - paragraph: Breakdown of active, non-completed tasks across categories
+  - generic: 9 open tasks
+  - table:
+    - rowgroup:
+      - row "Category Urgent High Medium Low Lowest Total":
+        - columnheader "Category"
+        - columnheader "Urgent"
+        - columnheader "High"
+        - columnheader "Medium"
+        - columnheader "Low"
+        - columnheader "Lowest"
+        - columnheader "Total"
+    - rowgroup:
+      - row "Personal 1 – 2 – 1 4":
+        - cell "Personal":
+          - generic: Personal
+        - cell "1"
+        - cell "–"
+        - cell "2"
+        - cell "–"
+        - cell "1"
+        - cell "4"
+      - row "Career – 2 – – – 2":
+        - cell "Career":
+          - generic: Career
+        - cell "–"
+        - cell "2"
+        - cell "–"
+        - cell "–"
+        - cell "–"
+        - cell "2"
+      - row "Health – – – 1 – 1":
+        - cell "Health":
+          - generic: Health
+        - cell "–"
+        - cell "–"
+        - cell "–"
+        - cell "1"
+        - cell "–"
+        - cell "1"
+      - row "Finances – 1 – – – 1":
+        - cell "Finances":
+          - generic: Finances
+        - cell "–"
+        - cell "1"
+        - cell "–"
+        - cell "–"
+        - cell "–"
+        - cell "1"
+      - row "Relationships – – – 1 – 1":
+        - cell "Relationships":
+          - generic: Relationships
+        - cell "–"
+        - cell "–"
+        - cell "–"
+        - cell "1"
+        - cell "–"
+        - cell "1"
+  - heading "Upcoming deadlines (next 7 days)" [level=3]
+  - generic: "0"
+  - generic: Wed
+  - generic: "2"
+  - generic: Thu
+  - generic: "0"
+  - generic: Fri
+  - generic: "1"
+  - generic: Sat
+  - generic: "2"
+  - generic: Sun
+  - generic: "1"
+  - generic: Mon
+  - generic: "0"
+  - generic: Tue
+  - heading "Overdue tasks (2)" [level=3]
+  - generic: Action required
+  - generic: Renew car insurance
+  - generic: Due 2026-10-11
+  - button "Complete overdue task \"Renew car insurance\"": Complete
+  - generic: Review budget
+  - generic: Due 2026-10-12
+  - button "Complete overdue task \"Review budget\"": Complete
+  - paragraph:
+    - strong: "Data tracking note:"
+    - text: Task completion dates are recorded as items are marked completed (
+    - code: completedAt
+    - text: ). Re-opened or legacy tasks without historic event records reflect their current status.

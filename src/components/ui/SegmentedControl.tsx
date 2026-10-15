@@ -92,13 +92,13 @@ export function SegmentedControl<T extends string = string>({
               if (!opt.disabled) onChange(opt.id);
             }}
             onKeyDown={(e) => handleKeyDown(e, idx)}
-            className={`flex items-center gap-1.5 rounded-lg font-semibold transition-all cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#087F83] dark:focus-visible:ring-[#38D0C5] ${
+            className={`flex items-center gap-1.5 rounded-lg font-semibold transition-all cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
               size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-xs'
             } ${
               opt.disabled ? 'opacity-40 cursor-not-allowed' : ''
             } ${
               isSelected
-                ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs'
                 : 'text-[#59677B] dark:text-[#A8B8CE] hover:text-[#14233B] dark:hover:text-[#EDF4FF]'
             }`}
           >

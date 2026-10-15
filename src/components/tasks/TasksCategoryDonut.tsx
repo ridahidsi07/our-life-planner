@@ -118,7 +118,7 @@ export const TasksCategoryDonut: React.FC<TasksCategoryDonutProps> = ({
               <span className="text-lg font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] leading-tight">
                 {activeCategory.count}
               </span>
-              <span className="text-[10px] font-mono text-[#087F83] dark:text-[#38D0C5]">
+              <span className="text-[10px] font-mono text-[var(--accent)]">
                 {activeCategory.percentage}%
               </span>
             </>

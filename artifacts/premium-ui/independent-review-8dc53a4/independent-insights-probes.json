@@ -1,0 +1,29 @@
+{
+  "legacyWithoutCompletionTimestamp": {
+    "computedDate": "2026-10-14",
+    "datedCompletionCount": 1,
+    "onTimeRate": 100,
+    "expected": "No known completion date; exclude from dated throughput and disclose unknown history"
+  },
+  "timezoneBoundary": {
+    "completedAt": "2026-10-13T23:30:00Z",
+    "actualDate": "2026-10-13",
+    "dateInSelectedTimezone": "2026-10-14"
+  },
+  "emptyPeriod": {
+    "actualOnTimeRate": 100,
+    "expected": "Unavailable/no eligible completions"
+  },
+  "customCategory": {
+    "recordCount": 3,
+    "actual": {
+      "count": 1,
+      "percentage": 33,
+      "color": "#64748B"
+    },
+    "expected": {
+      "count": 3,
+      "percentage": 100
+    }
+  }
+}

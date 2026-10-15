@@ -403,7 +403,7 @@ export const BudgetBillsView: React.FC = () => {
             <button
               type="button"
               onClick={() => navigateBudgetPeriod('prev')}
-              className="p-1 rounded-lg hover:bg-white dark:hover:bg-[#152238] hover:text-[#087F83] dark:hover:text-[#38D0C5] transition-colors cursor-pointer"
+              className="p-1 rounded-lg hover:bg-white dark:hover:bg-[#152238] hover:text-[var(--accent)] transition-colors cursor-pointer"
               title="Previous budget period"
               aria-label="Previous budget period"
             >
@@ -412,7 +412,7 @@ export const BudgetBillsView: React.FC = () => {
             <button
               type="button"
               onClick={resetBudgetPeriodToCurrent}
-              className="px-2 py-0.5 rounded-lg hover:bg-white dark:hover:bg-[#152238] hover:text-[#087F83] dark:hover:text-[#38D0C5] transition-colors cursor-pointer text-[11px]"
+              className="px-2 py-0.5 rounded-lg hover:bg-white dark:hover:bg-[#152238] hover:text-[var(--accent)] transition-colors cursor-pointer text-[11px]"
               title="Return to current period"
             >
               Current
@@ -420,7 +420,7 @@ export const BudgetBillsView: React.FC = () => {
             <button
               type="button"
               onClick={() => navigateBudgetPeriod('next')}
-              className="p-1 rounded-lg hover:bg-white dark:hover:bg-[#152238] hover:text-[#087F83] dark:hover:text-[#38D0C5] transition-colors cursor-pointer"
+              className="p-1 rounded-lg hover:bg-white dark:hover:bg-[#152238] hover:text-[var(--accent)] transition-colors cursor-pointer"
               title="Next budget period"
               aria-label="Next budget period"
             >
@@ -437,7 +437,7 @@ export const BudgetBillsView: React.FC = () => {
                 onClick={() => setActiveTab(t)}
                 className={`px-3 py-1.5 rounded-lg capitalize transition-colors cursor-pointer ${
                   activeTab === t
-                    ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                    ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs'
                     : ''
                 }`}
               >
@@ -453,13 +453,13 @@ export const BudgetBillsView: React.FC = () => {
             title="Edit opening balance, planned income, savings and category limits"
             aria-label="Edit budget plan: configure opening balance, planned income, savings and category limits"
           >
-            <Sliders className="w-3.5 h-3.5 text-[#087F83] dark:text-[#38D0C5]" />
+            <Sliders className="w-3.5 h-3.5 text-[var(--accent)]" />
             <span>Edit budget plan</span>
           </button>
 
           <button
             onClick={openAddTransaction}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-semibold text-xs transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add transaction</span>
@@ -471,7 +471,7 @@ export const BudgetBillsView: React.FC = () => {
       {transactions.length === 0 && bills.length === 0 && (
         <div
           data-testid="budget-empty-hero"
-          className="bg-white dark:bg-[#152238] rounded-2xl p-6 border-2 border-dashed border-[#087F83]/35 dark:border-[#38D0C5]/35 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+          className="bg-white dark:bg-[#152238] rounded-2xl p-6 border-2 border-dashed border-[var(--accent)]/35 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
         >
           <div className="space-y-1">
             <h2 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
@@ -486,7 +486,7 @@ export const BudgetBillsView: React.FC = () => {
               type="button"
               data-testid="budget-empty-cta"
               onClick={openAddTransaction}
-              className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-bold shadow-xs transition-colors cursor-pointer"
+              className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Add your first transaction</span>
@@ -496,7 +496,7 @@ export const BudgetBillsView: React.FC = () => {
               onClick={openBudgetPlanModal}
               className="min-h-[44px] inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] text-xs font-semibold transition-colors cursor-pointer"
             >
-              <Sliders className="w-3.5 h-3.5 text-[#087F83] dark:text-[#38D0C5]" />
+              <Sliders className="w-3.5 h-3.5 text-[var(--accent)]" />
               <span>Set up budget plan</span>
             </button>
           </div>
@@ -527,7 +527,7 @@ export const BudgetBillsView: React.FC = () => {
           <div className="text-xs text-[#526782] dark:text-[#A8B8CE] font-medium">
             Actual balance
           </div>
-          <div className="text-2xl font-bold font-mono text-[#087F83] dark:text-[#38D0C5] mt-1">
+          <div className="text-2xl font-bold font-mono text-[var(--accent)] mt-1">
             {currencySymbol}{cashFlow.actualBalance.toFixed(0)}
           </div>
           <div className="text-[11px] text-[#526782] mt-1.5">
@@ -582,7 +582,7 @@ export const BudgetBillsView: React.FC = () => {
               </h3>
               <button
                 onClick={openBudgetPlanModal}
-                className="text-[11px] font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline flex items-center gap-1 cursor-pointer"
+                className="text-[11px] font-semibold text-[var(--accent)] hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <Edit2 className="w-3 h-3" />
                 <span>Edit plan parameters</span>
@@ -627,7 +627,7 @@ export const BudgetBillsView: React.FC = () => {
                 </span>
               </div>
 
-              <div className="p-3 rounded-xl bg-[#087F83]/10 text-[#087F83] dark:text-[#38D0C5]">
+              <div className="p-3 rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
                 <span className="opacity-80 block text-[10px]">= Current balance</span>
                 <span className="text-base font-bold font-mono mt-0.5 block">
                   {currencySymbol}{cashFlow.actualBalance.toFixed(0)}
@@ -652,7 +652,7 @@ export const BudgetBillsView: React.FC = () => {
                   onClick={openBudgetPlanModal}
                   className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Edit2 className="w-3 h-3 text-[#087F83]" />
+                  <Edit2 className="w-3 h-3 text-[var(--accent)]" />
                   <span>Edit limits</span>
                 </button>
               </div>
@@ -725,7 +725,7 @@ export const BudgetBillsView: React.FC = () => {
                     progress={totalLimits > 0 ? Math.min(100, Math.round((totalSpent / totalLimits) * 100)) : 100}
                     size={84}
                     strokeWidth={8}
-                    color="#087F83"
+                    color="var(--accent)"
                   >
                     <div className="text-center font-mono">
                       <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF] block leading-none">
@@ -795,7 +795,7 @@ export const BudgetBillsView: React.FC = () => {
                   </div>
                   <button
                     onClick={openBudgetPlanModal}
-                    className="text-[10px] font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline cursor-pointer"
+                    className="text-[10px] font-semibold text-[var(--accent)] hover:underline cursor-pointer"
                   >
                     Adjust plan
                   </button>
@@ -832,7 +832,7 @@ export const BudgetBillsView: React.FC = () => {
                   onClick={() => setTxPeriodFilter('active')}
                   className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
                     txPeriodFilter === 'active'
-                      ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs font-semibold'
+                      ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs font-semibold'
                       : ''
                   }`}
                 >
@@ -843,7 +843,7 @@ export const BudgetBillsView: React.FC = () => {
                   onClick={() => setTxPeriodFilter('all')}
                   className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
                     txPeriodFilter === 'all'
-                      ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs font-semibold'
+                      ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs font-semibold'
                       : ''
                   }`}
                 >
@@ -853,7 +853,7 @@ export const BudgetBillsView: React.FC = () => {
 
               <button
                 onClick={openAddTransaction}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)] cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add entry</span>
@@ -932,7 +932,7 @@ export const BudgetBillsView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => openEditTransaction(tx)}
-                      className="p-1 rounded-md text-slate-400 hover:text-[#087F83] cursor-pointer"
+                      className="p-1 rounded-md text-slate-400 hover:text-[var(--accent)] cursor-pointer"
                       title="Edit transaction"
                       aria-label={`Edit transaction: ${tx.category} ${currencySymbol}${tx.amount.toFixed(2)}`}
                     >
@@ -1090,7 +1090,7 @@ export const BudgetBillsView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => openMarkPaid(occ)}
-                          className="px-3 py-1 rounded-lg bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] text-white dark:text-[#071A3A] text-xs font-semibold cursor-pointer shadow-xs"
+                          className="px-3 py-1 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold cursor-pointer shadow-xs"
                           aria-label={`Mark bill "${occ.title}" as paid`}
                         >
                           Mark paid
@@ -1102,7 +1102,7 @@ export const BudgetBillsView: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => openEditBill(parentBill)}
-                            className="p-1 rounded-md text-slate-400 hover:text-[#087F83] cursor-pointer"
+                            className="p-1 rounded-md text-slate-400 hover:text-[var(--accent)] cursor-pointer"
                             aria-label={`Edit bill "${occ.title}"`}
                             title="Edit bill"
                           >
@@ -1256,7 +1256,7 @@ export const BudgetBillsView: React.FC = () => {
               <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
                 Category Budget Allocations (Limits)
               </span>
-              <span className="text-[11px] font-mono font-semibold text-[#087F83] dark:text-[#38D0C5]">
+              <span className="text-[11px] font-mono font-semibold text-[var(--accent)]">
                 Total: {currencySymbol}{Object.values(planCategoryLimits).reduce((a, b) => a + b, 0)}
               </span>
             </div>
@@ -1331,7 +1331,7 @@ export const BudgetBillsView: React.FC = () => {
           </div>
 
           {/* Live Unallocated Calculation Preview */}
-          <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200/80 text-xs text-[#087F83] dark:text-[#38D0C5] flex items-center justify-between">
+          <div className="p-3 rounded-xl bg-[var(--accent-subtle)] border border-[var(--accent-muted)] text-xs text-[var(--accent)] flex items-center justify-between">
             <span>Projected Unallocated Budget:</span>
             <span className="font-bold font-mono text-sm">
               {currencySymbol}
@@ -1354,7 +1354,7 @@ export const BudgetBillsView: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+              className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90"
             >
               Save budget plan
             </button>
@@ -1417,7 +1417,7 @@ export const BudgetBillsView: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 text-xs text-[#087F83] dark:text-[#38D0C5] flex items-start gap-2">
+            <div className="p-3 rounded-xl bg-[var(--accent-subtle)] border border-[var(--accent-muted)] text-xs text-[var(--accent)] flex items-start gap-2">
               <Check className="w-4 h-4 shrink-0 mt-0.5" />
               <span>
                 Creates a single linked expense under {payingOccurrence.category}. Your actual balance and {payingOccurrence.category} spending update together.
@@ -1434,7 +1434,7 @@ export const BudgetBillsView: React.FC = () => {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+                className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90"
               >
                 Mark paid
               </button>
@@ -1490,7 +1490,7 @@ export const BudgetBillsView: React.FC = () => {
                 onClick={() => setTxType(t)}
                 className={`py-2 rounded-xl text-xs font-semibold capitalize border cursor-pointer ${
                   txType === t
-                    ? 'bg-[#087F83] text-white border-[#087F83]'
+                    ? 'bg-[var(--accent)] text-[var(--accent-foreground)] border-[var(--accent)]'
                     : 'border-slate-200 dark:border-slate-700 text-[#526782]'
                 }`}
               >
@@ -1590,7 +1590,7 @@ export const BudgetBillsView: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+              className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90"
             >
               {editingTx ? 'Update transaction' : 'Save transaction'}
             </button>
@@ -1718,7 +1718,7 @@ export const BudgetBillsView: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+              className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90"
             >
               {editingBill ? 'Update bill' : 'Save bill'}
             </button>

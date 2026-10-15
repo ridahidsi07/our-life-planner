@@ -38,6 +38,17 @@ const suites: TestSuite[] = [
   { name: 'Stage 6: Restrained Motion & Microinteractions', command: 'npx tsx scripts/verify-stage6-motion.ts', category: 'Remediation' },
   { name: 'Stage 7: Customer Readiness & Design Quality Validation', command: 'npx tsx scripts/verify-stage7-customer-readiness.ts', category: 'Remediation' },
   { name: 'Phase 4: Buyer Delivery & Packaging (LP-15 - LP-17)', command: 'npx tsx scripts/test-phase4-delivery.ts', category: 'Remediation' },
+
+  // 4. Premium UI Upgrade Suites (Phases 01 - 09 & Independent Review Corrections)
+  { name: 'Phase 01: Foundations & Shell Corrections', command: 'npx tsx scripts/test-phase01-corrections.ts', category: 'Premium Upgrade' },
+  { name: 'Phase 03: Tasks Hierarchy & Working Board', command: 'npx tsx scripts/test-phase03-tasks-board.ts', category: 'Premium Upgrade' },
+  { name: 'Phase 04: Insights & Useful Analytics', command: 'npx tsx scripts/test-phase04-insights.ts', category: 'Premium Upgrade' },
+  { name: 'Phase 05: Contextual Capture & Details', command: 'npx tsx scripts/test-phase05-capture-and-details.ts', category: 'Premium Upgrade' },
+  { name: 'Phase 06: Calendar Grid, Agenda & Sync', command: 'npx tsx scripts/test-phase06-calendar.ts', category: 'Premium Upgrade' },
+  { name: 'Phase 07: Shared Focus Controller', command: 'npx tsx scripts/test-phase07-focus.ts', category: 'Premium Upgrade' },
+  { name: 'Phase 08: Themes, Accents & Modules', command: 'npx tsx scripts/test-phase08-themes-and-modules.ts', category: 'Premium Upgrade' },
+  { name: 'Phase 09: Polish, Motion & Responsive Matrix', command: 'npx tsx scripts/test-phase09-polish.ts', category: 'Premium Upgrade' },
+  { name: 'Independent Review Corrections (R1–R8 Regressions)', command: 'npx tsx scripts/test-correction-pass-regressions.ts', category: 'Premium Upgrade' },
 ];
 
 console.log('================================================================');

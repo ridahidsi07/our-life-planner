@@ -163,7 +163,7 @@ export const BoardTaskCard: React.FC<BoardTaskCardProps> = ({
       draggable={!task.isArchived}
       onDragStart={(e) => onDragStart(e, task)}
       onDragEnd={onDragEnd}
-      className="bg-white dark:bg-[#152238] rounded-xl p-3.5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs hover:shadow-md transition-all duration-150 cursor-grab active:cursor-grabbing group relative focus-within:ring-2 focus-within:ring-[#087F83]"
+      className="bg-white dark:bg-[#152238] rounded-xl p-3.5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs hover:shadow-md transition-all duration-150 cursor-grab active:cursor-grabbing group relative focus-within:ring-2 focus-within:ring-[var(--accent)]"
     >
       {/* Top Row: Category tag, Priority badge, and Overflow action menu */}
       <div className="flex items-center justify-between gap-2 mb-2">
@@ -230,7 +230,7 @@ export const BoardTaskCard: React.FC<BoardTaskCardProps> = ({
                     className={`w-full text-left px-3 py-1.5 flex items-center justify-between transition-colors cursor-pointer ${
                       isCurrent
                         ? 'text-slate-400 dark:text-slate-600 bg-slate-50 dark:bg-slate-800/40 cursor-default'
-                        : 'text-[#071A3A] dark:text-[#EDF4FF] hover:bg-teal-50 dark:hover:bg-teal-950/40 hover:text-[#087F83] dark:hover:text-[#38D0C5]'
+                        : 'text-[#071A3A] dark:text-[#EDF4FF] hover:bg-[var(--accent-subtle)] hover:text-[var(--accent)]'
                     }`}
                   >
                     <span>{st.label}</span>
@@ -262,7 +262,7 @@ export const BoardTaskCard: React.FC<BoardTaskCardProps> = ({
                     setIsMenuOpen(false);
                     onUnarchive(task.id);
                   }}
-                  className="w-full text-left px-3 py-1.5 flex items-center gap-2 text-[#087F83] dark:text-[#38D0C5] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="w-full text-left px-3 py-1.5 flex items-center gap-2 text-[var(--accent)] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>Restore task</span>

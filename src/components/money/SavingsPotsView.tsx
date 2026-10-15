@@ -134,7 +134,7 @@ export const SavingsPotsView: React.FC = () => {
 
         <button
           onClick={() => setIsAddPotModalOpen(true)}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>New pot</span>
@@ -145,7 +145,7 @@ export const SavingsPotsView: React.FC = () => {
       {savingsPots.length === 0 && (
         <div
           data-testid="savings-empty-hero"
-          className="bg-teal-50/70 dark:bg-teal-950/30 rounded-2xl p-6 border border-teal-200 dark:border-teal-800/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
+          className="bg-[var(--accent-subtle)] rounded-2xl p-6 border border-[var(--accent-muted)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
         >
           <div className="space-y-1">
             <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
@@ -159,7 +159,7 @@ export const SavingsPotsView: React.FC = () => {
             type="button"
             data-testid="savings-empty-cta"
             onClick={() => setIsAddPotModalOpen(true)}
-            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>Create first savings pot</span>
@@ -190,7 +190,7 @@ export const SavingsPotsView: React.FC = () => {
             progress={combinedMetrics.progressPct}
             size={56}
             strokeWidth={5}
-            color="#087F83"
+            color="var(--accent)"
           >
             <span className="text-sm font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF]">
               {combinedMetrics.progressPct}%
@@ -250,7 +250,7 @@ export const SavingsPotsView: React.FC = () => {
                 onClick={() => setSelectedPotId(pot.id)}
                 className={`p-5 rounded-2xl border transition-all cursor-pointer bg-white dark:bg-[#152238] shadow-2xs ${
                   isSelected
-                    ? 'border-[#087F83] ring-1 ring-[#087F83]'
+                    ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]'
                     : 'border-[#E2E8F0] dark:border-[#1E2D4A] hover:border-slate-300'
                 }`}
               >
@@ -264,7 +264,7 @@ export const SavingsPotsView: React.FC = () => {
                     </div>
                   </div>
 
-                  <span className="text-xs font-bold font-mono text-[#087F83] dark:text-[#38D0C5]">
+                  <span className="text-xs font-bold font-mono text-[var(--accent)]">
                     {pct}%
                   </span>
                 </div>
@@ -272,7 +272,7 @@ export const SavingsPotsView: React.FC = () => {
                 <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden my-3">
                   <div
                     className={`h-full rounded-full transition-all duration-300 ${
-                      isComplete ? 'bg-emerald-500' : 'bg-[#087F83] dark:bg-[#38D0C5]'
+                      isComplete ? 'bg-emerald-500' : 'bg-[var(--accent)]'
                     }`}
                     style={{ width: `${pct}%` }}
                   />
@@ -309,7 +309,7 @@ export const SavingsPotsView: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setIsDepositModalOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Add deposit</span>
@@ -332,7 +332,7 @@ export const SavingsPotsView: React.FC = () => {
                   progress={selectedPotMetrics.progress}
                   size={72}
                   strokeWidth={7}
-                  color="#087F83"
+                  color="var(--accent)"
                 >
                   <span className="text-xs font-bold font-mono">
                     {selectedPotMetrics.progress}%
@@ -363,7 +363,7 @@ export const SavingsPotsView: React.FC = () => {
                     {currencySymbol}{selectedPotMetrics.totalDeposits.toFixed(0)}
                   </span>
                 </div>
-                <div className="p-3 rounded-xl bg-[#087F83]/10 text-[#087F83] dark:text-[#38D0C5]">
+                <div className="p-3 rounded-xl bg-[var(--accent-subtle)] text-[var(--accent)]">
                   <span className="opacity-80 block text-[10px]">Current balance</span>
                   <span className="text-sm font-bold font-mono mt-0.5 block">
                     {currencySymbol}{selectedPotMetrics.currentBalance.toFixed(0)}
@@ -525,7 +525,7 @@ export const SavingsPotsView: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+              className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90"
             >
               Save deposit
             </button>
@@ -641,7 +641,7 @@ export const SavingsPotsView: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+              className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90"
             >
               Create pot
             </button>

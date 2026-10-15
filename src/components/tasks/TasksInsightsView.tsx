@@ -20,21 +20,27 @@ import {
 
 interface TasksInsightsViewProps {
   tasks: TaskItem[];
+  allTasksCount?: number;
+  onClearFilters?: () => void;
   currentDate: string;
+  timeZone?: string;
   onToggleTaskCompletion: (taskId: string) => void;
 }
 
 export const TasksInsightsView: React.FC<TasksInsightsViewProps> = ({
   tasks,
+  allTasksCount,
+  onClearFilters,
   currentDate,
+  timeZone,
   onToggleTaskCompletion,
 }) => {
   const [selectedRange, setSelectedRange] = useState<InsightsRange>('30D');
 
   // Compute analytics using pure calculation utility
   const summary = useMemo(
-    () => computeInsights(tasks, currentDate, selectedRange),
-    [tasks, currentDate, selectedRange]
+    () => computeInsights(tasks, currentDate, selectedRange, timeZone),
+    [tasks, currentDate, selectedRange, timeZone]
   );
 
   // Active non-archived tasks
@@ -76,6 +82,46 @@ export const TasksInsightsView: React.FC<TasksInsightsViewProps> = ({
 
   return (
     <div className="space-y-6" data-testid="tasks-insights-container">
+      {/* Active Filter Scope Disclosure (R3) */}
+      {allTasksCount !== undefined && allTasksCount > tasks.length && (
+        <div
+          role="status"
+          data-testid="insights-filter-disclosure"
+          className="p-3 px-4 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 flex items-center justify-between gap-3 text-xs"
+        >
+          <div className="flex items-center gap-2 text-[#071A3A] dark:text-[#EDF4FF]">
+            <Info className="w-4 h-4 text-[var(--accent)] shrink-0" />
+            <span>
+              Showing insights for <strong>{tasks.length}</strong> filtered task{tasks.length === 1 ? '' : 's'} (of {allTasksCount} total).
+            </span>
+          </div>
+          {onClearFilters && (
+            <button
+              type="button"
+              data-testid="insights-clear-filters-btn"
+              onClick={onClearFilters}
+              className="px-2.5 py-1 rounded-lg text-xs font-semibold text-[var(--accent)] hover:underline cursor-pointer shrink-0"
+            >
+              Clear active filters
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Unknown History Disclosure Notice (R1) */}
+      {summary.unknownHistoryCount > 0 && (
+        <div
+          role="note"
+          data-testid="insights-unknown-history-notice"
+          className="p-3 px-4 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-900/40 flex items-center gap-2 text-xs text-amber-800 dark:text-amber-200"
+        >
+          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+          <span>
+            {summary.unknownHistoryCount} completed task{summary.unknownHistoryCount === 1 ? '' : 's'} with unrecorded completion dates {summary.unknownHistoryCount === 1 ? 'is' : 'are'} excluded from dated throughput.
+          </span>
+        </div>
+      )}
+
       {/* Top Controls Bar: Subtitle & Range Switcher (Fernly frame-041) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
         <div>
@@ -106,7 +152,7 @@ export const TasksInsightsView: React.FC<TasksInsightsViewProps> = ({
                 onClick={() => setSelectedRange(r.id)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-[#071A3A] dark:bg-[#38D0C5] text-white dark:text-[#071A3A] shadow-xs'
+                    ? 'bg-[#071A3A] dark:bg-[var(--accent)] text-white dark:text-[#071A3A] shadow-xs'
                     : 'text-[#526782] dark:text-[#A8B8CE] hover:text-[#071A3A] dark:hover:text-[#EDF4FF]'
                 }`}
               >
@@ -149,7 +195,7 @@ export const TasksInsightsView: React.FC<TasksInsightsViewProps> = ({
         <div className="card-surface p-4 rounded-2xl space-y-1.5" data-testid="metric-completion-velocity">
           <div className="text-xs font-medium text-[#526782] dark:text-[#A8B8CE] flex items-center justify-between">
             <span>Daily velocity</span>
-            <TrendingUp className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+            <TrendingUp className="w-4 h-4 text-[var(--accent)]" />
           </div>
           <div className="text-2xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF]">
             {summary.dailyVelocity}{' '}
@@ -179,22 +225,28 @@ export const TasksInsightsView: React.FC<TasksInsightsViewProps> = ({
             <Clock className="w-4 h-4 text-blue-500" />
           </div>
           <div className="text-2xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF]">
-            {summary.onTimeRate}%
+            {summary.onTimeRate !== null ? `${summary.onTimeRate}%` : '—'}
           </div>
           <div className="flex items-center gap-1.5 text-xs">
-            <span
-              className={`font-semibold font-mono ${
-                summary.onTimeMetric.isPositive
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : summary.onTimeMetric.isNeutral
-                  ? 'text-slate-500'
-                  : 'text-rose-600 dark:text-rose-400'
-              }`}
-            >
-              {summary.onTimeMetric.isPositive && '^ '}
-              {summary.onTimeMetric.formattedChange}
-            </span>
-            <span className="text-[11px] text-slate-400">vs previous {selectedRange}</span>
+            {summary.onTimeRate !== null ? (
+              <>
+                <span
+                  className={`font-semibold font-mono ${
+                    summary.onTimeMetric.isPositive
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : summary.onTimeMetric.isNeutral
+                      ? 'text-slate-500'
+                      : 'text-rose-600 dark:text-rose-400'
+                  }`}
+                >
+                  {summary.onTimeMetric.isPositive && '^ '}
+                  {summary.onTimeMetric.formattedChange}
+                </span>
+                <span className="text-[11px] text-slate-400">vs previous {selectedRange}</span>
+              </>
+            ) : (
+              <span className="text-[11px] text-slate-400">No eligible completions in period</span>
+            )}
           </div>
         </div>
 
@@ -336,7 +388,7 @@ export const TasksInsightsView: React.FC<TasksInsightsViewProps> = ({
               Breakdown of active, non-completed tasks across categories
             </p>
           </div>
-          <span className="text-xs font-mono font-semibold text-[#087F83] dark:text-[#38D0C5]">
+          <span className="text-xs font-mono font-semibold text-[var(--accent)]">
             {summary.activeBacklogCount} open tasks
           </span>
         </div>
@@ -413,11 +465,11 @@ export const TasksInsightsView: React.FC<TasksInsightsViewProps> = ({
           <div className="flex items-end justify-between h-32 pt-6">
             {next7DaysCounts.map((d) => (
               <div key={d.iso} className="flex flex-col items-center gap-1.5 flex-1">
-                <span className="text-xs font-mono font-bold text-[#087F83] dark:text-[#38D0C5]">
+                <span className="text-xs font-mono font-bold text-[var(--accent)]">
                   {d.count}
                 </span>
                 <div
-                  className="w-5 bg-teal-100 dark:bg-teal-900/60 rounded-t-md transition-all"
+                  className="w-5 bg-[var(--accent)]/20 dark:bg-[var(--accent)]/30 rounded-t-md transition-all"
                   style={{ height: `${Math.max(6, d.count * 28)}px` }}
                 />
                 <span className="text-[10px] text-[#526782] dark:text-[#A8B8CE]">{d.name}</span>
@@ -476,9 +528,9 @@ export const TasksInsightsView: React.FC<TasksInsightsViewProps> = ({
 
       {/* Historical Data Disclosure Notice (Requirement 8) */}
       <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 flex items-start gap-2.5 text-xs text-[#526782] dark:text-[#A8B8CE]">
-        <Info className="w-4 h-4 text-[#087F83] shrink-0 mt-0.5" />
+        <Info className="w-4 h-4 text-[var(--accent)] shrink-0 mt-0.5" />
         <p className="leading-relaxed">
-          <strong className="text-[#071A3A] dark:text-[#EDF4FF]">Data tracking note:</strong> Task completion dates are recorded as items are marked completed (<code className="font-mono text-[11px] text-[#087F83]">completedAt</code>). Re-opened or legacy tasks without historic event records reflect their current status.
+          <strong className="text-[#071A3A] dark:text-[#EDF4FF]">Data tracking note:</strong> Task completion dates are recorded as items are marked completed (<code className="font-mono text-[11px] text-[var(--accent)]">completedAt</code>). Re-opened or legacy tasks without historic event records reflect their current status.
         </p>
       </div>
     </div>

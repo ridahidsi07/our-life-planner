@@ -170,8 +170,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           )}
 
           {preRestore && (
-            <div className="p-3.5 rounded-xl bg-teal-50/70 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800/70 text-xs space-y-2">
-              <div className="font-bold text-[#087F83] dark:text-[#38D0C5] flex items-center gap-1.5">
+            <div className="p-3.5 rounded-xl bg-[var(--accent-subtle)] border border-[var(--accent-muted)] text-xs space-y-2">
+              <div className="font-bold text-[var(--accent)] flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4" />
                 <span>Recoverable safety snapshot available</span>
               </div>
@@ -181,7 +181,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               <button
                 type="button"
                 onClick={this.handleRestorePreviousSnapshot}
-                className="px-3.5 py-1.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] text-white text-xs font-semibold cursor-pointer transition-colors"
+                className="px-3.5 py-1.5 rounded-xl bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] text-xs font-semibold cursor-pointer transition-colors"
               >
                 Restore previous snapshot
               </button>

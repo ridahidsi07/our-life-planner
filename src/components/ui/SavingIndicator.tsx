@@ -53,7 +53,7 @@ export const SavingIndicator: React.FC<{ className?: string }> = ({ className = 
       case 'saving':
         return (
           <div className={`flex items-center gap-1.5 text-xs text-[#526782] dark:text-[#A8B8CE] transition-opacity duration-150 ${className}`}>
-            <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#087F83] dark:text-[#38D0C5]" />
+            <RefreshCw className="w-3.5 h-3.5 animate-spin text-[var(--accent)]" />
             <span>Saving locally…</span>
           </div>
         );

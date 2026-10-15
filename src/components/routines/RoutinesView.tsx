@@ -249,7 +249,7 @@ export const RoutinesView: React.FC = () => {
               onClick={() => setActiveTab('active')}
               className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'active'
-                  ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                  ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs'
                   : ''
               }`}
             >
@@ -259,7 +259,7 @@ export const RoutinesView: React.FC = () => {
               onClick={() => setActiveTab('paused')}
               className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'paused'
-                  ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                  ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs'
                   : ''
               }`}
             >
@@ -269,7 +269,7 @@ export const RoutinesView: React.FC = () => {
               onClick={() => setActiveTab('history')}
               className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'history'
-                  ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                  ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs'
                   : ''
               }`}
             >
@@ -279,7 +279,7 @@ export const RoutinesView: React.FC = () => {
 
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>New routine</span>
@@ -340,7 +340,7 @@ export const RoutinesView: React.FC = () => {
                     type="button"
                     data-testid="routines-empty-cta"
                     onClick={openCreateModal}
-                    className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-semibold cursor-pointer shadow-xs transition-colors"
+                    className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] text-xs font-semibold cursor-pointer shadow-xs transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Create your first routine</span>
@@ -373,8 +373,8 @@ export const RoutinesView: React.FC = () => {
                         title={isDoneToday ? 'Completed today (click to undo)' : 'Click to complete for today'}
                         className={`w-5 h-5 mt-0.5 sm:mt-0 rounded-full flex items-center justify-center cursor-pointer micro-checkbox shrink-0 ${
                           isDoneToday
-                            ? 'bg-[#087F83] text-white'
-                            : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
+                            ? 'bg-[var(--accent)] text-[var(--accent-foreground)]'
+                            : 'border border-slate-300 dark:border-slate-600 hover:border-[var(--accent)]'
                         }`}
                       >
                         {isDoneToday && <Check className="w-3.5 h-3.5 stroke-[3] motion-check-pop" />}
@@ -438,7 +438,7 @@ export const RoutinesView: React.FC = () => {
                           </span>
                         )}
                         {isScheduledToday && !isDoneToday && (
-                          <span className="text-[#087F83] dark:text-[#38D0C5] font-medium">
+                          <span className="text-[var(--accent)] font-medium">
                             Scheduled today
                           </span>
                         )}
@@ -463,7 +463,7 @@ export const RoutinesView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setInspectingRoutine(routine)}
-                      className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#087F83] dark:text-[#38D0C5] cursor-pointer"
+                      className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--accent)] cursor-pointer"
                       title="Inspect recurrence rule"
                       aria-label={`Inspect recurrence rule for "${routine.title}"`}
                     >
@@ -542,7 +542,7 @@ export const RoutinesView: React.FC = () => {
                       </div>
                       <div className="text-[10px] text-[#526782]">{formatRecurrenceRule(r)}</div>
                     </div>
-                    <span className="text-[11px] font-mono text-[#087F83]">
+                    <span className="text-[11px] font-mono text-[var(--accent)]">
                       {r.completedDates.length} completed · {r.skippedDates.length} skipped
                     </span>
                   </div>
@@ -605,7 +605,7 @@ export const RoutinesView: React.FC = () => {
                 <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
                   Repeat Rule
                 </span>
-                <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-[#087F83] text-white">
+                <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-[var(--accent)] text-[var(--accent-foreground)]">
                   {formatRecurrenceRule(inspectingRoutine)}
                 </span>
               </div>
@@ -697,7 +697,7 @@ export const RoutinesView: React.FC = () => {
                         ({formatFriendlyDate(dateStr)})
                       </span>
                     </span>
-                    <span className="text-[10px] text-[#087F83] font-sans font-semibold">
+                    <span className="text-[10px] text-[var(--accent)] font-sans font-semibold">
                       {dateStr === currentDate ? 'Today' : idx === 0 ? 'Next' : 'Upcoming'}
                     </span>
                   </div>
@@ -733,7 +733,7 @@ export const RoutinesView: React.FC = () => {
                   setInspectingRoutine(null);
                   openEditModal(toEdit);
                 }}
-                className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90 cursor-pointer flex items-center gap-1.5"
               >
                 <Edit2 className="w-3.5 h-3.5" />
                 <span>Edit routine</span>
@@ -773,7 +773,7 @@ export const RoutinesView: React.FC = () => {
               value={modalTitle}
               onChange={(e) => setModalTitle(e.target.value)}
               placeholder="e.g. Morning routine, Water plants, Renew passport"
-              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs focus:ring-2 focus:ring-[#087F83]"
+              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs focus:ring-2 focus:ring-[var(--accent)]"
             />
           </div>
 
@@ -829,7 +829,7 @@ export const RoutinesView: React.FC = () => {
               >
                 Repeat interval *
               </span>
-              <span className="text-[10px] font-semibold text-[#087F83] dark:text-[#38D0C5]">
+              <span className="text-[10px] font-semibold text-[var(--accent)]">
                 {previewRuleDescription}
               </span>
             </div>
@@ -842,7 +842,7 @@ export const RoutinesView: React.FC = () => {
                   onClick={() => setModalInterval(int)}
                   className={`py-2 rounded-xl text-xs font-semibold capitalize border transition-colors cursor-pointer ${
                     modalInterval === int
-                      ? 'bg-[#087F83] text-white border-[#087F83] shadow-xs'
+                      ? 'bg-[var(--accent)] text-[var(--accent-foreground)] border-[var(--accent)] shadow-xs'
                       : 'border-slate-200 dark:border-slate-700 text-[#526782] hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
@@ -935,7 +935,7 @@ export const RoutinesView: React.FC = () => {
                     onClick={() => toggleWeekday(d.num)}
                     className={`flex-1 h-8 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                       modalWeekdays.includes(d.num)
-                        ? 'bg-[#087F83] text-white font-bold'
+                        ? 'bg-[var(--accent)] text-[var(--accent-foreground)] font-bold'
                         : 'bg-slate-100 dark:bg-slate-800 text-[#526782] hover:bg-slate-200'
                     }`}
                   >
@@ -1109,7 +1109,7 @@ export const RoutinesView: React.FC = () => {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+                className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90"
               >
                 Save routine
               </button>

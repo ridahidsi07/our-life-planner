@@ -39,7 +39,7 @@ export const FilterEmptyState: React.FC<FilterEmptyStateProps> = ({
         type="button"
         data-testid="clear-filters-btn"
         onClick={onClearFilters}
-        className="mt-1 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] transition-colors cursor-pointer shadow-2xs micro-tap"
+        className="mt-1 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] transition-colors cursor-pointer shadow-2xs micro-tap"
       >
         <RotateCcw className="w-3.5 h-3.5" />
         <span>{clearLabel}</span>

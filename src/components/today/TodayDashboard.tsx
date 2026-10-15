@@ -402,8 +402,8 @@ export const TodayDashboard: React.FC = () => {
             title: occ.title,
             time: occ.startTime || '07:30',
             type: 'Routine',
-            badgeBg: 'bg-teal-50 dark:bg-teal-950/60',
-            badgeText: 'text-[#087F83] dark:text-[#38D0C5]',
+            badgeBg: 'bg-[var(--accent-soft)]',
+            badgeText: 'text-[var(--accent)]',
             isCompleted,
             onToggle: () => toggleRoutineCompletion(r.id, dateStr),
             subtext: formatRecurrenceRule(r),
@@ -487,8 +487,8 @@ export const TodayDashboard: React.FC = () => {
           title: w.title,
           time: w.startTime || '15:00',
           type: 'Workout',
-          badgeBg: 'bg-teal-50 dark:bg-teal-950/60',
-          badgeText: 'text-[#087F83] dark:text-[#38D0C5]',
+          badgeBg: 'bg-[var(--accent-soft)]',
+          badgeText: 'text-[var(--accent)]',
           isCompleted: w.isCompleted,
           onToggle: () => updateWorkoutSession(w.id, { isCompleted: !w.isCompleted }),
           subtext: `${w.durationMinutes} min`,
@@ -630,7 +630,7 @@ export const TodayDashboard: React.FC = () => {
     settings.todayVisibleSections?.health !== false;
   const isFocusVisible = isModuleOrToolEnabled('focus', settings.enabledTools) && !isCalmMode;
   const hasRightWidgets =
-    isHabitsVisible || isWaterVisible || isMoneyVisible || isGoalsVisible || isHealthVisible;
+    isHabitsVisible || isWaterVisible || isMoneyVisible || isGoalsVisible || isHealthVisible || isFocusVisible;
 
   return (
     <div className="p-2 sm:p-4 md:p-8 max-w-7xl mx-auto space-y-2 sm:space-y-4 md:space-y-6">
@@ -646,7 +646,7 @@ export const TodayDashboard: React.FC = () => {
           <button
             type="button"
             onClick={goToToday}
-            className="min-h-[44px] sm:min-h-9 px-3.5 py-2 rounded-xl bg-[#087F83] text-white font-semibold hover:bg-[#06676A] dark:bg-[#38D0C5] dark:text-[#071A3A] dark:hover:bg-[#2BB5AB] transition-colors cursor-pointer shrink-0 text-xs"
+            className="min-h-[44px] sm:min-h-9 px-3.5 py-2 rounded-xl bg-[var(--accent)] text-white font-semibold hover:bg-[var(--accent-hover)] transition-colors cursor-pointer shrink-0 text-xs"
           >
             Jump to Today
           </button>
@@ -816,7 +816,7 @@ export const TodayDashboard: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => rescheduleTask(t.id, todayDate)}
-                        className="min-h-[44px] sm:min-h-8 px-3 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] text-[11px] font-semibold hover:bg-teal-100 dark:hover:bg-teal-900/70 cursor-pointer transition-colors"
+                        className="min-h-[44px] sm:min-h-8 px-3 py-1.5 rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] text-[11px] font-semibold hover:opacity-90 cursor-pointer transition-colors"
                       >
                         Reschedule Today
                       </button>
@@ -864,7 +864,7 @@ export const TodayDashboard: React.FC = () => {
                   type="button"
                   onClick={goToToday}
                   aria-label="Jump to real today"
-                  className="min-h-[44px] sm:min-h-7 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-100 dark:hover:bg-teal-900/70 cursor-pointer flex items-center"
+                  className="min-h-[44px] sm:min-h-7 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] hover:opacity-90 cursor-pointer flex items-center"
                 >
                   Today
                 </button>
@@ -873,7 +873,7 @@ export const TodayDashboard: React.FC = () => {
 
             <div className="flex items-center gap-2">
               {/* Inlined progress on mobile */}
-              <div className="md:hidden flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-50 dark:bg-teal-950/60 border border-teal-200/60 dark:border-teal-800/40 text-[11px] font-semibold text-[#087F83] dark:text-[#38D0C5]">
+              <div className="md:hidden flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--accent-soft)] border border-[var(--accent)]/30 text-[11px] font-semibold text-[var(--accent)]">
                 <CheckCircle2 className="w-3 h-3" />
                 <span>{completedCount}/{totalCompletable}</span>
                 <span className="text-[10px] text-[#526782] dark:text-[#A8B8CE]">({completionPercentage}%)</span>
@@ -927,7 +927,7 @@ export const TodayDashboard: React.FC = () => {
                 onClick={() => setCurrentDate(w.dateStr)}
                 className={`relative flex flex-col items-center justify-center flex-1 md:flex-none md:w-11 min-w-[44px] min-h-[44px] shrink-0 px-0.5 py-1.5 rounded-xl text-xs transition-colors cursor-pointer ${
                   w.isSelected
-                    ? 'bg-[#087F83] text-white font-bold shadow-xs'
+                    ? 'bg-[var(--accent)] text-white font-bold shadow-xs'
                     : 'text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
@@ -936,7 +936,7 @@ export const TodayDashboard: React.FC = () => {
                 {w.isRealToday && (
                   <span
                     className={`absolute bottom-0.5 w-1 h-1 rounded-full ${
-                      w.isSelected ? 'bg-white' : 'bg-[#087F83] dark:text-[#38D0C5]'
+                      w.isSelected ? 'bg-white' : 'bg-[var(--accent)]'
                     }`}
                   />
                 )}
@@ -951,7 +951,7 @@ export const TodayDashboard: React.FC = () => {
             progress={completionPercentage}
             size={56}
             strokeWidth={5}
-            color="#087F83"
+            color="var(--accent)"
           >
             <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
               {completionPercentage}%
@@ -1054,9 +1054,9 @@ export const TodayDashboard: React.FC = () => {
         <div className={`${hasRightWidgets ? 'lg:col-span-7' : 'lg:col-span-12'} space-y-4 sm:space-y-6`}>
           {/* Hero Next Up Card */}
           {nextUpItem && (
-            <div className="card-surface p-3 sm:p-5 border-l-4 border-l-[#087F83] dark:border-l-[#38D0C5] animate-in fade-in">
+            <div className="card-surface p-3 sm:p-5 border-l-4 border-l-[var(--accent)] animate-in fade-in">
               <div className="flex items-center justify-between mb-1.5">
-                <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#087F83] dark:text-[#38D0C5]">
+                <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--accent)]">
                   <Zap className="w-3.5 h-3.5 fill-current" />
                   <span>Next Up</span>
                 </div>
@@ -1125,7 +1125,7 @@ export const TodayDashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveView('calendar')}
-                className="min-h-[44px] sm:min-h-8 px-2 text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline flex items-center gap-1 cursor-pointer"
+                className="min-h-[44px] sm:min-h-8 px-2 text-xs font-semibold text-[var(--accent)] hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <span>View calendar</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -1145,7 +1145,7 @@ export const TodayDashboard: React.FC = () => {
                     type="button"
                     data-testid="today-empty-cta"
                     onClick={() => setActiveModal('quick_add')}
-                    className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-semibold cursor-pointer shadow-xs transition-colors"
+                    className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold cursor-pointer shadow-xs transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Add your first item for today</span>
@@ -1183,15 +1183,15 @@ export const TodayDashboard: React.FC = () => {
                                 <span
                                   className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
                                     item.isCompleted
-                                      ? 'bg-[#087F83] text-white'
-                                      : 'border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#152238] hover:border-[#087F83]'
+                                      ? 'bg-[var(--accent)] text-white'
+                                      : 'border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#152238] hover:border-[var(--accent)]'
                                   }`}
                                 >
                                   {item.isCompleted && <Check className="w-3.5 h-3.5 stroke-[3] motion-check-pop" />}
                                 </span>
                               </button>
                             ) : (
-                              <div className="w-2 h-2 rounded-full bg-[#087F83] shrink-0 ml-1.5 mr-1.5" />
+                              <div className="w-2 h-2 rounded-full bg-[var(--accent)] shrink-0 ml-1.5 mr-1.5" />
                             )}
                             <div>
                               <span
@@ -1255,15 +1255,15 @@ export const TodayDashboard: React.FC = () => {
                               <span
                                 className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
                                   item.isCompleted
-                                    ? 'bg-[#087F83] text-white'
-                                    : 'border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#152238] hover:border-[#087F83]'
+                                    ? 'bg-[var(--accent)] text-white'
+                                    : 'border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#152238] hover:border-[var(--accent)]'
                                 }`}
                               >
                                 {item.isCompleted && <Check className="w-3.5 h-3.5 stroke-[3] motion-check-pop" />}
                               </span>
                             </button>
                           ) : (
-                            <div className="w-2.5 h-2.5 rounded-full bg-[#087F83] shrink-0 ml-1 mr-1" />
+                            <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] shrink-0 ml-1 mr-1" />
                           )}
                           <div>
                             <span
@@ -1345,7 +1345,7 @@ export const TodayDashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setCurrentDate(tomorrowDateStr)}
-                className="min-h-[44px] sm:min-h-8 px-2 flex items-center text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline cursor-pointer"
+                className="min-h-[44px] sm:min-h-8 px-2 flex items-center text-xs font-semibold text-[var(--accent)] hover:underline cursor-pointer"
               >
                 Open tomorrow
               </button>
@@ -1360,7 +1360,7 @@ export const TodayDashboard: React.FC = () => {
                     setCurrentDate(tomorrowDateStr);
                     setActiveModal('quick_add');
                   }}
-                  className="min-h-[44px] sm:min-h-8 px-2 font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline cursor-pointer"
+                  className="min-h-[44px] sm:min-h-8 px-2 font-semibold text-[var(--accent)] hover:underline cursor-pointer"
                 >
                   + Add task
                 </button>
@@ -1372,7 +1372,7 @@ export const TodayDashboard: React.FC = () => {
                     key={item.id}
                     className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-teal-100/70 dark:bg-teal-900/40 text-[#087F83] dark:text-[#38D0C5] flex items-center justify-center text-[11px] font-mono font-bold shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] flex items-center justify-center text-[11px] font-mono font-bold shrink-0">
                       {item.time.length > 5 ? item.time.split('–')[0].trim() : item.time}
                     </div>
                     <div className="truncate">
@@ -1398,7 +1398,7 @@ export const TodayDashboard: React.FC = () => {
               <div className="card-surface p-5">
                 <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A] mb-3">
                   <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-2">
-                    <Flame className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+                    <Flame className="w-4 h-4 text-[var(--accent)]" />
                     <span>Daily rhythm</span>
                   </h3>
                   <span className="text-xs text-[#526782] dark:text-[#A8B8CE] font-mono">
@@ -1427,8 +1427,8 @@ export const TodayDashboard: React.FC = () => {
                             <span
                               className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
                                 isChecked
-                                  ? 'bg-[#087F83] text-white'
-                                  : 'border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#152238] hover:border-[#087F83]'
+                                  ? 'bg-[var(--accent)] text-white'
+                                  : 'border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#152238] hover:border-[var(--accent)]'
                               }`}
                             >
                               {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -1482,7 +1482,7 @@ export const TodayDashboard: React.FC = () => {
                     {focusSession.isBreak ? (
                       <Coffee className="w-4 h-4 text-emerald-400" />
                     ) : (
-                      <Clock className="w-4 h-4 text-[#38D0C5]" />
+                      <Clock className="w-4 h-4 text-[var(--accent)]" />
                     )}
                     <span className="text-xs font-bold uppercase tracking-wider text-white/90">
                       {focusSession.isBreak ? 'Rest & Recharge' : 'Focus Session'}
@@ -1535,7 +1535,7 @@ export const TodayDashboard: React.FC = () => {
                     className="relative z-10 p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between gap-2"
                   >
                     <div className="min-w-0">
-                      <div className="text-[10px] uppercase font-semibold text-[#38D0C5] tracking-wider truncate">
+                      <div className="text-[10px] uppercase font-semibold text-[var(--accent)] tracking-wider truncate">
                         {focusSession.currentTask.category}
                       </div>
                       <div className="text-xs font-semibold text-white truncate">
@@ -1550,7 +1550,7 @@ export const TodayDashboard: React.FC = () => {
                       aria-label={`Complete focus task "${focusSession.currentTask.title}"`}
                       className="shrink-0 min-h-[44px] min-w-[44px] px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     >
-                      <Check className="w-3 h-3 text-[#38D0C5]" />
+                      <Check className="w-3 h-3 text-[var(--accent)]" />
                       <span>Done</span>
                     </button>
                   </div>
@@ -1614,7 +1614,7 @@ export const TodayDashboard: React.FC = () => {
               <div className="card-surface p-5">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-2">
-                    <Droplet className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+                    <Droplet className="w-4 h-4 text-[var(--accent)]" />
                     <span>Water</span>
                   </h3>
                   <span className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
@@ -1627,7 +1627,7 @@ export const TodayDashboard: React.FC = () => {
                     progress={waterProgress}
                     size={74}
                     strokeWidth={7}
-                    color="#087F83"
+                    color="var(--accent)"
                   >
                     <div className="text-center">
                       <span className="text-[11px] font-bold text-[#071A3A] dark:text-[#EDF4FF] leading-none block">
@@ -1655,7 +1655,7 @@ export const TodayDashboard: React.FC = () => {
                     type="button"
                     aria-label="Log 250 ml of water"
                     onClick={() => addWaterLog(250)}
-                    className="flex-1 min-h-[44px] py-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900/70 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold cursor-pointer transition-colors"
+                    className="flex-1 min-h-[44px] py-2 rounded-xl bg-[var(--accent-soft)] text-[var(--accent)] text-xs font-semibold hover:opacity-90 cursor-pointer transition-colors"
                   >
                     +250 ml
                   </button>
@@ -1663,7 +1663,7 @@ export const TodayDashboard: React.FC = () => {
                     type="button"
                     aria-label="Log 500 ml of water"
                     onClick={() => addWaterLog(500)}
-                    className="flex-1 min-h-[44px] py-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900/70 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold cursor-pointer transition-colors"
+                    className="flex-1 min-h-[44px] py-2 rounded-xl bg-[var(--accent-soft)] text-[var(--accent)] text-xs font-semibold hover:opacity-90 cursor-pointer transition-colors"
                   >
                     +500 ml
                   </button>
@@ -1671,7 +1671,7 @@ export const TodayDashboard: React.FC = () => {
                     type="button"
                     aria-label="Log 750 ml of water"
                     onClick={() => addWaterLog(750)}
-                    className="flex-1 min-h-[44px] py-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900/70 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold cursor-pointer transition-colors"
+                    className="flex-1 min-h-[44px] py-2 rounded-xl bg-[var(--accent-soft)] text-[var(--accent)] text-xs font-semibold hover:opacity-90 cursor-pointer transition-colors"
                   >
                     +750 ml
                   </button>
@@ -1703,7 +1703,7 @@ export const TodayDashboard: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setActiveView('budget')}
-                    className="min-h-[44px] sm:min-h-8 px-2 text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline flex items-center gap-1 cursor-pointer"
+                    className="min-h-[44px] sm:min-h-8 px-2 text-xs font-semibold text-[var(--accent)] hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <span>View budget</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -1731,7 +1731,7 @@ export const TodayDashboard: React.FC = () => {
                     </div>
                     <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
                       <div
-                        className="bg-[#087F83] h-full rounded-full transition-all"
+                        className="bg-[var(--accent)] h-full rounded-full transition-all"
                         style={{ width: `${savingsAndDebtSummary.savingsProgressPercent}%` }}
                       />
                     </div>
@@ -1748,7 +1748,7 @@ export const TodayDashboard: React.FC = () => {
                     </div>
                     <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
                       <div
-                        className="bg-[#38D0C5] h-full rounded-full transition-all"
+                        className="bg-[var(--accent)] h-full rounded-full transition-all"
                         style={{ width: `${savingsAndDebtSummary.debtRepaidPercent}%` }}
                       />
                     </div>
@@ -1768,7 +1768,7 @@ export const TodayDashboard: React.FC = () => {
                     type="button"
                     onClick={() => setActiveView('goals')}
                     aria-label="View goals"
-                    className="min-w-[44px] min-h-[44px] sm:min-w-8 sm:min-h-8 p-2 rounded-lg flex items-center justify-center text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                    className="min-w-[44px] min-h-[44px] sm:min-w-8 sm:min-h-8 p-2 rounded-lg flex items-center justify-center text-xs font-semibold text-[var(--accent)] hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                   >
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
@@ -1823,10 +1823,10 @@ export const TodayDashboard: React.FC = () => {
                       setActiveView('workouts');
                     }
                   }}
-                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-[#087F83] transition-colors"
+                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-[var(--accent)] transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-teal-100 dark:bg-teal-900/40 text-[#087F83] flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] flex items-center justify-center">
                       <Dumbbell className="w-4 h-4" />
                     </div>
                     <div>
@@ -1855,7 +1855,7 @@ export const TodayDashboard: React.FC = () => {
                       setActiveView('weight');
                     }
                   }}
-                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-[#087F83] transition-colors"
+                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-[var(--accent)] transition-colors"
                 >
                   <div>
                     {displayedLatestWeight === null ? (

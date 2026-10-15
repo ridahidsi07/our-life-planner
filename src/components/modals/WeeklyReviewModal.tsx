@@ -692,7 +692,7 @@ export const WeeklyReviewModal: React.FC = () => {
                 persistReviewDraft();
                 setStep((prev) => (prev + 1) as 1 | 2 | 3 | 4);
               }}
-              className="px-5 py-2.5 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] flex items-center gap-1.5 cursor-pointer transition-colors shadow-sm"
+              className="px-5 py-2.5 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90 flex items-center gap-1.5 cursor-pointer transition-colors shadow-sm"
             >
               <span>Next Step</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -701,7 +701,7 @@ export const WeeklyReviewModal: React.FC = () => {
             <button
               type="button"
               onClick={handleCompleteReview}
-              className="px-5 py-2.5 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] flex items-center gap-1.5 cursor-pointer transition-colors shadow-sm"
+              className="px-5 py-2.5 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90 flex items-center gap-1.5 cursor-pointer transition-colors shadow-sm"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>Complete Review</span>

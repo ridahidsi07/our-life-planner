@@ -293,7 +293,7 @@ export const QuickAddModal: React.FC = () => {
     >
       <div className="space-y-4">
         {/* Category selection row */}
-        <div role="radiogroup" aria-label="Item category" className="grid grid-cols-6 gap-2">
+        <div role="radiogroup" aria-label="Item category" className="grid grid-cols-3 sm:grid-cols-6 gap-2">
           {categories.map((item) => {
             const Icon = item.icon;
             const isSelected = activeTab === item.id;
@@ -307,7 +307,7 @@ export const QuickAddModal: React.FC = () => {
                 onClick={() => handleTabChange(item.id)}
                 className={`flex flex-col items-center justify-center p-2 rounded-xl border text-center transition-all cursor-pointer min-h-[44px] ${
                   isSelected
-                    ? 'border-[#087F83] bg-teal-50 dark:bg-teal-950/40 text-[#087F83] dark:text-[#38D0C5] font-bold shadow-2xs'
+                    ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)] font-bold shadow-2xs'
                     : 'border-slate-200 dark:border-slate-700 text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
@@ -352,7 +352,7 @@ export const QuickAddModal: React.FC = () => {
                     if (validationError) setValidationError(null);
                   }}
                   placeholder="e.g. Call accountant, Review draft"
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs text-[#071A3A] dark:text-[#EDF4FF] focus:ring-2 focus:ring-[#087F83] outline-none"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs text-[#071A3A] dark:text-[#EDF4FF] focus:ring-2 focus:ring-[var(--accent)] outline-none"
                 />
               </div>
 
@@ -362,7 +362,7 @@ export const QuickAddModal: React.FC = () => {
                   type="button"
                   onClick={() => setIsTaskOptionsOpen((prev) => !prev)}
                   aria-expanded={isTaskOptionsOpen}
-                  className="text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] flex items-center gap-1 hover:underline cursor-pointer py-1"
+                  className="text-xs font-semibold text-[var(--accent)] flex items-center gap-1 hover:underline cursor-pointer py-1"
                 >
                   <span>{isTaskOptionsOpen ? 'Fewer options' : '+ Add scheduling & priority'}</span>
                   {isTaskOptionsOpen ? (
@@ -498,7 +498,7 @@ export const QuickAddModal: React.FC = () => {
                       setExpenseAmount(e.target.value);
                       if (validationError) setValidationError(null);
                     }}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-mono font-bold text-[#071A3A] dark:text-[#EDF4FF] focus:ring-2 focus:ring-[#087F83]"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-mono font-bold text-[#071A3A] dark:text-[#EDF4FF] focus:ring-2 focus:ring-[var(--accent)]"
                   />
                 </div>
 
@@ -581,7 +581,7 @@ export const QuickAddModal: React.FC = () => {
                     if (validationError) setValidationError(null);
                   }}
                   placeholder="e.g. 20 min Core & Mobility"
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs text-[#071A3A] dark:text-[#EDF4FF] focus:ring-2 focus:ring-[#087F83]"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs text-[#071A3A] dark:text-[#EDF4FF] focus:ring-2 focus:ring-[var(--accent)]"
                 />
               </div>
 
@@ -648,7 +648,7 @@ export const QuickAddModal: React.FC = () => {
                         onClick={() => handleModalWeightUnitChange('kg')}
                         className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer ${
                           modalWeightUnit === 'kg'
-                            ? 'bg-[#087F83] text-white shadow-2xs'
+                            ? 'bg-[var(--accent)] text-white shadow-2xs'
                             : 'text-[#526782] dark:text-[#A8B8CE] hover:text-[#071A3A]'
                         }`}
                       >
@@ -659,7 +659,7 @@ export const QuickAddModal: React.FC = () => {
                         onClick={() => handleModalWeightUnitChange('lb')}
                         className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer ${
                           modalWeightUnit === 'lb'
-                            ? 'bg-[#087F83] text-white shadow-2xs'
+                            ? 'bg-[var(--accent)] text-white shadow-2xs'
                             : 'text-[#526782] dark:text-[#A8B8CE] hover:text-[#071A3A]'
                         }`}
                       >
@@ -680,7 +680,7 @@ export const QuickAddModal: React.FC = () => {
                     setWeightValue(e.target.value);
                     if (validationError) setValidationError(null);
                   }}
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-mono font-bold text-[#071A3A] dark:text-[#EDF4FF] focus:ring-2 focus:ring-[#087F83]"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs font-mono font-bold text-[#071A3A] dark:text-[#EDF4FF] focus:ring-2 focus:ring-[var(--accent)]"
                 />
               </div>
 
@@ -737,7 +737,7 @@ export const QuickAddModal: React.FC = () => {
                     }}
                     className={`py-2 px-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer min-h-[44px] ${
                       waterAmount === preset
-                        ? 'border-[#087F83] bg-teal-50 dark:bg-teal-950/40 text-[#087F83] dark:text-[#38D0C5]'
+                        ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
                         : 'border-slate-200 dark:border-slate-700 text-[#526782] dark:text-[#A8B8CE]'
                     }`}
                   >
@@ -789,7 +789,7 @@ export const QuickAddModal: React.FC = () => {
                   if (validationError) setValidationError(null);
                 }}
                 placeholder="What's on your mind? Jot down anything to process later…"
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs text-[#071A3A] dark:text-[#EDF4FF] focus:ring-2 focus:ring-[#087F83] outline-none"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs text-[#071A3A] dark:text-[#EDF4FF] focus:ring-2 focus:ring-[var(--accent)] outline-none"
               />
             </div>
           )}
@@ -810,7 +810,7 @@ export const QuickAddModal: React.FC = () => {
               type="submit"
               disabled={isSubmitting}
               data-testid="quick-add-submit-btn"
-              className="px-5 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] text-white text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+              className="px-5 py-2.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
             >
               <span>{isSubmitting ? 'Saving…' : 'Add to planner'}</span>
             </button>

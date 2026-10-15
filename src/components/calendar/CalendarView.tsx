@@ -627,8 +627,30 @@ export const CalendarView: React.FC = () => {
       });
     }
 
+    // Goals (Deadlines)
+    if (filters.goals) {
+      goals.forEach((g) => {
+        if (g.deadline) {
+          const arr = map.get(g.deadline) || [];
+          arr.push({ id: g.id, title: `${g.title} deadline`, type: 'Goal', dotColor: 'bg-amber-500' });
+          map.set(g.deadline, arr);
+        }
+      });
+    }
+
+    // Planned Meals
+    if (filters.meals) {
+      plannedMeals.forEach((m) => {
+        if (m.date) {
+          const arr = map.get(m.date) || [];
+          arr.push({ id: m.id, title: m.recipeTitle, type: 'Meal', dotColor: 'bg-emerald-500' });
+          map.set(m.date, arr);
+        }
+      });
+    }
+
     return map;
-  }, [filters, tasks, bills, workouts, calendarEvents, routines, monthGridDays]);
+  }, [filters, tasks, bills, workouts, calendarEvents, routines, goals, plannedMeals, monthGridDays]);
 
   // Upcoming items across the next 7 days (reference frame-037.png)
   const upcomingItems = useMemo(() => {
@@ -644,12 +666,14 @@ export const CalendarView: React.FC = () => {
     }> = [];
 
     const baseDate = selectedDate >= currentDate ? selectedDate : currentDate;
+    const tomorrowDate = shiftCalendarDate(currentDate, 1);
 
     for (let i = 1; i <= 7; i++) {
       const targetDate = shiftCalendarDate(baseDate, i);
       const [y, m, d] = targetDate.split('-').map(Number);
       const dt = new Date(y, m - 1, d);
-      const dateLabel = i === 1
+      const isTomorrow = targetDate === tomorrowDate;
+      const dateLabel = isTomorrow
         ? 'Tomorrow'
         : dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
@@ -729,11 +753,65 @@ export const CalendarView: React.FC = () => {
           });
       }
 
-      if (list.length >= 8) break;
+      // Routines
+      if (filters.routines) {
+        routines
+          .filter((r) => !r.isPaused && isRoutineActiveOnDate(r, targetDate))
+          .forEach((r) => {
+            list.push({
+              id: `${r.id}-${targetDate}`,
+              title: r.title,
+              type: 'Routine',
+              date: targetDate,
+              time: r.startTime || '08:00',
+              dateLabel,
+              dotColor: 'bg-purple-500',
+              badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300',
+            });
+          });
+      }
+
+      // Goals
+      if (filters.goals) {
+        goals
+          .filter((g) => g.status !== 'completed' && g.deadline === targetDate)
+          .forEach((g) => {
+            list.push({
+              id: g.id,
+              title: `${g.title} deadline`,
+              type: 'Goal',
+              date: targetDate,
+              time: 'All day',
+              dateLabel,
+              dotColor: 'bg-amber-500',
+              badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300',
+            });
+          });
+      }
+
+      // Meals
+      if (filters.meals) {
+        plannedMeals
+          .filter((m) => !m.isConsumed && m.date === targetDate)
+          .forEach((m) => {
+            list.push({
+              id: m.id,
+              title: m.recipeTitle,
+              type: 'Meal',
+              date: targetDate,
+              time: m.plannedTime || '12:30',
+              dateLabel,
+              dotColor: 'bg-emerald-500',
+              badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300',
+            });
+          });
+      }
+
+      if (list.length >= 10) break;
     }
 
     return list.slice(0, 5);
-  }, [selectedDate, currentDate, filters, tasks, bills, calendarEvents, workouts]);
+  }, [selectedDate, currentDate, filters, tasks, bills, calendarEvents, workouts, routines, goals, plannedMeals]);
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
@@ -767,7 +845,7 @@ export const CalendarView: React.FC = () => {
                 onClick={() => setViewMode(m)}
                 className={`px-3 py-1.5 rounded-lg capitalize transition-colors cursor-pointer ${
                   viewMode === m
-                    ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                    ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs'
                     : 'hover:text-[#071A3A] dark:hover:text-[#EDF4FF]'
                 }`}
               >
@@ -820,7 +898,7 @@ export const CalendarView: React.FC = () => {
             title="Export calendar to iCalendar (.ics)"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] transition-colors cursor-pointer"
           >
-            <Download className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+            <Download className="w-4 h-4 text-[var(--accent)]" />
             <span className="hidden sm:inline">Export .ics</span>
           </button>
 
@@ -828,7 +906,7 @@ export const CalendarView: React.FC = () => {
           <button
             type="button"
             onClick={() => openAddEntryModal(selectedDate)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-semibold text-xs transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add entry</span>
@@ -850,7 +928,7 @@ export const CalendarView: React.FC = () => {
             <button
               type="button"
               onClick={handleUndoDeleteCalendarEvent}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#38D0C5] text-[#071A3A] text-xs font-bold hover:bg-[#2BB5AB] transition-colors cursor-pointer"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white text-xs font-bold hover:bg-[var(--accent-hover)] transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Undo delete</span>
@@ -888,7 +966,7 @@ export const CalendarView: React.FC = () => {
               onClick={() => toggleFilter(f.key as keyof typeof filters)}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium border transition-colors cursor-pointer ${
                 active
-                  ? 'bg-white dark:bg-[#152238] border-[#087F83] text-[#087F83] dark:text-[#38D0C5]'
+                  ? 'bg-white dark:bg-[#152238] border-[var(--accent)] text-[var(--accent)]'
                   : 'bg-slate-100 dark:bg-slate-800 border-transparent text-[#526782] dark:text-[#A8B8CE] opacity-60'
               }`}
             >
@@ -947,17 +1025,8 @@ export const CalendarView: React.FC = () => {
                     formattedCellLabel = cell.dateStr;
                   }
 
-                  const cellEventsCount = [
-                    tasks.some((t) => !t.isArchived && t.dueDate === cell.dateStr),
-                    bills.some((b) => b.dueDate === cell.dateStr),
-                    workouts.some((w) => w.date === cell.dateStr && !w.isRestDay),
-                    calendarEvents.some((e) =>
-                      e.type === 'birthday'
-                        ? isBirthdayEventOnDate(e.date, cell.dateStr)
-                        : e.date === cell.dateStr
-                    ),
-                    filters.routines && routines.some((r) => isRoutineActiveOnDate(r, cell.dateStr)),
-                  ].filter(Boolean).length;
+                  const cellItems = monthEventsMap.get(cell.dateStr) || [];
+                  const cellEventsCount = cellItems.length;
 
                   if (cellEventsCount > 0) {
                     formattedCellLabel += `, ${cellEventsCount} scheduled item${cellEventsCount === 1 ? '' : 's'}`;
@@ -968,7 +1037,6 @@ export const CalendarView: React.FC = () => {
                   if (cell.isToday) formattedCellLabel += ', Today';
                   if (cell.isSelected) formattedCellLabel += ', Selected';
 
-                  const cellItems = monthEventsMap.get(cell.dateStr) || [];
                   return (
                     <button
                       key={idx}
@@ -980,9 +1048,9 @@ export const CalendarView: React.FC = () => {
                       onClick={() => setSelectedDate(cell.dateStr)}
                       className={`min-h-[92px] p-1.5 rounded-xl border text-left cursor-pointer transition-all flex flex-col justify-between w-full min-w-0 ${
                         cell.isSelected
-                          ? 'border-[#087F83] ring-2 ring-[#087F83]/50 bg-teal-50/50 dark:bg-teal-950/20 shadow-xs'
+                          ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/50 bg-[var(--accent-soft)] shadow-xs'
                           : cell.isToday
-                          ? 'border-teal-300 dark:border-teal-700/80 bg-teal-50/20 dark:bg-teal-950/10'
+                          ? 'border-[var(--accent)]/40 bg-[var(--accent-soft)]/40'
                           : cell.isCurrentMonth
                           ? 'border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                           : 'border-transparent text-slate-300 dark:text-slate-600 bg-slate-50/30 dark:bg-slate-900/20'
@@ -992,9 +1060,9 @@ export const CalendarView: React.FC = () => {
                         <span
                           className={`text-xs font-semibold ${
                             cell.isToday
-                              ? 'w-5 h-5 rounded-full bg-[#087F83] text-white flex items-center justify-center font-bold text-[11px] shadow-2xs'
+                              ? 'w-5 h-5 rounded-full bg-[var(--accent)] text-white flex items-center justify-center font-bold text-[11px] shadow-2xs'
                               : cell.isSelected
-                              ? 'text-[#087F83] dark:text-[#38D0C5] font-bold'
+                              ? 'text-[var(--accent)] font-bold'
                               : ''
                           }`}
                         >
@@ -1017,7 +1085,7 @@ export const CalendarView: React.FC = () => {
                         {cellItems.length > 2 && (
                           <span
                             data-testid={`calendar-cell-overflow-${cell.dateStr}`}
-                            className="text-[9px] font-bold text-[#087F83] dark:text-[#38D0C5] px-1 hover:underline text-left leading-tight"
+                            className="text-[9px] font-bold text-[var(--accent)] px-1 hover:underline text-left leading-tight"
                           >
                             +{cellItems.length - 2} more
                           </span>
@@ -1030,7 +1098,7 @@ export const CalendarView: React.FC = () => {
                           <span key={it.id} className={`w-1.5 h-1.5 rounded-full ${it.dotColor}`} />
                         ))}
                         {cellItems.length > 4 && (
-                          <span className="text-[8px] font-bold text-[#087F83] dark:text-[#38D0C5] leading-none">+</span>
+                          <span className="text-[8px] font-bold text-[var(--accent)] leading-none">+</span>
                         )}
                       </div>
                     </button>
@@ -1054,7 +1122,7 @@ export const CalendarView: React.FC = () => {
                     onClick={() => setSelectedDate(w.dateStr)}
                     className={`py-2 px-0.5 rounded-xl transition-colors cursor-pointer min-w-0 ${
                       w.isSelected
-                        ? 'bg-[#087F83] text-white font-bold shadow-xs'
+                        ? 'bg-[var(--accent)] text-white font-bold shadow-xs'
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE]'
                     }`}
                   >
@@ -1093,8 +1161,8 @@ export const CalendarView: React.FC = () => {
                               onClick={item.onToggle}
                               className={`w-4 h-4 rounded-md shrink-0 flex items-center justify-center cursor-pointer transition-colors ${
                                 item.isCompleted
-                                  ? 'bg-[#087F83] text-white'
-                                  : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
+                                  ? 'bg-[var(--accent)] text-white'
+                                  : 'border border-slate-300 dark:border-slate-600 hover:border-[var(--accent)]'
                               }`}
                             >
                               {item.isCompleted && <Check className="w-3 h-3 stroke-[3]" />}
@@ -1180,14 +1248,14 @@ export const CalendarView: React.FC = () => {
                           onClick={item.onToggle}
                           className={`w-5 h-5 rounded-md flex items-center justify-center cursor-pointer transition-colors ${
                             item.isCompleted
-                              ? 'bg-[#087F83] text-white'
-                              : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
+                              ? 'bg-[var(--accent)] text-white'
+                              : 'border border-slate-300 dark:border-slate-600 hover:border-[var(--accent)]'
                           }`}
                         >
                           {item.isCompleted && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                         </button>
                       ) : (
-                        <div className="w-2.5 h-2.5 rounded-full bg-[#087F83]" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent)]" />
                       )}
                       <div>
                         <div className="flex items-center gap-1.5">
@@ -1276,7 +1344,7 @@ export const CalendarView: React.FC = () => {
                 progress={selectedDayPct}
                 size={50}
                 strokeWidth={5}
-                color="#087F83"
+                color="var(--accent)"
               >
                 <span className="text-xs font-bold font-mono">
                   {selectedDayPct}%
@@ -1329,8 +1397,8 @@ export const CalendarView: React.FC = () => {
                           onClick={item.onToggle}
                           className={`w-4 h-4 rounded-md shrink-0 flex items-center justify-center cursor-pointer micro-checkbox ${
                             item.isCompleted
-                              ? 'bg-[#087F83] text-white'
-                              : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
+                              ? 'bg-[var(--accent)] text-white'
+                              : 'border border-slate-300 dark:border-slate-600 hover:border-[var(--accent)]'
                           }`}
                         >
                           {item.isCompleted && <Check className="w-3 h-3 stroke-[3] motion-check-pop" />}
@@ -1404,7 +1472,7 @@ export const CalendarView: React.FC = () => {
 
             <button
               onClick={() => openAddEntryModal(selectedDate)}
-              className="w-full py-2.5 rounded-xl border border-dashed border-[#087F83] text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold flex items-center justify-center gap-2 hover:bg-teal-50 dark:hover:bg-teal-950/40 transition-colors cursor-pointer"
+              className="w-full py-2.5 rounded-xl border border-dashed border-[var(--accent)] text-[var(--accent)] text-xs font-semibold flex items-center justify-center gap-2 hover:bg-[var(--accent-soft)] transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Add entry to this day</span>
@@ -1444,7 +1512,7 @@ export const CalendarView: React.FC = () => {
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span className={`w-2 h-2 rounded-full ${item.dotColor} shrink-0`} />
                       <div className="min-w-0">
-                        <div className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] truncate group-hover:text-[#087F83] dark:group-hover:text-[#38D0C5] transition-colors">
+                        <div className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] truncate group-hover:text-[var(--accent)] transition-colors">
                           {item.title}
                         </div>
                         <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] font-mono">
@@ -1490,7 +1558,7 @@ export const CalendarView: React.FC = () => {
               id="calendar-entry-type"
               value={entryType}
               onChange={(e) => setEntryType(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium focus:ring-2 focus:ring-[#087F83]"
+              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-medium focus:ring-2 focus:ring-[var(--accent)]"
             >
               <option value="free_time">Free time / Focus block</option>
               {!editingCalendarEvent && <option value="task">Task</option>}
@@ -1520,7 +1588,7 @@ export const CalendarView: React.FC = () => {
                   ? 'e.g. Sam Birthday'
                   : 'e.g. Focus time, Doctor appointment'
               }
-              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs focus:ring-2 focus:ring-[#087F83]"
+              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs focus:ring-2 focus:ring-[var(--accent)]"
             />
           </div>
 
@@ -1619,7 +1687,7 @@ export const CalendarView: React.FC = () => {
                     type="checkbox"
                     checked={isAllDay}
                     onChange={(e) => setIsAllDay(e.target.checked)}
-                    className="rounded text-[#087F83] focus:ring-[#087F83]"
+                    className="rounded text-[var(--accent)] focus:ring-[var(--accent)]"
                   />
                   <span>All-day event</span>
                 </label>
@@ -1714,7 +1782,7 @@ export const CalendarView: React.FC = () => {
             <button
               type="submit"
               data-testid="calendar-entry-submit-btn"
-              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+              className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)] cursor-pointer"
             >
               {editingCalendarEvent ? 'Save changes' : 'Save entry'}
             </button>

@@ -126,7 +126,7 @@ export const TasksThroughputChart: React.FC<TasksThroughputChartProps> = ({
   return (
     <div
       ref={containerRef}
-      className="card-surface p-5 space-y-4 focus:outline-none focus:ring-2 focus:ring-[#087F83] rounded-2xl"
+      className="card-surface p-5 space-y-4 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] rounded-2xl"
       tabIndex={0}
       role="region"
       aria-label="Throughput chart. Use left and right arrow keys to inspect daily task completions."
@@ -146,8 +146,8 @@ export const TasksThroughputChart: React.FC<TasksThroughputChartProps> = ({
 
         {/* Legend */}
         <div className="flex items-center gap-4 text-xs font-medium">
-          <div className="flex items-center gap-1.5 text-[#087F83] dark:text-[#38D0C5]">
-            <span className="w-3.5 h-0.5 bg-[#087F83] dark:bg-[#38D0C5] rounded-full" />
+          <div className="flex items-center gap-1.5 text-[var(--accent)]">
+            <span className="w-3.5 h-0.5 bg-[var(--accent)] rounded-full" />
             <span>This period</span>
           </div>
           <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
@@ -185,9 +185,9 @@ export const TasksThroughputChart: React.FC<TasksThroughputChartProps> = ({
           />
           <defs>
             <linearGradient id="throughputAreaGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#087F83" stopOpacity="0.28" />
-              <stop offset="60%" stopColor="#087F83" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="#087F83" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.28" />
+              <stop offset="60%" stopColor="var(--accent)" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.0" />
             </linearGradient>
           </defs>
 
@@ -245,7 +245,7 @@ export const TasksThroughputChart: React.FC<TasksThroughputChartProps> = ({
             <path
               d={thisPeriodPath}
               fill="none"
-              stroke="#087F83"
+              stroke="var(--accent)"
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -301,7 +301,7 @@ export const TasksThroughputChart: React.FC<TasksThroughputChartProps> = ({
                 cy={activeY}
                 r="5.5"
                 fill="#FFFFFF"
-                stroke="#087F83"
+                stroke="var(--accent)"
                 strokeWidth="2.5"
                 className="transition-all"
               />
