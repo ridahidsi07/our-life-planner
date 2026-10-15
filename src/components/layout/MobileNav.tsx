@@ -104,6 +104,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
         {/* More */}
         <button
           type="button"
+          data-testid="mobile-nav-more"
           onClick={handleOpenMore}
           aria-label="All tools and views"
           aria-controls="all-tools-menu"

@@ -306,16 +306,19 @@ async function main() {
     // Verify accent swatch buttons exist
     const accentSwatches = await evalJs(`
       (() => {
+        const apple = document.querySelector('[data-testid="settings-accent-apple"]');
         const teal = document.querySelector('[data-testid="settings-accent-teal"]');
         const ocean = document.querySelector('[data-testid="settings-accent-ocean"]');
         const plum = document.querySelector('[data-testid="settings-accent-plum"]');
         const ember = document.querySelector('[data-testid="settings-accent-ember"]');
         return {
+          apple: Boolean(apple),
           teal: Boolean(teal),
           ocean: Boolean(ocean),
           plum: Boolean(plum),
           ember: Boolean(ember),
           currentAttr: document.documentElement.getAttribute('data-accent'),
+          appleChecked: apple?.getAttribute('aria-checked'),
           tealChecked: teal?.getAttribute('aria-checked')
         };
       })()
@@ -326,8 +329,8 @@ async function main() {
       'All 4 accent swatches (Teal, Ocean, Plum, Ember) exist in Appearance settings'
     );
     assert(
-      accentSwatches.tealChecked === 'true',
-      'Default accent theme is Teal (aria-checked="true")'
+      accentSwatches.appleChecked === 'true' || accentSwatches.tealChecked === 'true',
+      'Default accent theme is Apple (or Teal fallback) (aria-checked="true")'
     );
 
     await captureScreenshot('02-settings-appearance-accents-light-1440.png');

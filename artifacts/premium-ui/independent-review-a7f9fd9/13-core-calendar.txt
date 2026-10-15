@@ -1,0 +1,330 @@
+- complementary:
+  - generic: Our Life Planner
+  - generic: A little more room for life
+  - generic: Plan
+  - button "Today":
+    - generic: Today
+  - button "Calendar":
+    - generic: Calendar
+  - button "Tasks 9":
+    - generic: Tasks 9
+  - button "Routines":
+    - generic: Routines
+  - button "Inbox":
+    - generic: Inbox
+  - button "Focus":
+    - generic: Focus
+  - button "App Install":
+    - generic: App Install
+  - button "Manage profile and storage for Review Sample":
+    - generic: R
+    - generic: Review Sample
+    - generic: Profile & Storage
+  - button "Backup & Restore":
+    - generic: Backup & Restore
+  - button "Settings":
+    - generic: Settings
+  - generic: Saved locally
+- banner:
+  - heading "Good afternoon, Review Sample." [level=1]
+  - paragraph: Thursday, October 15, 2026
+  - button "Search planner":
+    - generic: Search planner…
+    - generic: ⌘K
+  - button "Quick add item":
+    - generic: Quick add
+  - 'button "Storage status: All changes saved locally to this device"':
+    - generic: Saved locally
+  - button "Profile and local storage for Review Sample":
+    - generic: R
+- status "Demo mode active":
+  - generic: Demo Mode
+  - generic: Exploring with sample records. Any personal items you add are preserved.
+  - button "Remove sample data"
+  - button "Dismiss demo banner":
+- main:
+  - generic: Viewing calendar date 2026-10-15. Showing 7 scheduled items.
+  - heading "October 2026" [active] [level=2]
+  - generic: month view
+  - paragraph: Connect your daily tasks, routines, meals, workouts, and events
+  - button "month"
+  - button "week"
+  - button "day"
+  - button "Previous month":
+  - button "Today"
+  - button "Next month":
+  - button "Export .ics":
+    - generic: Export .ics
+  - button "Add entry":
+    - generic: Add entry
+  - switch "Filter Tasks" [checked]:
+    - generic: Tasks
+  - switch "Filter Routines" [checked]:
+    - generic: Routines
+  - switch "Filter Bills" [checked]:
+    - generic: Bills
+  - switch "Filter Goals" [checked]:
+    - generic: Goals
+  - switch "Filter Meals" [checked]:
+    - generic: Meals
+  - switch "Filter Workouts" [checked]:
+    - generic: Workouts
+  - switch "Filter Events" [checked]:
+    - generic: Events
+  - generic: Mon
+  - generic: Tue
+  - generic: Wed
+  - generic: Thu
+  - generic: Fri
+  - generic: Sat
+  - generic: Sun
+  - button "Monday, September 28, 2026, 1 scheduled item":
+    - generic: "28"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Tuesday, September 29, 2026, 1 scheduled item":
+    - generic: "29"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Wednesday, September 30, 2026, 1 scheduled item":
+    - generic: "30"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Thursday, October 1, 2026, 2 scheduled items":
+    - generic: "1"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+    - generic "Pay rent (Routine)":
+      - generic: Pay rent
+  - button "Friday, October 2, 2026, 2 scheduled items":
+    - generic: "2"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+    - generic "Call parents (Routine)":
+      - generic: Call parents
+  - button "Saturday, October 3, 2026, 1 scheduled item":
+    - generic: "3"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Sunday, October 4, 2026, 3 scheduled items":
+    - generic: "4"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+    - generic "Weekly reset (Routine)":
+      - generic: Weekly reset
+    - generic: +1 more
+  - button "Monday, October 5, 2026, 1 scheduled item":
+    - generic: "5"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Tuesday, October 6, 2026, 1 scheduled item":
+    - generic: "6"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Wednesday, October 7, 2026, 1 scheduled item":
+    - generic: "7"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Thursday, October 8, 2026, 1 scheduled item":
+    - generic: "8"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Friday, October 9, 2026, 2 scheduled items":
+    - generic: "9"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+    - generic "Finish portfolio deadline (Goal)":
+      - generic: Finish portfolio deadline
+  - button "Saturday, October 10, 2026, 1 scheduled item":
+    - generic: "10"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Sunday, October 11, 2026, 4 scheduled items":
+    - generic: "11"
+    - generic "Submit invoice (Task)":
+      - generic: Submit invoice
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+    - generic: +2 more
+  - button "Monday, October 12, 2026, 3 scheduled items":
+    - generic: "12"
+    - generic "Renew car insurance (Task)":
+      - generic: Renew car insurance
+    - generic "Strength workout (Workout)":
+      - generic: Strength workout
+    - generic: +1 more
+  - button "Tuesday, October 13, 2026, 3 scheduled items":
+    - generic: "13"
+    - generic "Review budget (Task)":
+      - generic: Review budget
+    - generic "Mobile (Bill)":
+      - generic: Mobile
+    - generic: +1 more
+  - button "Wednesday, October 14, 2026, 2 scheduled items":
+    - generic: "14"
+    - generic "Read book (Task)":
+      - generic: Read book
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Thursday, October 15, 2026, 7 scheduled items, Today, Selected" [pressed]:
+    - generic: "15"
+    - generic "Plan the week (Task)":
+      - generic: Plan the week
+    - generic "Internet (Bill)":
+      - generic: Internet
+    - generic: +5 more
+  - button "Friday, October 16, 2026, 6 scheduled items":
+    - generic: "16"
+    - generic "Project proposal (Task)":
+      - generic: Project proposal
+    - generic "Get groceries (Task)":
+      - generic: Get groceries
+    - generic: +4 more
+  - button "Saturday, October 17, 2026, 3 scheduled items":
+    - generic: "17"
+    - generic "Cardio (Workout)":
+      - generic: Cardio
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+    - generic: +1 more
+  - button "Sunday, October 18, 2026, 5 scheduled items":
+    - generic: "18"
+    - generic "Book dentist (Task)":
+      - generic: Book dentist
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+    - generic: +3 more
+  - button "Monday, October 19, 2026, 6 scheduled items":
+    - generic: "19"
+    - generic "Call family (Task)":
+      - generic: Call family
+    - generic "Update portfolio (Task)":
+      - generic: Update portfolio
+    - generic: +4 more
+  - button "Tuesday, October 20, 2026, 4 scheduled items":
+    - generic: "20"
+    - generic "Plan weekend (Task)":
+      - generic: Plan weekend
+    - generic "Walk (Workout)":
+      - generic: Walk
+    - generic: +2 more
+  - button "Wednesday, October 21, 2026, 2 scheduled items":
+    - generic: "21"
+    - generic "Family time (Event)":
+      - generic: Family time
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Thursday, October 22, 2026, 1 scheduled item":
+    - generic: "22"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Friday, October 23, 2026, 1 scheduled item":
+    - generic: "23"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Saturday, October 24, 2026, 1 scheduled item":
+    - generic: "24"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Sunday, October 25, 2026, 3 scheduled items":
+    - generic: "25"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+    - generic "Weekly reset (Routine)":
+      - generic: Weekly reset
+    - generic: +1 more
+  - button "Monday, October 26, 2026, 1 scheduled item":
+    - generic: "26"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Tuesday, October 27, 2026, 1 scheduled item":
+    - generic: "27"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Wednesday, October 28, 2026, 1 scheduled item":
+    - generic: "28"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Thursday, October 29, 2026, 1 scheduled item":
+    - generic: "29"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Friday, October 30, 2026, 2 scheduled items":
+    - generic: "30"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+    - generic "Call parents (Routine)":
+      - generic: Call parents
+  - button "Saturday, October 31, 2026, 1 scheduled item":
+    - generic: "31"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+  - button "Sunday, November 1, 2026, 4 scheduled items":
+    - generic: "1"
+    - generic "Morning routine (Routine)":
+      - generic: Morning routine
+    - generic "Weekly reset (Routine)":
+      - generic: Weekly reset
+    - generic: +2 more
+  - heading "Selected day" [level=3]
+  - paragraph: 2026-10-15
+  - generic: 17%
+  - generic: 1 of 6 complete
+  - checkbox "Mark \"Morning routine\" as complete"
+  - generic: Morning routine
+  - generic: 07:30
+  - generic: · Daily
+  - button "Preview recurring schedule":
+  - generic: Routine
+  - checkbox "Mark \"Plan the week\" as incomplete" [checked]:
+  - generic: Plan the week
+  - generic: 09:00 - 09:30
+  - generic: Task
+  - generic: Focus time
+  - generic: 10:00 - 11:00
+  - generic: · Personal work
+  - button "Edit event \"Focus time\"":
+  - button "Delete event \"Focus time\"":
+  - generic: Focus time
+  - checkbox "Mark \"Chicken & quinoa bowl\" as complete"
+  - generic: Chicken & quinoa bowl
+  - generic: 12:30
+  - generic: Meal
+  - checkbox "Mark \"Monday Strength\" as complete"
+  - generic: Monday Strength
+  - generic: 15:00
+  - generic: Workout
+  - checkbox "Mark \"Internet\" as complete"
+  - generic: Internet
+  - generic: 18:00
+  - generic: · $49.00
+  - generic: Bill
+  - checkbox "Mark \"Salmon & vegetables\" as complete"
+  - generic: Salmon & vegetables
+  - generic: 19:30
+  - generic: Meal
+  - button "Add entry to this day":
+    - generic: Add entry to this day
+  - heading "Coming up" [level=3]
+  - paragraph: Next 7 days
+  - generic: "5"
+  - 'button "Jump to Tomorrow: Project proposal (Task)"':
+    - generic: Project proposal
+    - generic: Tomorrow · 09:00
+    - generic: Task
+  - 'button "Jump to Tomorrow: Get groceries (Task)"':
+    - generic: Get groceries
+    - generic: Tomorrow · All day
+    - generic: Task
+  - 'button "Jump to Tomorrow: Morning routine (Routine)"':
+    - generic: Morning routine
+    - generic: Tomorrow · 07:30
+    - generic: Routine
+  - 'button "Jump to Tomorrow: Call parents (Routine)"':
+    - generic: Call parents
+    - generic: Tomorrow · 18:00
+    - generic: Routine
+  - 'button "Jump to Tomorrow: Lentil soup (Meal)"':
+    - generic: Lentil soup
+    - generic: Tomorrow · 12:30
+    - generic: Meal

@@ -30,7 +30,25 @@ import {
 import { getWeekDaysForDate } from '../../utils/formatters';
 import { isCompletableScheduleItem } from '../../utils/calculations';
 import { isBirthdayEventOnDate, shiftCalendarDate } from '../../utils/recurrence';
+import { isModuleOrToolEnabled } from '../../utils/moduleRegistry';
 import { CalendarEvent, RepeatInterval } from '../../types/planner';
+
+// Shared item comparator: Defined all-day policy (all-day first, then chronological by time)
+export const compareCalendarItems = (
+  a: { date?: string; time?: string; isAllDay?: boolean },
+  b: { date?: string; time?: string; isAllDay?: boolean }
+) => {
+  if (a.date && b.date && a.date !== b.date) {
+    return a.date.localeCompare(b.date);
+  }
+  const aIsAllDay = a.time === 'All day' || a.time === undefined || Boolean(a.isAllDay);
+  const bIsAllDay = b.time === 'All day' || b.time === undefined || Boolean(b.isAllDay);
+  if (aIsAllDay && !bIsAllDay) return -1;
+  if (!aIsAllDay && bIsAllDay) return 1;
+  const aTime = (a.time || '').replace(/ - .*$/, '');
+  const bTime = (b.time || '').replace(/ - .*$/, '');
+  return aTime.localeCompare(bTime);
+};
 
 export const CalendarView: React.FC = () => {
   const {
@@ -66,6 +84,7 @@ export const CalendarView: React.FC = () => {
   const [editingCalendarEvent, setEditingCalendarEvent] = useState<CalendarEvent | null>(null);
   const [lastDeletedEvent, setLastDeletedEvent] = useState<CalendarEvent | null>(null);
   const [previewRoutineId, setPreviewRoutineId] = useState<string | null>(null);
+  const [isUpcomingExpanded, setIsUpcomingExpanded] = useState(false);
 
   // Keep selectedDate synchronized when currentDate changes from outside
   React.useEffect(() => {
@@ -277,40 +296,46 @@ export const CalendarView: React.FC = () => {
 
   const conflictsSet = useMemo(() => {
     const conflictMap = new Set<string>();
+    const isEventsEnabled = isModuleOrToolEnabled('calendar', settings.enabledTools);
+    const isTasksEnabled = isModuleOrToolEnabled('tasks', settings.enabledTools);
 
     weekDays.forEach((w) => {
       const timedList: Array<{ id: string; start: number; end: number }> = [];
 
-      calendarEvents
-        .filter(
-          (e) =>
-            (e.type === 'birthday'
-              ? isBirthdayEventOnDate(e.date, w.dateStr)
-              : e.date === w.dateStr) &&
-            !e.isAllDay &&
-            e.startTime
-        )
-        .forEach((e) => {
-          const [sh, sm] = (e.startTime || '00:00').split(':').map(Number);
-          const [eh, em] = (e.endTime || '00:00').split(':').map(Number);
-          timedList.push({
-            id: e.id,
-            start: sh * 60 + sm,
-            end: eh ? eh * 60 + em : sh * 60 + sm + 60,
+      if (isEventsEnabled) {
+        calendarEvents
+          .filter(
+            (e) =>
+              (e.type === 'birthday'
+                ? isBirthdayEventOnDate(e.date, w.dateStr)
+                : e.date === w.dateStr) &&
+              !e.isAllDay &&
+              e.startTime
+          )
+          .forEach((e) => {
+            const [sh, sm] = (e.startTime || '00:00').split(':').map(Number);
+            const [eh, em] = (e.endTime || '00:00').split(':').map(Number);
+            timedList.push({
+              id: e.id,
+              start: sh * 60 + sm,
+              end: eh ? eh * 60 + em : sh * 60 + sm + 60,
+            });
           });
-        });
+      }
 
-      tasks
-        .filter((t) => t.dueDate === w.dateStr && !t.isArchived && t.scheduledStart)
-        .forEach((t) => {
-          const [sh, sm] = t.scheduledStart!.split(':').map(Number);
-          const [eh, em] = (t.scheduledEnd || '').split(':').map(Number);
-          timedList.push({
-            id: t.id,
-            start: sh * 60 + sm,
-            end: eh ? eh * 60 + em : sh * 60 + sm + 30,
+      if (isTasksEnabled) {
+        tasks
+          .filter((t) => t.dueDate === w.dateStr && !t.isArchived && t.scheduledStart)
+          .forEach((t) => {
+            const [sh, sm] = t.scheduledStart!.split(':').map(Number);
+            const [eh, em] = (t.scheduledEnd || '').split(':').map(Number);
+            timedList.push({
+              id: t.id,
+              start: sh * 60 + sm,
+              end: eh ? eh * 60 + em : sh * 60 + sm + 30,
+            });
           });
-        });
+      }
 
       for (let i = 0; i < timedList.length; i++) {
         for (let j = i + 1; j < timedList.length; j++) {
@@ -325,7 +350,7 @@ export const CalendarView: React.FC = () => {
     });
 
     return conflictMap;
-  }, [weekDays, calendarEvents, tasks]);
+  }, [weekDays, calendarEvents, tasks, settings.enabledTools]);
 
   // Items for selected day
   const selectedDayItems = useMemo(() => {
@@ -334,6 +359,7 @@ export const CalendarView: React.FC = () => {
       title: string;
       type: string;
       time?: string;
+      isAllDay?: boolean;
       isCompleted?: boolean;
       badgeColor: string;
       onToggle?: () => void;
@@ -343,7 +369,7 @@ export const CalendarView: React.FC = () => {
     }> = [];
 
     // Tasks (exclude archived tasks - LP-08)
-    if (filters.tasks) {
+    if (filters.tasks && isModuleOrToolEnabled('tasks', settings.enabledTools)) {
       tasks
         .filter((t) => !t.isArchived && t.dueDate === selectedDate)
         .forEach((t) => {
@@ -356,6 +382,7 @@ export const CalendarView: React.FC = () => {
               : t.scheduledStart && t.scheduledEnd
               ? `${t.scheduledStart} - ${t.scheduledEnd}`
               : t.dueTime || t.scheduledStart || 'All day',
+            isAllDay: Boolean(t.isAllDay || (!t.scheduledStart && !t.dueTime)),
             isCompleted: t.status === 'completed',
             badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300',
             onToggle: () => toggleTaskCompletion(t.id),
@@ -364,7 +391,7 @@ export const CalendarView: React.FC = () => {
     }
 
     // Routines (scheduled on selected date)
-    if (filters.routines) {
+    if (filters.routines && isModuleOrToolEnabled('routines', settings.enabledTools)) {
       routines
         .filter((r) => isRoutineActiveOnDate(r, selectedDate))
         .forEach((r) => {
@@ -375,6 +402,7 @@ export const CalendarView: React.FC = () => {
             title: occ.title,
             type: 'Routine',
             time: occ.startTime || '07:30',
+            isAllDay: false,
             isCompleted: isDone,
             badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300',
             onToggle: () => toggleRoutineCompletion(r.id, selectedDate),
@@ -385,7 +413,7 @@ export const CalendarView: React.FC = () => {
     }
 
     // Bills
-    if (filters.bills) {
+    if (filters.bills && isModuleOrToolEnabled('money', settings.enabledTools)) {
       bills
         .filter((b) => b.dueDate === selectedDate)
         .forEach((b) => {
@@ -394,6 +422,7 @@ export const CalendarView: React.FC = () => {
             title: b.title,
             type: 'Bill',
             time: '18:00',
+            isAllDay: false,
             isCompleted: b.isPaid,
             badgeColor: 'bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300',
             onToggle: () => (b.isPaid ? unpayBill(b.id) : markBillPaid(b.id, b.plannedAmount, selectedDate)),
@@ -403,7 +432,7 @@ export const CalendarView: React.FC = () => {
     }
 
     // Goals (Deadlines)
-    if (filters.goals) {
+    if (filters.goals && isModuleOrToolEnabled('goals', settings.enabledTools)) {
       goals
         .filter((g) => g.deadline === selectedDate)
         .forEach((g) => {
@@ -412,6 +441,7 @@ export const CalendarView: React.FC = () => {
             title: `${g.title} deadline`,
             type: 'Goal',
             time: 'All day',
+            isAllDay: true,
             isCompleted: g.status === 'completed',
             badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300',
           });
@@ -419,7 +449,7 @@ export const CalendarView: React.FC = () => {
     }
 
     // Meals
-    if (filters.meals) {
+    if (filters.meals && isModuleOrToolEnabled('food', settings.enabledTools)) {
       plannedMeals
         .filter((m) => m.date === selectedDate)
         .forEach((m) => {
@@ -428,6 +458,7 @@ export const CalendarView: React.FC = () => {
             title: m.recipeTitle,
             type: 'Meal',
             time: m.plannedTime || '12:30',
+            isAllDay: false,
             isCompleted: m.isConsumed,
             badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300',
             onToggle: () => toggleMealConsumed(m.id),
@@ -436,7 +467,7 @@ export const CalendarView: React.FC = () => {
     }
 
     // Workouts
-    if (filters.workouts) {
+    if (filters.workouts && isModuleOrToolEnabled('body', settings.enabledTools)) {
       workouts
         .filter((w) => w.date === selectedDate && !w.isRestDay)
         .forEach((w) => {
@@ -445,6 +476,7 @@ export const CalendarView: React.FC = () => {
             title: w.title,
             type: 'Workout',
             time: w.startTime || '15:00',
+            isAllDay: false,
             isCompleted: w.isCompleted,
             badgeColor: 'bg-teal-100 text-teal-700 dark:bg-teal-900/60 dark:text-teal-300',
             onToggle: () => updateWorkoutSession(w.id, { isCompleted: !w.isCompleted }),
@@ -453,7 +485,7 @@ export const CalendarView: React.FC = () => {
     }
 
     // Events (including yearly recurring birthdays - LP-10)
-    if (filters.events) {
+    if (filters.events && isModuleOrToolEnabled('calendar', settings.enabledTools)) {
       calendarEvents
         .filter((e) =>
           e.type === 'birthday'
@@ -466,6 +498,7 @@ export const CalendarView: React.FC = () => {
             title: e.title,
             type: e.type === 'birthday' ? 'Birthday' : e.type === 'free_time' ? 'Focus time' : 'Event',
             time: e.type === 'birthday' || e.isAllDay ? 'All day' : `${e.startTime} - ${e.endTime}`,
+            isAllDay: Boolean(e.type === 'birthday' || e.isAllDay),
             badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300',
             subtitle: e.type === 'birthday' ? 'Yearly birthday' : e.notes,
             calendarEvent: e,
@@ -473,11 +506,12 @@ export const CalendarView: React.FC = () => {
         });
     }
 
-    // Sort chronologically
-    return list.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+    // Sort chronologically using defined all-day policy
+    return list.sort(compareCalendarItems);
   }, [
     selectedDate,
     filters,
+    settings.enabledTools,
     tasks,
     routines,
     bills,
@@ -563,7 +597,7 @@ export const CalendarView: React.FC = () => {
     const map = new Map<string, Array<{ id: string; title: string; type: string; dotColor: string }>>();
 
     // Tasks
-    if (filters.tasks) {
+    if (filters.tasks && isModuleOrToolEnabled('tasks', settings.enabledTools)) {
       tasks.forEach((t) => {
         if (!t.isArchived && t.dueDate) {
           const arr = map.get(t.dueDate) || [];
@@ -574,7 +608,7 @@ export const CalendarView: React.FC = () => {
     }
 
     // Bills
-    if (filters.bills) {
+    if (filters.bills && isModuleOrToolEnabled('money', settings.enabledTools)) {
       bills.forEach((b) => {
         if (b.dueDate) {
           const arr = map.get(b.dueDate) || [];
@@ -585,7 +619,7 @@ export const CalendarView: React.FC = () => {
     }
 
     // Workouts
-    if (filters.workouts) {
+    if (filters.workouts && isModuleOrToolEnabled('body', settings.enabledTools)) {
       workouts.forEach((w) => {
         if (w.date && !w.isRestDay) {
           const arr = map.get(w.date) || [];
@@ -596,7 +630,7 @@ export const CalendarView: React.FC = () => {
     }
 
     // Calendar events
-    if (filters.events) {
+    if (filters.events && isModuleOrToolEnabled('calendar', settings.enabledTools)) {
       calendarEvents.forEach((e) => {
         if (e.type === 'birthday') {
           monthGridDays.forEach((cell) => {
@@ -615,7 +649,7 @@ export const CalendarView: React.FC = () => {
     }
 
     // Routines
-    if (filters.routines) {
+    if (filters.routines && isModuleOrToolEnabled('routines', settings.enabledTools)) {
       monthGridDays.forEach((cell) => {
         routines.forEach((r) => {
           if (isRoutineActiveOnDate(r, cell.dateStr)) {
@@ -628,7 +662,7 @@ export const CalendarView: React.FC = () => {
     }
 
     // Goals (Deadlines)
-    if (filters.goals) {
+    if (filters.goals && isModuleOrToolEnabled('goals', settings.enabledTools)) {
       goals.forEach((g) => {
         if (g.deadline) {
           const arr = map.get(g.deadline) || [];
@@ -639,7 +673,7 @@ export const CalendarView: React.FC = () => {
     }
 
     // Planned Meals
-    if (filters.meals) {
+    if (filters.meals && isModuleOrToolEnabled('food', settings.enabledTools)) {
       plannedMeals.forEach((m) => {
         if (m.date) {
           const arr = map.get(m.date) || [];
@@ -650,10 +684,10 @@ export const CalendarView: React.FC = () => {
     }
 
     return map;
-  }, [filters, tasks, bills, workouts, calendarEvents, routines, goals, plannedMeals, monthGridDays]);
+  }, [filters, settings.enabledTools, tasks, bills, workouts, calendarEvents, routines, goals, plannedMeals, monthGridDays]);
 
   // Upcoming items across the next 7 days (reference frame-037.png)
-  const upcomingItems = useMemo(() => {
+  const allUpcomingItems = useMemo(() => {
     const list: Array<{
       id: string;
       title: string;
@@ -663,10 +697,19 @@ export const CalendarView: React.FC = () => {
       dateLabel: string;
       dotColor: string;
       badgeColor: string;
+      isAllDay?: boolean;
     }> = [];
 
     const baseDate = selectedDate >= currentDate ? selectedDate : currentDate;
     const tomorrowDate = shiftCalendarDate(currentDate, 1);
+
+    const isTasksEnabled = filters.tasks && isModuleOrToolEnabled('tasks', settings.enabledTools);
+    const isBillsEnabled = filters.bills && isModuleOrToolEnabled('money', settings.enabledTools);
+    const isEventsEnabled = filters.events && isModuleOrToolEnabled('calendar', settings.enabledTools);
+    const isWorkoutsEnabled = filters.workouts && isModuleOrToolEnabled('body', settings.enabledTools);
+    const isRoutinesEnabled = filters.routines && isModuleOrToolEnabled('routines', settings.enabledTools);
+    const isGoalsEnabled = filters.goals && isModuleOrToolEnabled('goals', settings.enabledTools);
+    const isMealsEnabled = filters.meals && isModuleOrToolEnabled('food', settings.enabledTools);
 
     for (let i = 1; i <= 7; i++) {
       const targetDate = shiftCalendarDate(baseDate, i);
@@ -678,7 +721,7 @@ export const CalendarView: React.FC = () => {
         : dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
       // Tasks
-      if (filters.tasks) {
+      if (isTasksEnabled) {
         tasks
           .filter((t) => !t.isArchived && t.status !== 'completed' && t.dueDate === targetDate)
           .forEach((t) => {
@@ -687,7 +730,8 @@ export const CalendarView: React.FC = () => {
               title: t.title,
               type: 'Task',
               date: targetDate,
-              time: t.dueTime || 'All day',
+              time: t.isAllDay ? 'All day' : t.dueTime || 'All day',
+              isAllDay: Boolean(t.isAllDay || !t.dueTime),
               dateLabel,
               dotColor: 'bg-blue-500',
               badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300',
@@ -696,7 +740,7 @@ export const CalendarView: React.FC = () => {
       }
 
       // Bills
-      if (filters.bills) {
+      if (isBillsEnabled) {
         bills
           .filter((b) => !b.isPaid && b.dueDate === targetDate)
           .forEach((b) => {
@@ -706,6 +750,7 @@ export const CalendarView: React.FC = () => {
               type: 'Bill',
               date: targetDate,
               time: '18:00',
+              isAllDay: false,
               dateLabel,
               dotColor: 'bg-rose-500',
               badgeColor: 'bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300',
@@ -714,7 +759,7 @@ export const CalendarView: React.FC = () => {
       }
 
       // Events
-      if (filters.events) {
+      if (isEventsEnabled) {
         calendarEvents
           .filter((e) =>
             e.type === 'birthday'
@@ -727,7 +772,8 @@ export const CalendarView: React.FC = () => {
               title: e.title,
               type: e.type === 'birthday' ? 'Birthday' : 'Event',
               date: targetDate,
-              time: e.startTime || 'All day',
+              time: e.type === 'birthday' || e.isAllDay ? 'All day' : e.startTime || 'All day',
+              isAllDay: Boolean(e.type === 'birthday' || e.isAllDay),
               dateLabel,
               dotColor: 'bg-indigo-500',
               badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300',
@@ -736,7 +782,7 @@ export const CalendarView: React.FC = () => {
       }
 
       // Workouts
-      if (filters.workouts) {
+      if (isWorkoutsEnabled) {
         workouts
           .filter((w) => !w.isCompleted && w.date === targetDate && !w.isRestDay)
           .forEach((w) => {
@@ -746,6 +792,7 @@ export const CalendarView: React.FC = () => {
               type: 'Workout',
               date: targetDate,
               time: w.startTime || '15:00',
+              isAllDay: false,
               dateLabel,
               dotColor: 'bg-teal-500',
               badgeColor: 'bg-teal-100 text-teal-700 dark:bg-teal-900/60 dark:text-teal-300',
@@ -754,16 +801,18 @@ export const CalendarView: React.FC = () => {
       }
 
       // Routines
-      if (filters.routines) {
+      if (isRoutinesEnabled) {
         routines
           .filter((r) => !r.isPaused && isRoutineActiveOnDate(r, targetDate))
           .forEach((r) => {
+            const occ = getRoutineOccurrence(r, targetDate);
             list.push({
               id: `${r.id}-${targetDate}`,
               title: r.title,
               type: 'Routine',
               date: targetDate,
-              time: r.startTime || '08:00',
+              time: occ.startTime || '07:30',
+              isAllDay: false,
               dateLabel,
               dotColor: 'bg-purple-500',
               badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300',
@@ -772,7 +821,7 @@ export const CalendarView: React.FC = () => {
       }
 
       // Goals
-      if (filters.goals) {
+      if (isGoalsEnabled) {
         goals
           .filter((g) => g.status !== 'completed' && g.deadline === targetDate)
           .forEach((g) => {
@@ -782,6 +831,7 @@ export const CalendarView: React.FC = () => {
               type: 'Goal',
               date: targetDate,
               time: 'All day',
+              isAllDay: true,
               dateLabel,
               dotColor: 'bg-amber-500',
               badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300',
@@ -790,7 +840,7 @@ export const CalendarView: React.FC = () => {
       }
 
       // Meals
-      if (filters.meals) {
+      if (isMealsEnabled) {
         plannedMeals
           .filter((m) => !m.isConsumed && m.date === targetDate)
           .forEach((m) => {
@@ -800,18 +850,33 @@ export const CalendarView: React.FC = () => {
               type: 'Meal',
               date: targetDate,
               time: m.plannedTime || '12:30',
+              isAllDay: false,
               dateLabel,
               dotColor: 'bg-emerald-500',
               badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300',
             });
           });
       }
-
-      if (list.length >= 10) break;
     }
 
-    return list.slice(0, 5);
-  }, [selectedDate, currentDate, filters, tasks, bills, calendarEvents, workouts, routines, goals, plannedMeals]);
+    return list.sort(compareCalendarItems);
+  }, [
+    selectedDate,
+    currentDate,
+    filters,
+    settings.enabledTools,
+    tasks,
+    bills,
+    calendarEvents,
+    workouts,
+    routines,
+    goals,
+    plannedMeals,
+  ]);
+
+  const upcomingItems = useMemo(() => {
+    return isUpcomingExpanded ? allUpcomingItems : allUpcomingItems.slice(0, 5);
+  }, [allUpcomingItems, isUpcomingExpanded]);
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
@@ -824,10 +889,10 @@ export const CalendarView: React.FC = () => {
       <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
         <div>
           <div className="flex items-center gap-2.5">
-            <h2 className="text-xl font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-              {visibleMonthYearLabel}
+            <h2 data-testid="calendar-heading" className="text-xl font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+              Calendar &bull; {visibleMonthYearLabel}
             </h2>
-            <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-md bg-teal-100 dark:bg-teal-900/40 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+            <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-md bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--border-subtle)]">
               {viewMode} view
             </span>
           </div>
@@ -906,7 +971,7 @@ export const CalendarView: React.FC = () => {
           <button
             type="button"
             onClick={() => openAddEntryModal(selectedDate)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add entry</span>
@@ -928,7 +993,7 @@ export const CalendarView: React.FC = () => {
             <button
               type="button"
               onClick={handleUndoDeleteCalendarEvent}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white text-xs font-bold hover:bg-[var(--accent-hover)] transition-colors cursor-pointer"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-bold hover:bg-[var(--btn-primary-hover-bg)] transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Undo delete</span>
@@ -947,14 +1012,14 @@ export const CalendarView: React.FC = () => {
       {/* Filter Chips Bar */}
       <div className="flex flex-wrap items-center gap-2">
         {[
-          { key: 'tasks', label: 'Tasks', color: 'bg-blue-500' },
-          { key: 'routines', label: 'Routines', color: 'bg-purple-500' },
-          { key: 'bills', label: 'Bills', color: 'bg-rose-500' },
-          { key: 'goals', label: 'Goals', color: 'bg-amber-500' },
-          { key: 'meals', label: 'Meals', color: 'bg-emerald-500' },
-          { key: 'workouts', label: 'Workouts', color: 'bg-teal-500' },
-          { key: 'events', label: 'Events', color: 'bg-indigo-500' },
-        ].map((f) => {
+          { key: 'tasks', label: 'Tasks', color: 'bg-blue-500', module: 'tasks' },
+          { key: 'routines', label: 'Routines', color: 'bg-purple-500', module: 'routines' },
+          { key: 'bills', label: 'Bills', color: 'bg-rose-500', module: 'money' },
+          { key: 'goals', label: 'Goals', color: 'bg-amber-500', module: 'goals' },
+          { key: 'meals', label: 'Meals', color: 'bg-emerald-500', module: 'food' },
+          { key: 'workouts', label: 'Workouts', color: 'bg-teal-500', module: 'body' },
+          { key: 'events', label: 'Events', color: 'bg-indigo-500', module: 'calendar' },
+        ].filter((f) => isModuleOrToolEnabled(f.module, settings.enabledTools)).map((f) => {
           const active = filters[f.key as keyof typeof filters];
           return (
             <button
@@ -1060,7 +1125,7 @@ export const CalendarView: React.FC = () => {
                         <span
                           className={`text-xs font-semibold ${
                             cell.isToday
-                              ? 'w-5 h-5 rounded-full bg-[var(--accent)] text-white flex items-center justify-center font-bold text-[11px] shadow-2xs'
+                              ? 'w-5 h-5 rounded-full bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] flex items-center justify-center font-bold text-[11px] shadow-2xs'
                               : cell.isSelected
                               ? 'text-[var(--accent)] font-bold'
                               : ''
@@ -1122,7 +1187,7 @@ export const CalendarView: React.FC = () => {
                     onClick={() => setSelectedDate(w.dateStr)}
                     className={`py-2 px-0.5 rounded-xl transition-colors cursor-pointer min-w-0 ${
                       w.isSelected
-                        ? 'bg-[var(--accent)] text-white font-bold shadow-xs'
+                        ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] font-bold shadow-xs'
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-[#526782] dark:text-[#A8B8CE]'
                     }`}
                   >
@@ -1161,7 +1226,7 @@ export const CalendarView: React.FC = () => {
                               onClick={item.onToggle}
                               className={`w-4 h-4 rounded-md shrink-0 flex items-center justify-center cursor-pointer transition-colors ${
                                 item.isCompleted
-                                  ? 'bg-[var(--accent)] text-white'
+                                  ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)]'
                                   : 'border border-slate-300 dark:border-slate-600 hover:border-[var(--accent)]'
                               }`}
                             >
@@ -1248,7 +1313,7 @@ export const CalendarView: React.FC = () => {
                           onClick={item.onToggle}
                           className={`w-5 h-5 rounded-md flex items-center justify-center cursor-pointer transition-colors ${
                             item.isCompleted
-                              ? 'bg-[var(--accent)] text-white'
+                              ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)]'
                               : 'border border-slate-300 dark:border-slate-600 hover:border-[var(--accent)]'
                           }`}
                         >
@@ -1397,7 +1462,7 @@ export const CalendarView: React.FC = () => {
                           onClick={item.onToggle}
                           className={`w-4 h-4 rounded-md shrink-0 flex items-center justify-center cursor-pointer micro-checkbox ${
                             item.isCompleted
-                              ? 'bg-[var(--accent)] text-white'
+                              ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)]'
                               : 'border border-slate-300 dark:border-slate-600 hover:border-[var(--accent)]'
                           }`}
                         >
@@ -1487,16 +1552,19 @@ export const CalendarView: React.FC = () => {
                   Coming up
                 </h3>
                 <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
-                  Next 7 days
+                  {selectedDate !== currentDate ? `From selected date (${selectedDate})` : 'Next 7 days'}
                 </p>
               </div>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE]">
-                {upcomingItems.length}
+              <span
+                data-testid="calendar-upcoming-badge"
+                className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE]"
+              >
+                {allUpcomingItems.length}
               </span>
             </div>
 
             <div className="space-y-2">
-              {upcomingItems.length === 0 ? (
+              {allUpcomingItems.length === 0 ? (
                 <div className="p-4 text-center text-xs text-[#526782] dark:text-[#A8B8CE]">
                   No upcoming items scheduled in the next 7 days.
                 </div>
@@ -1527,6 +1595,19 @@ export const CalendarView: React.FC = () => {
                 ))
               )}
             </div>
+
+            {allUpcomingItems.length > 5 && (
+              <button
+                type="button"
+                data-testid="calendar-upcoming-toggle-btn"
+                onClick={() => setIsUpcomingExpanded(!isUpcomingExpanded)}
+                className="w-full py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent-soft)] transition-colors cursor-pointer text-center"
+              >
+                {isUpcomingExpanded
+                  ? 'Show preview (5)'
+                  : `Show all (${allUpcomingItems.length})`}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1782,7 +1863,7 @@ export const CalendarView: React.FC = () => {
             <button
               type="submit"
               data-testid="calendar-entry-submit-btn"
-              className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)] cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer"
             >
               {editingCalendarEvent ? 'Save changes' : 'Save entry'}
             </button>

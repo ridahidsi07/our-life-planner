@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import http from 'node:http';
 import os from 'node:os';
+import crypto from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { validateBackupData } from '../src/utils/backupValidator';
 import { INITIAL_SETTINGS } from '../src/utils/sampleData';
@@ -70,7 +71,6 @@ function assert(condition: any, message: string) {
   console.log(`  PASS: ${message}`);
 }
 
-// Relative luminance and contrast ratio utilities (WCAG 2.1)
 function parseHex(hex: string): [number, number, number] {
   const clean = hex.replace('#', '').trim();
   if (clean.length === 3) {
@@ -104,8 +104,24 @@ function contrastRatio(hex1: string, hex2: string): number {
   return Number(((lighter + 0.05) / (darker + 0.05)).toFixed(2));
 }
 
+function parseColorToHex(colorStr: string): string {
+  if (!colorStr) return '#FFFFFF';
+  if (colorStr.startsWith('#')) return colorStr;
+  const match = colorStr.match(/\d+/g);
+  if (!match || match.length < 3) return '#FFFFFF';
+  const r = parseInt(match[0], 10).toString(16).padStart(2, '0');
+  const g = parseInt(match[1], 10).toString(16).padStart(2, '0');
+  const b = parseInt(match[2], 10).toString(16).padStart(2, '0');
+  return `#${r}${g}${b}`;
+}
+
+function getFileHash(filePath: string): string {
+  const buffer = fs.readFileSync(filePath);
+  return crypto.createHash('sha256').update(buffer).digest('hex');
+}
+
 async function main() {
-  console.log('=== Apple-Inspired Color System Verification Suite ===\n');
+  console.log('=== Apple-Inspired Color System & Visual Verification Suite ===\n');
 
   const rootDir = process.cwd();
   const outDir = path.resolve(rootDir, 'artifacts', 'premium-ui', 'apple-color-system');
@@ -392,7 +408,7 @@ async function main() {
     await cdp.send('Runtime.enable');
     await cdp.send('DOM.enable');
 
-    await wait(1200);
+    await wait(1500);
 
     async function evalJs<T = any>(expr: string): Promise<T> {
       const res = await cdp!.send('Runtime.evaluate', {
@@ -419,19 +435,259 @@ async function main() {
       const filePath = path.join(outDir, filename);
       const res = await cdp!.send('Page.captureScreenshot', { format: 'png' });
       fs.writeFileSync(filePath, Buffer.from(res.data, 'base64'));
-      console.log(`  Saved screenshot: ${filename}`);
+      console.log(`  Saved verified screenshot: ${filename}`);
       return filePath;
+    }
+
+    /**
+     * Verified navigation helper (F4).
+     * Strictly verifies destination heading AND landmark. Throws on missing or ambiguous controls.
+     * Never uses null fallback.
+     */
+    async function navigateToView(
+      viewId: 'today' | 'tasks' | 'budget' | 'settings' | 'calendar',
+      expectedHeading: string,
+      landmarkSelector: string,
+      isMobile = false
+    ): Promise<void> {
+      if (isMobile) {
+        // If MoreSheet is open, and we want today or calendar, close it first
+        const isSheetOpen = await evalJs<boolean>(`Boolean(document.querySelector('#all-tools-menu'))`);
+        if (isSheetOpen && (viewId === 'today' || viewId === 'calendar')) {
+          await evalJs(`
+            (() => {
+              const closeBtn = document.querySelector('button[aria-label="Close menu"]');
+              if (closeBtn) closeBtn.click();
+            })()
+          `);
+          await wait(200);
+        }
+
+        if (viewId !== 'today' && viewId !== 'calendar') {
+          // We need MoreSheet open to access tasks, budget, settings, etc. on mobile
+          const currentSheetOpen = await evalJs<boolean>(`Boolean(document.querySelector('#all-tools-menu'))`);
+          if (!currentSheetOpen) {
+            const opened = await evalJs<boolean>(`
+              (() => {
+                const moreBtn = document.querySelector('button[data-testid="mobile-nav-more"]') ||
+                                document.querySelector('button[aria-label="All tools and views"]');
+                if (moreBtn) {
+                  moreBtn.click();
+                  return true;
+                }
+                return false;
+              })()
+            `);
+            if (!opened) {
+              throw new Error(`Mobile navigation failed: mobile-nav-more button not found`);
+            }
+            // Poll for MoreSheet to mount
+            let sheetMounted = false;
+            for (let i = 0; i < 25; i++) {
+              await wait(80);
+              sheetMounted = await evalJs<boolean>(`Boolean(document.querySelector('#all-tools-menu'))`);
+              if (sheetMounted) break;
+            }
+            if (!sheetMounted) {
+              throw new Error(`Mobile navigation failed: MoreSheet (#all-tools-menu) did not appear`);
+            }
+          }
+
+          // In MoreSheet, find target button
+          const clickResult = await evalJs<{ success: boolean; foundSelector: string; reason?: string }>(`
+            (() => {
+              let btn = null;
+              let foundSelector = '';
+              if ('${viewId}' === 'settings') {
+                btn = document.querySelector('button[data-testid="moresheet-settings"]');
+                foundSelector = 'button[data-testid="moresheet-settings"]';
+              } else {
+                btn = document.querySelector('button[data-testid="moresheet-tool-${viewId}"]') ||
+                      document.querySelector('button[data-testid="moresheet-favorite-${viewId}"]');
+                foundSelector = 'button[data-testid="moresheet-tool-${viewId}"] or favorite';
+              }
+              if (!btn) {
+                return { success: false, foundSelector, reason: 'Selector ' + foundSelector + ' not found in MoreSheet' };
+              }
+              btn.click();
+              return { success: true, foundSelector };
+            })()
+          `);
+
+          if (!clickResult.success) {
+            throw new Error(`Navigation failed: target button for view "${viewId}" not found. Reason: ${clickResult.reason}`);
+          }
+        } else {
+          // Mobile today or calendar
+          const clickResult = await evalJs<{ success: boolean; foundSelector: string; reason?: string }>(`
+            (() => {
+              let btn = null;
+              let foundSelector = '';
+              if ('${viewId}' === 'today') {
+                btn = document.querySelector('button[data-testid="mobile-nav-today"]');
+                foundSelector = 'button[data-testid="mobile-nav-today"]';
+              } else if ('${viewId}' === 'calendar') {
+                btn = document.querySelector('button[data-testid="mobile-nav-calendar"]');
+                foundSelector = 'button[data-testid="mobile-nav-calendar"]';
+              }
+              if (!btn) {
+                return { success: false, foundSelector, reason: 'Selector ' + foundSelector + ' not found in MobileNav' };
+              }
+              btn.click();
+              return { success: true, foundSelector };
+            })()
+          `);
+
+          if (!clickResult.success) {
+            throw new Error(`Navigation failed: target button for view "${viewId}" not found. Reason: ${clickResult.reason}`);
+          }
+        }
+      } else {
+        // Desktop navigation via sidebar
+        const clickResult = await evalJs<{ success: boolean; foundSelector: string; reason?: string }>(`
+          (() => {
+            let btn = null;
+            let foundSelector = '';
+            if ('${viewId}' === 'settings') {
+              btn = document.querySelector('button[data-testid="sidebar-settings"]') ||
+                    document.querySelector('button[data-testid="sidebar-nav-settings"]');
+              foundSelector = 'button[data-testid="sidebar-settings"]';
+            } else {
+              btn = document.querySelector('button[data-testid="sidebar-nav-${viewId}"]');
+              foundSelector = 'button[data-testid="sidebar-nav-${viewId}"]';
+            }
+
+            if (!btn) {
+              return { success: false, foundSelector, reason: 'Selector ' + foundSelector + ' not found in DOM' };
+            }
+
+            btn.click();
+            return { success: true, foundSelector };
+          })()
+        `);
+
+        if (!clickResult.success) {
+          throw new Error(`Navigation failed: target button for view "${viewId}" not found. Reason: ${clickResult.reason}`);
+        }
+      }
+
+      // Poll and assert destination heading AND landmark
+      let verified = false;
+      let lastHeading = '';
+      let lastLandmark = false;
+
+      for (let i = 0; i < 30; i++) {
+        await wait(100);
+        const state = await evalJs<{ headingMatch: boolean; headingText: string; landmarkFound: boolean }>(`
+          (() => {
+            const headings = Array.from(document.querySelectorAll('h1, h2, h3, [data-testid$="-heading"]'));
+            let headingMatch = false;
+            let headingText = '';
+
+            for (const h of headings) {
+              const text = (h.textContent || '').trim();
+              if (text.toLowerCase().includes('${expectedHeading.toLowerCase()}')) {
+                headingMatch = true;
+                headingText = text;
+                break;
+              }
+            }
+
+            const landmark = document.querySelector('${landmarkSelector}');
+            const landmarkFound = Boolean(landmark && (landmark.offsetWidth > 0 || landmark.offsetHeight > 0 || landmark.getClientRects().length > 0));
+
+            return { headingMatch, headingText, landmarkFound };
+          })()
+        `);
+
+        lastHeading = state.headingText;
+        lastLandmark = state.landmarkFound;
+
+        if (state.headingMatch && state.landmarkFound) {
+          verified = true;
+          break;
+        }
+      }
+
+      if (!verified) {
+        throw new Error(
+          `Destination assertion failed navigating to "${viewId}": Expected heading containing "${expectedHeading}" (observed: "${lastHeading}") and landmark "${landmarkSelector}" (found: ${lastLandmark})`
+        );
+      }
+    }
+
+    /**
+     * Measure real DOM element contrast with true alpha compositing over DOM background stack
+     */
+    async function measureRealElementContrast(selector: string, desc: string): Promise<number> {
+      const colors = await evalJs<{ fg: string; bgStack: string[] }>(`
+        (() => {
+          const el = document.querySelector('${selector}');
+          if (!el) throw new Error('Cannot measure contrast: element "${selector}" not found');
+          
+          const fg = getComputedStyle(el).color;
+          const bgStack = [];
+          
+          let cur = el;
+          while (cur && cur !== document.documentElement) {
+            const bg = getComputedStyle(cur).backgroundColor;
+            if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
+              bgStack.unshift(bg);
+            }
+            cur = cur.parentElement;
+          }
+          const bodyBg = getComputedStyle(document.body).backgroundColor;
+          if (bodyBg && bodyBg !== 'transparent' && bodyBg !== 'rgba(0, 0, 0, 0)') {
+            bgStack.unshift(bodyBg);
+          } else {
+            bgStack.unshift('rgb(255, 255, 255)');
+          }
+          
+          return { fg, bgStack };
+        })()
+      `);
+
+      function parseRgbaArr(colorStr: string): [number, number, number, number] {
+        if (!colorStr) return [255, 255, 255, 1];
+        if (colorStr.startsWith('#')) {
+          const [r, g, b] = parseHex(colorStr);
+          return [r, g, b, 1];
+        }
+        const match = colorStr.match(/[\d.]+/g);
+        if (!match || match.length < 3) return [255, 255, 255, 1];
+        const r = parseInt(match[0], 10);
+        const g = parseInt(match[1], 10);
+        const b = parseInt(match[2], 10);
+        const a = match.length >= 4 ? parseFloat(match[3]) : 1;
+        return [r, g, b, a];
+      }
+
+      let currentBg: [number, number, number, number] = parseRgbaArr(colors.bgStack[0] || 'rgb(255, 255, 255)');
+      for (let i = 1; i < colors.bgStack.length; i++) {
+        const top = parseRgbaArr(colors.bgStack[i]);
+        const alpha = top[3];
+        const r = Math.round(top[0] * alpha + currentBg[0] * (1 - alpha));
+        const g = Math.round(top[1] * alpha + currentBg[1] * (1 - alpha));
+        const b = Math.round(top[2] * alpha + currentBg[2] * (1 - alpha));
+        currentBg = [r, g, b, 1];
+      }
+
+      const fgArr = parseRgbaArr(colors.fg);
+      const fgHex = '#' + fgArr[0].toString(16).padStart(2, '0') + fgArr[1].toString(16).padStart(2, '0') + fgArr[2].toString(16).padStart(2, '0');
+      const bgHex = '#' + currentBg[0].toString(16).padStart(2, '0') + currentBg[1].toString(16).padStart(2, '0') + currentBg[2].toString(16).padStart(2, '0');
+      const ratio = contrastRatio(fgHex, bgHex);
+      assert(ratio >= 4.5, `Visible control contrast [${desc}] (${fgHex} on ${bgHex}): ${ratio}:1 (>= 4.5:1)`);
+      return ratio;
     }
 
     // Dismiss setup modal if open, switch to apple accent, apply demo data
     await evalJs(`
       (() => {
-        // Set settings in localStorage to apple accent using correct storage key
         const storageKey = 'our_life_planner_settings_v1';
         const raw = window.localStorage.getItem(storageKey);
         let settings = raw ? JSON.parse(raw) : {};
-        settings.accentColor = 'apple';
         settings.hasCompletedSetup = true;
+        settings.accentColor = 'apple';
         window.localStorage.setItem(storageKey, JSON.stringify(settings));
         window.localStorage.setItem('hasCompletedSetup', 'true');
       })()
@@ -439,129 +695,303 @@ async function main() {
     await cdp.send('Page.reload');
     await wait(1500);
 
-    // Verify data-accent attribute on root
-    const rootDataAccent = await evalJs(`document.documentElement.getAttribute('data-accent')`);
-    assert(rootDataAccent === 'apple', `Root document has data-accent="apple" (found: ${rootDataAccent})`);
+    // ==========================================
+    // 4A. REAL APPEARANCE PICKER INTERACTION (F4)
+    // ==========================================
+    console.log('\n4A. Testing Real Appearance Picker & Refresh Persistence...');
+    await setViewport(1440, 900, false);
+    await wait(300);
 
-    // Verify computed styles in light mode
-    const lightComputedAccent = await evalJs(`getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()`);
-    assert(
-      lightComputedAccent.toLowerCase() === '#0066cc' || lightComputedAccent.toLowerCase() === '#06c',
-      `Light mode computed --accent is #0066CC (found: ${lightComputedAccent})`
-    );
+    // Navigate to Settings
+    await navigateToView('settings', 'Settings', '[data-testid="settings-heading"]', false);
 
+    // Click Apple accent preset using real UI control
+    const clickedApple = await evalJs<boolean>(`
+      (() => {
+        const btn = document.querySelector('button[data-testid="settings-accent-apple"]');
+        if (!btn) return false;
+        (btn).click();
+        return true;
+      })()
+    `);
+    assert(clickedApple, 'Clicked real Apple accent button in SettingsView');
+    await wait(300);
+
+    // Verify data-accent on root
+    const rootDataAccentBefore = await evalJs(`document.documentElement.getAttribute('data-accent')`);
+    assert(rootDataAccentBefore === 'apple', `Root document has data-accent="apple" (found: ${rootDataAccentBefore})`);
+
+    // Reload page and assert persistence without manual override
+    await cdp.send('Page.reload');
+    await wait(1500);
+    const rootDataAccentPersisted = await evalJs(`document.documentElement.getAttribute('data-accent')`);
+    assert(rootDataAccentPersisted === 'apple', `Apple accent persisted after page reload (found: ${rootDataAccentPersisted})`);
+
+    // Set Light Theme via real UI
+    await navigateToView('settings', 'Settings', '[data-testid="settings-heading"]', false);
+    const clickedLight = await evalJs<boolean>(`
+      (() => {
+        const btn = document.querySelector('button[data-testid="settings-theme-light"]');
+        if (!btn) return false;
+        (btn).click();
+        return true;
+      })()
+    `);
+    assert(clickedLight, 'Clicked real Light mode button in SettingsView');
+    await wait(300);
+
+    // Reload and verify light theme persistence naturally
+    await cdp.send('Page.reload');
+    await wait(1500);
     const lightBodyBg = await evalJs(`getComputedStyle(document.body).backgroundColor`);
     assert(
       lightBodyBg === 'rgb(245, 245, 247)' || lightBodyBg === '#f5f5f7',
-      `Light mode body background is #F5F5F7 (found: ${lightBodyBg})`
+      `Natural Light mode body background persisted as #F5F5F7 (found: ${lightBodyBg})`
     );
 
-    // Capture Light Desktop Screenshots: Today, Tasks, Budget & Bills, Settings
-    await setViewport(1440, 900, false);
-    await wait(400);
+    // Check undefined role variables audit in live DOM
+    const undefinedVarCount = await evalJs<number>(`
+      (() => {
+        let count = 0;
+        document.querySelectorAll('*').forEach((el) => {
+          const style = el.getAttribute('style') || '';
+          if (style.includes('var(--accent-foreground)') || style.includes('var(--accent-muted)')) {
+            count++;
+          }
+        });
+        return count;
+      })()
+    `);
+    assert(undefinedVarCount === 0, `Zero DOM elements consume undefined role variables (found: ${undefinedVarCount})`);
 
+    // Measure live button contrast in Light Mode
+    await navigateToView('settings', 'Settings', '[data-testid="settings-heading"]', false);
+    await measureRealElementContrast('button[data-testid="settings-accent-apple"]', 'Apple accent button');
+
+    // ==========================================
+    // 4B. CAPTURE DESKTOP LIGHT SCREENSHOTS (F4)
+    // ==========================================
+    console.log('\n4B. Capturing Verified Desktop Light Screenshots...');
     // 1. Today Light Desktop
-    await evalJs(`document.querySelector('button[aria-label="Today"]') ? document.querySelector('button[aria-label="Today"]').click() : null`);
-    await wait(500);
+    await navigateToView('today', 'Your day', '[data-testid="today-compact-focus-card"]', false);
+    await measureRealElementContrast('button[data-testid="today-focus-toggle-btn"]', 'Today Focus toggle button');
     await captureScreenshot('01-today-light-desktop.png');
 
     // 2. Tasks Light Desktop
-    await evalJs(`document.querySelector('button[aria-label="Tasks"]') ? document.querySelector('button[aria-label="Tasks"]').click() : null`);
-    await wait(500);
+    await navigateToView('tasks', 'Tasks', '[data-testid="tasks-heading"]', false);
+    await measureRealElementContrast('button[data-testid="tasks-new-task-btn"]', 'Tasks New task primary button');
     await captureScreenshot('02-tasks-light-desktop.png');
 
     // 3. Budget Light Desktop
-    await evalJs(`document.querySelector('button[aria-label="Budget & Bills"]') ? document.querySelector('button[aria-label="Budget & Bills"]').click() : null`);
-    await wait(500);
+    await navigateToView('budget', 'Budget', '[data-testid="budget-heading"]', false);
     await captureScreenshot('03-budget-light-desktop.png');
 
     // 4. Settings Light Desktop
-    await evalJs(`document.querySelector('button[aria-label="Settings"]') ? document.querySelector('button[aria-label="Settings"]').click() : null`);
-    await wait(500);
+    await navigateToView('settings', 'Settings', '[data-testid="settings-heading"]', false);
     await captureScreenshot('04-settings-light-desktop.png');
 
-    // Switch to Dark Mode
-    await evalJs(`
+    // ==========================================
+    // 4C. SWITCH TO DARK MODE VIA REAL PICKER
+    // ==========================================
+    console.log('\n4C. Switching to Dark Mode via Real Appearance Picker & Verifying Persistence...');
+    const clickedDark = await evalJs<boolean>(`
       (() => {
-        document.documentElement.classList.add('dark');
-        document.documentElement.classList.remove('light');
-        const storageKey = 'our_life_planner_settings_v1';
-        const raw = window.localStorage.getItem(storageKey);
-        let settings = raw ? JSON.parse(raw) : {};
-        settings.darkMode = true;
-        window.localStorage.setItem(storageKey, JSON.stringify(settings));
-        document.body.style.backgroundColor = '#000000';
-        document.body.style.color = '#F5F5F7';
+        const btn = document.querySelector('button[data-testid="settings-theme-dark"]');
+        if (!btn) return false;
+        (btn).click();
+        return true;
       })()
     `);
-    await wait(500);
+    assert(clickedDark, 'Clicked real Dark mode button in SettingsView');
+    await wait(300);
 
-    // Verify Dark Mode computed styles
-    const darkComputedAccent = await evalJs(`getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()`);
-    assert(darkComputedAccent.toLowerCase() === '#2997ff', `Dark mode computed --accent is #2997FF (found: ${darkComputedAccent})`);
+    // Reload and verify dark theme persistence naturally
+    await cdp.send('Page.reload');
+    await wait(1500);
+
+    const darkClassActive = await evalJs<boolean>(`document.documentElement.classList.contains('dark')`);
+    assert(darkClassActive, 'document.documentElement has .dark class after reload without manual override');
 
     const darkBodyBg = await evalJs(`getComputedStyle(document.body).backgroundColor`);
     assert(
       darkBodyBg === 'rgb(0, 0, 0)' || darkBodyBg === '#000000',
-      `Dark mode body background is #000000 (found: ${darkBodyBg})`
+      `Natural Dark mode body background persisted as #000000 (found: ${darkBodyBg})`
     );
 
-    // Capture Dark Desktop Screenshots: Today, Tasks, Budget & Bills, Settings
-    // 5. Settings Dark Desktop
+    const darkComputedAccent = await evalJs(`getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()`);
+    assert(darkComputedAccent.toLowerCase() === '#2997ff', `Dark mode computed --accent is #2997FF (found: ${darkComputedAccent})`);
+
+    // ==========================================
+    // 4D. CAPTURE DESKTOP DARK SCREENSHOTS (F4)
+    // ==========================================
+    console.log('\n4D. Capturing Verified Desktop Dark Screenshots...');
+    // 8. Settings Dark Desktop
+    await navigateToView('settings', 'Settings', '[data-testid="settings-heading"]', false);
+    await measureRealElementContrast('button[data-testid="settings-accent-apple"]', 'Settings Apple radio button (dark)');
     await captureScreenshot('08-settings-dark-desktop.png');
 
-    // 6. Today Dark Desktop
-    await evalJs(`document.querySelector('button[aria-label="Today"]') ? document.querySelector('button[aria-label="Today"]').click() : null`);
-    await wait(500);
+    // 5. Today Dark Desktop
+    await navigateToView('today', 'Your day', '[data-testid="today-compact-focus-card"]', false);
+    await measureRealElementContrast('button[data-testid="today-focus-toggle-btn"]', 'Today Focus toggle button (dark)');
     await captureScreenshot('05-today-dark-desktop.png');
 
-    // 7. Tasks Dark Desktop
-    await evalJs(`document.querySelector('button[aria-label="Tasks"]') ? document.querySelector('button[aria-label="Tasks"]').click() : null`);
-    await wait(500);
+    // 6. Tasks Dark Desktop
+    await navigateToView('tasks', 'Tasks', '[data-testid="tasks-heading"]', false);
+    await measureRealElementContrast('button[data-testid="tasks-new-task-btn"]', 'Tasks New task primary button (dark)');
     await captureScreenshot('06-tasks-dark-desktop.png');
 
-    // 8. Budget Dark Desktop
-    await evalJs(`document.querySelector('button[aria-label="Budget & Bills"]') ? document.querySelector('button[aria-label="Budget & Bills"]').click() : null`);
-    await wait(500);
+    // 7. Budget Dark Desktop
+    await navigateToView('budget', 'Budget', '[data-testid="budget-heading"]', false);
     await captureScreenshot('07-budget-dark-desktop.png');
 
-    // Mobile Viewport (390 x 844 iPhone 12/13/14)
+    // ==========================================
+    // 4E. MOBILE SCREENSHOTS (390 x 844)
+    // ==========================================
+    console.log('\n4E. Capturing Verified Mobile Screenshots (390x844)...');
     await setViewport(390, 844, true);
     await wait(400);
 
     // 9. Today Dark Mobile
-    await evalJs(`document.querySelector('button[aria-label="Today"]') ? document.querySelector('button[aria-label="Today"]').click() : null`);
-    await wait(500);
+    await navigateToView('today', 'Your day', '[data-testid="today-compact-focus-card"]', true);
     await captureScreenshot('09-today-dark-mobile.png');
 
     // 10. Tasks Dark Mobile
-    await evalJs(`document.querySelector('button[aria-label="Tasks"]') ? document.querySelector('button[aria-label="Tasks"]').click() : null`);
-    await wait(500);
+    await navigateToView('tasks', 'Tasks', '[data-testid="tasks-heading"]', true);
     await captureScreenshot('10-tasks-dark-mobile.png');
 
-    // Switch back to Light Mode for Mobile
-    await evalJs(`
+    // Switch back to Light Mode via Settings on mobile
+    await navigateToView('settings', 'Settings', '[data-testid="settings-heading"]', true);
+    const clickedLightMobile = await evalJs<boolean>(`
       (() => {
-        document.documentElement.classList.remove('dark');
-        document.documentElement.classList.add('light');
-        document.body.style.backgroundColor = '#F5F5F7';
-        document.body.style.color = '#1D1D1F';
+        const btn = document.querySelector('button[data-testid="settings-theme-light"]');
+        if (!btn) return false;
+        (btn).click();
+        return true;
       })()
     `);
-    await wait(500);
-
-    // 11. Today Light Mobile
-    await evalJs(`document.querySelector('button[aria-label="Today"]') ? document.querySelector('button[aria-label="Today"]').click() : null`);
-    await wait(500);
-    await captureScreenshot('11-today-light-mobile.png');
+    assert(clickedLightMobile, 'Switched to Light Mode on Mobile via Settings');
+    await wait(300);
+    await cdp.send('Page.reload');
+    await wait(1500);
 
     // 12. Settings Light Mobile
-    await evalJs(`document.querySelector('button[aria-label="Settings"]') ? document.querySelector('button[aria-label="Settings"]').click() : null`);
-    await wait(500);
+    await navigateToView('settings', 'Settings', '[data-testid="settings-heading"]', true);
     await captureScreenshot('12-settings-light-mobile.png');
 
-    console.log('\nAll 12 visual verification screenshots captured and stored in artifacts/premium-ui/apple-color-system/!');
-    console.log('\n=== APPLE-INSPIRED COLOR SYSTEM VERIFICATION COMPLETED SUCCESSFULLY ===');
+    // 11. Today Light Mobile
+    await navigateToView('today', 'Your day', '[data-testid="today-compact-focus-card"]', true);
+    await captureScreenshot('11-today-light-mobile.png');
+
+    // ==========================================
+    // 4F. SCREENSHOT UNIQUENESS & HASH VERIFICATION (F4)
+    // ==========================================
+    console.log('\n4F. Verifying Unique Hashes and Non-Duplication of All Screenshots...');
+    const h01 = getFileHash(path.join(outDir, '01-today-light-desktop.png'));
+    const h02 = getFileHash(path.join(outDir, '02-tasks-light-desktop.png'));
+    const h03 = getFileHash(path.join(outDir, '03-budget-light-desktop.png'));
+    const h04 = getFileHash(path.join(outDir, '04-settings-light-desktop.png'));
+
+    const h05 = getFileHash(path.join(outDir, '05-today-dark-desktop.png'));
+    const h06 = getFileHash(path.join(outDir, '06-tasks-dark-desktop.png'));
+    const h07 = getFileHash(path.join(outDir, '07-budget-dark-desktop.png'));
+    const h08 = getFileHash(path.join(outDir, '08-settings-dark-desktop.png'));
+
+    const h09 = getFileHash(path.join(outDir, '09-today-dark-mobile.png'));
+    const h10 = getFileHash(path.join(outDir, '10-tasks-dark-mobile.png'));
+
+    const h11 = getFileHash(path.join(outDir, '11-today-light-mobile.png'));
+    const h12 = getFileHash(path.join(outDir, '12-settings-light-mobile.png'));
+
+    // Assert Desktop Light distinctness
+    assert(h01 !== h02 && h01 !== h03 && h01 !== h04 && h02 !== h03 && h02 !== h04 && h03 !== h04,
+      'Desktop light screenshots (Today, Tasks, Budget, Settings) are all distinct unique images (no duplicated captures)');
+
+    // Assert Desktop Dark distinctness
+    assert(h05 !== h06 && h05 !== h07 && h05 !== h08 && h06 !== h07 && h06 !== h08 && h07 !== h08,
+      'Desktop dark screenshots (Today, Tasks, Budget, Settings) are all distinct unique images (no duplicated captures)');
+
+    // Assert Mobile Dark distinctness
+    assert(h09 !== h10, 'Mobile dark screenshots (Today, Tasks) are distinct unique images');
+
+    // Assert Mobile Light distinctness
+    assert(h11 !== h12, 'Mobile light screenshots (Today, Settings) are distinct unique images');
+
+    // ==========================================
+    // 4G. RENDERED BEHAVIOR ASSERTIONS (R3, R6, R7, F3)
+    // ==========================================
+    console.log('\n4G. Verifying Rendered Behavior Assertions (R3, R6, R7, F3)...');
+    await setViewport(1280, 800, false);
+    await wait(300);
+
+    // R7 rendered behavior: Core Starter preset renders Compact Focus visibly
+    await evalJs(`
+      (() => {
+        const storageKey = 'our_life_planner_settings_v1';
+        const raw = window.localStorage.getItem(storageKey);
+        let s = raw ? JSON.parse(raw) : {};
+        s.enabledTools = ['today', 'tasks', 'calendar', 'routines', 'inbox'];
+        window.localStorage.setItem(storageKey, JSON.stringify(s));
+      })()
+    `);
+    await cdp.send('Page.reload');
+    await wait(1200);
+
+    await navigateToView('today', 'Your day', '[data-testid="today-compact-focus-card"]', false);
+    const focusCardVisible = await evalJs<boolean>(`
+      (() => {
+        const el = document.querySelector('[data-testid="today-compact-focus-card"]');
+        return Boolean(el && el.offsetHeight > 0 && el.offsetWidth > 0);
+      })()
+    `);
+    assert(focusCardVisible, 'R7: Core Starter preset renders data-testid="today-compact-focus-card" visibly');
+
+    // F3 rendered behavior: Calendar module filtering in Core Starter
+    await navigateToView('calendar', 'Calendar', '[data-testid="calendar-schedule-section"], h2', false);
+    const calendarFilterChips = await evalJs<string[]>(`
+      (() => {
+        return Array.from(document.querySelectorAll('[data-testid^="calendar-filter-"]'))
+          .map(el => el.getAttribute('data-testid'));
+      })()
+    `);
+    assert(!calendarFilterChips.includes('calendar-filter-meals'), 'F3: Meals filter chip absent in Core Starter Calendar');
+    assert(!calendarFilterChips.includes('calendar-filter-bills'), 'F3: Bills filter chip absent in Core Starter Calendar');
+    assert(!calendarFilterChips.includes('calendar-filter-workouts'), 'F3: Workouts filter chip absent in Core Starter Calendar');
+
+    // F3 rendered behavior: Chronological ordering & all-day policy in Coming Up
+    // Enable all tools to test mixed items
+    await evalJs(`
+      (() => {
+        const storageKey = 'our_life_planner_settings_v1';
+        const raw = window.localStorage.getItem(storageKey);
+        let s = raw ? JSON.parse(raw) : {};
+        s.enabledTools = ['today', 'tasks', 'calendar', 'routines', 'inbox', 'goals', 'habits', 'budget', 'savings', 'debt', 'meals', 'groceries', 'workouts', 'weight', 'water', 'settings'];
+        window.localStorage.setItem(storageKey, JSON.stringify(s));
+      })()
+    `);
+    await cdp.send('Page.reload');
+    await wait(1200);
+
+    await navigateToView('calendar', 'Calendar', '[data-testid="calendar-schedule-section"], h2', false);
+
+    // Verify Coming Up disclosure toggle exists when items > 5
+    const upcomingBadgeText = await evalJs<string>(`
+      (() => {
+        const badge = document.querySelector('[data-testid="calendar-upcoming-badge"]');
+        return badge ? (badge.textContent || '').trim() : '';
+      })()
+    `);
+    assert(Boolean(upcomingBadgeText), `F3: Calendar Coming Up card displays true total upcoming count badge (found: ${upcomingBadgeText})`);
+
+    // R6 rendered behavior: 320px viewport layout wrapping
+    await setViewport(320, 600, true);
+    await wait(300);
+    const is320NoHorizontalOverflow = await evalJs<boolean>(`
+      document.body.scrollWidth <= 325
+    `);
+    assert(is320NoHorizontalOverflow, 'R6: 320px viewport layout renders without horizontal overflow or clipping');
+
+    console.log('\nAll 12 visual verification screenshots captured and verified as distinct in artifacts/premium-ui/apple-color-system/!');
+    console.log('=== APPLE-INSPIRED COLOR SYSTEM VERIFICATION COMPLETED SUCCESSFULLY ===');
   } finally {
     if (cdp) cdp.close();
     try {

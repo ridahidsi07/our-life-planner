@@ -141,7 +141,7 @@ export const DebtPayoffView: React.FC = () => {
 
         <button
           onClick={openCreateModal}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Add debt</span>
@@ -152,7 +152,7 @@ export const DebtPayoffView: React.FC = () => {
       {debts.length === 0 && (
         <div
           data-testid="debts-empty-hero"
-          className="bg-[var(--accent-subtle)] rounded-2xl p-6 border border-[var(--accent-muted)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
+          className="bg-[var(--accent-subtle)] rounded-2xl p-6 border border-[var(--border-color)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
         >
           <div className="space-y-1">
             <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
@@ -166,7 +166,7 @@ export const DebtPayoffView: React.FC = () => {
             type="button"
             data-testid="debts-empty-cta"
             onClick={openCreateModal}
-            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>Add your first debt</span>
@@ -401,7 +401,7 @@ export const DebtPayoffView: React.FC = () => {
             </div>
 
             {/* With Extra */}
-            <div className="p-4 rounded-xl bg-[var(--accent-subtle)] border border-[var(--accent-muted)]">
+            <div className="p-4 rounded-xl bg-[var(--accent-subtle)] border border-[var(--border-color)]">
               <span className="text-[11px] font-bold text-[var(--accent)] uppercase">
                 With extra ({currencySymbol}{basePayment + extraPayment} / mo)
               </span>
@@ -633,7 +633,7 @@ export const DebtPayoffView: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90"
+              className="px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold cursor-pointer"
             >
               Save debt
             </button>

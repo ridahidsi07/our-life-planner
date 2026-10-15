@@ -171,13 +171,13 @@ export const GroceriesView: React.FC = () => {
             onClick={() => setIsRegenModalOpen(true)}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer"
           >
-            <RefreshCw className="w-3.5 h-3.5 text-[#087F83]" />
+            <RefreshCw className="w-3.5 h-3.5 text-[var(--accent)]" />
             <span>Regenerate from meals</span>
           </button>
 
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add item</span>
@@ -207,7 +207,7 @@ export const GroceriesView: React.FC = () => {
       {groceries.length === 0 && (
         <div
           data-testid="groceries-empty-hero"
-          className="bg-white dark:bg-[#152238] rounded-2xl p-6 border-2 border-dashed border-[#087F83]/35 dark:border-[#38D0C5]/35 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+          className="bg-white dark:bg-[#152238] rounded-2xl p-6 border-2 border-dashed border-[var(--border-color)] shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
         >
           <div className="space-y-1">
             <h2 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
@@ -221,7 +221,7 @@ export const GroceriesView: React.FC = () => {
             type="button"
             data-testid="groceries-empty-cta"
             onClick={() => setIsAddModalOpen(true)}
-            className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0"
+            className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0"
           >
             <Plus className="w-4 h-4" />
             <span>Add your first grocery item</span>
@@ -236,7 +236,7 @@ export const GroceriesView: React.FC = () => {
             progress={progressPct}
             size={56}
             strokeWidth={5}
-            color="#087F83"
+            color="var(--accent)"
           >
             <span className="text-xs font-bold font-mono">
               {progressPct}%
@@ -309,7 +309,7 @@ export const GroceriesView: React.FC = () => {
                 onClick={() => setCategoryFilter(c)}
                 className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors whitespace-nowrap ${
                   categoryFilter === c
-                    ? 'bg-[#087F83] text-white shadow-2xs font-semibold'
+                    ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] shadow-2xs font-semibold'
                     : 'bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
@@ -369,8 +369,8 @@ export const GroceriesView: React.FC = () => {
                         onClick={() => toggleGroceryPurchased(item.id)}
                         className={`w-5 h-5 rounded-md flex items-center justify-center cursor-pointer micro-checkbox shrink-0 ${
                           item.isPurchased
-                            ? 'bg-[#087F83] text-white'
-                            : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
+                            ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)]'
+                            : 'border border-slate-300 dark:border-slate-600 hover:border-[var(--accent)]'
                         }`}
                       >
                         {item.isPurchased && <Check className="w-3.5 h-3.5 stroke-[3] motion-check-pop" />}
@@ -394,7 +394,7 @@ export const GroceriesView: React.FC = () => {
                           </span>
                         ) : (
                           <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] border border-teal-200 dark:border-teal-800/60">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--border-color)]">
                               Recipe derived
                             </span>
                             {item.sourceMealTitles && item.sourceMealTitles.length > 0 ? (
@@ -449,13 +449,13 @@ export const GroceriesView: React.FC = () => {
           <form onSubmit={handleSaveItemChanges} className="space-y-4">
             <div className="flex items-baseline justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800">
               <span className="text-xs text-[#526782] dark:text-[#A8B8CE]">Current list quantity:</span>
-              <span className="text-xl font-bold font-mono text-[#087F83] dark:text-[#38D0C5]">
+              <span className="text-xl font-bold font-mono text-[var(--accent)]">
                 {selectedItem.amount} {selectedItem.unit}
               </span>
             </div>
 
             {selectedItem.sourceType === 'generated' ? (
-              <div className="p-3.5 rounded-xl bg-teal-50/50 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800/60 text-xs text-[#087F83] dark:text-[#38D0C5] space-y-1">
+              <div className="p-3.5 rounded-xl bg-[var(--accent-soft)] border border-[var(--border-color)] text-xs text-[var(--accent)] space-y-1">
                 <div className="flex items-center gap-1.5 font-semibold">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>Recipe derived item</span>
@@ -554,7 +554,7 @@ export const GroceriesView: React.FC = () => {
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer shadow-xs"
+                className="px-5 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer shadow-xs"
               >
                 Save changes
               </button>
@@ -577,11 +577,11 @@ export const GroceriesView: React.FC = () => {
 
           {/* Contributing Meals List */}
           {mealsWithIngredients.length > 0 && (
-            <div className="p-3.5 rounded-xl bg-teal-50/50 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800/60 space-y-1">
-              <span className="font-semibold text-[#087F83] dark:text-[#38D0C5] block">
+            <div className="p-3.5 rounded-xl bg-[var(--accent-soft)] border border-[var(--border-color)] space-y-1">
+              <span className="font-semibold text-[var(--accent)] block">
                 Contributing planned meals ({mealsWithIngredients.length}):
               </span>
-              <p className="text-[11px] text-[#087F83] dark:text-[#38D0C5]">
+              <p className="text-[11px] text-[var(--accent)]">
                 {mealsWithIngredients.map((m) => `${m.recipeTitle} (${m.plannedServings} servings)`).join(', ')}
               </p>
             </div>
@@ -620,7 +620,7 @@ export const GroceriesView: React.FC = () => {
             </button>
             <button
               onClick={handleConfirmRegenerate}
-              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+              className="px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer"
             >
               Apply update
             </button>
@@ -723,7 +723,7 @@ export const GroceriesView: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+              className="px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer"
             >
               Add to list
             </button>

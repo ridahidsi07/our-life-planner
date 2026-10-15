@@ -20,6 +20,8 @@
     --accent-soft: rgba(8, 127, 131, 0.08);
     --accent-soft-hover: rgba(8, 127, 131, 0.15);
     --accent-deep: #071A3A;
+    --accent-foreground: var(--btn-primary-fg);
+    --accent-muted: var(--border-color);
     --border-color: #E2E7EF;
     --border-subtle: #EBF0F5;
     --border-strong: #CBD5E1;
@@ -63,6 +65,8 @@
     --accent-soft: rgba(56, 208, 197, 0.12);
     --accent-soft-hover: rgba(56, 208, 197, 0.2);
     --accent-deep: #0D1B3E;
+    --accent-foreground: var(--btn-primary-fg);
+    --accent-muted: var(--border-color);
     --border-color: #1E2D4A;
     --border-subtle: #1E2D4A;
     --border-strong: #2D4268;
@@ -270,6 +274,8 @@ html[data-accent="apple"][data-theme="light"],
   --accent-soft: rgba(0, 102, 204, 0.08);
   --accent-soft-hover: rgba(0, 102, 204, 0.12);
   --accent-deep: #1D1D1F;
+  --accent-foreground: var(--btn-primary-fg);
+  --accent-muted: var(--border-color);
   --border-color: #D2D2D7;
   --border-subtle: #E8E8ED;
   --border-strong: #86868B;
@@ -323,6 +329,8 @@ html[data-accent="apple"][data-theme="dark"],
   --accent-soft: rgba(41, 151, 255, 0.12);
   --accent-soft-hover: rgba(41, 151, 255, 0.18);
   --accent-deep: #161617;
+  --accent-foreground: var(--btn-primary-fg);
+  --accent-muted: var(--border-color);
   --border-color: #424245;
   --border-subtle: #333336;
   --border-strong: #86868B;
@@ -439,6 +447,31 @@ html[data-accent="apple"][data-theme="dark"] .dark\:bg-\[\#152238\],
 .dark[data-accent="apple"] .dark\:bg-\[\#152238\],
 [data-accent="apple"] .dark .dark\:bg-\[\#152238\] {
   background-color: var(--surface);
+}
+html[data-accent="apple"].dark .dark\:bg-\[\#152238\]\/85,
+html[data-accent="apple"][data-theme="dark"] .dark\:bg-\[\#152238\]\/85,
+.dark[data-accent="apple"] .dark\:bg-\[\#152238\]\/85,
+[data-accent="apple"] .dark .dark\:bg-\[\#152238\]\/85 {
+  background-color: rgba(22, 22, 23, 0.85);
+}
+html[data-accent="apple"].dark .dark\:bg-\[\#152238\]\/60,
+html[data-accent="apple"][data-theme="dark"] .dark\:bg-\[\#152238\]\/60,
+.dark[data-accent="apple"] .dark\:bg-\[\#152238\]\/60,
+[data-accent="apple"] .dark .dark\:bg-\[\#152238\]\/60 {
+  background-color: rgba(22, 22, 23, 0.6);
+}
+html[data-accent="apple"] [data-testid="today-compact-focus-card"] {
+  background: #1D1D1F !important;
+  color: #F5F5F7 !important;
+  border-color: #424245 !important;
+}
+html[data-accent="apple"].dark [data-testid="today-compact-focus-card"],
+html[data-accent="apple"][data-theme="dark"] [data-testid="today-compact-focus-card"],
+.dark[data-accent="apple"] [data-testid="today-compact-focus-card"],
+[data-accent="apple"] .dark [data-testid="today-compact-focus-card"] {
+  background: #161617 !important;
+  color: #F5F5F7 !important;
+  border-color: #333336 !important;
 }
 html[data-accent="apple"].dark .dark\:bg-\[\#0B1220\],
 html[data-accent="apple"][data-theme="dark"] .dark\:bg-\[\#0B1220\],

@@ -279,7 +279,7 @@ export const RoutinesView: React.FC = () => {
 
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>New routine</span>
@@ -340,7 +340,7 @@ export const RoutinesView: React.FC = () => {
                     type="button"
                     data-testid="routines-empty-cta"
                     onClick={openCreateModal}
-                    className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] text-xs font-semibold cursor-pointer shadow-xs transition-colors"
+                    className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold cursor-pointer shadow-xs transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Create your first routine</span>
@@ -373,7 +373,7 @@ export const RoutinesView: React.FC = () => {
                         title={isDoneToday ? 'Completed today (click to undo)' : 'Click to complete for today'}
                         className={`w-5 h-5 mt-0.5 sm:mt-0 rounded-full flex items-center justify-center cursor-pointer micro-checkbox shrink-0 ${
                           isDoneToday
-                            ? 'bg-[var(--accent)] text-[var(--accent-foreground)]'
+                            ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)]'
                             : 'border border-slate-300 dark:border-slate-600 hover:border-[var(--accent)]'
                         }`}
                       >
@@ -600,12 +600,12 @@ export const RoutinesView: React.FC = () => {
         >
           <div className="space-y-4">
             {/* Rule Summary Card */}
-            <div className="p-4 rounded-xl bg-teal-50/60 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-900/60 space-y-2">
+            <div className="p-4 rounded-xl bg-[var(--accent-subtle)] border border-[var(--border-color)] space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
                   Repeat Rule
                 </span>
-                <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-[var(--accent)] text-[var(--accent-foreground)]">
+                <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)]">
                   {formatRecurrenceRule(inspectingRoutine)}
                 </span>
               </div>
@@ -733,7 +733,7 @@ export const RoutinesView: React.FC = () => {
                   setInspectingRoutine(null);
                   openEditModal(toEdit);
                 }}
-                className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90 cursor-pointer flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold cursor-pointer flex items-center gap-1.5"
               >
                 <Edit2 className="w-3.5 h-3.5" />
                 <span>Edit routine</span>
@@ -842,7 +842,7 @@ export const RoutinesView: React.FC = () => {
                   onClick={() => setModalInterval(int)}
                   className={`py-2 rounded-xl text-xs font-semibold capitalize border transition-colors cursor-pointer ${
                     modalInterval === int
-                      ? 'bg-[var(--accent)] text-[var(--accent-foreground)] border-[var(--accent)] shadow-xs'
+                      ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] border-[var(--btn-primary-bg)] shadow-xs'
                       : 'border-slate-200 dark:border-slate-700 text-[#526782] hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
@@ -854,7 +854,7 @@ export const RoutinesView: React.FC = () => {
 
           {/* Custom Interval Controls */}
           {modalInterval === 'custom' && (
-            <div className="p-3 rounded-xl bg-teal-50/50 dark:bg-teal-950/20 border border-teal-200/80 dark:border-teal-900/60 space-y-3">
+            <div className="p-3 rounded-xl bg-[var(--accent-subtle)] border border-[var(--border-color)] space-y-3">
               <span className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] block">
                 Custom Interval Rule
               </span>
@@ -935,7 +935,7 @@ export const RoutinesView: React.FC = () => {
                     onClick={() => toggleWeekday(d.num)}
                     className={`flex-1 h-8 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                       modalWeekdays.includes(d.num)
-                        ? 'bg-[var(--accent)] text-[var(--accent-foreground)] font-bold'
+                        ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] font-bold'
                         : 'bg-slate-100 dark:bg-slate-800 text-[#526782] hover:bg-slate-200'
                     }`}
                   >
@@ -1109,7 +1109,7 @@ export const RoutinesView: React.FC = () => {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90"
+                className="px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold cursor-pointer"
               >
                 Save routine
               </button>

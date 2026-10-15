@@ -100,7 +100,7 @@ export const InboxView: React.FC = () => {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder="What's on your mind?"
-                className="w-full p-3.5 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-slate-50 dark:bg-slate-800 text-xs text-[#071A3A] dark:text-[#EDF4FF] focus:ring-2 focus:ring-[#087F83] focus:outline-none"
+                className="w-full p-3.5 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-slate-50 dark:bg-slate-800 text-xs text-[#071A3A] dark:text-[#EDF4FF] focus:ring-2 focus:ring-[var(--accent)] focus:outline-none"
               />
 
               <div className="flex items-center justify-between">
@@ -110,7 +110,7 @@ export const InboxView: React.FC = () => {
                 <button
                   type="submit"
                   disabled={!inputText.trim()}
-                  className="px-4 py-2 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors disabled:opacity-50 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)] font-semibold text-xs transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   Add to inbox
                 </button>
@@ -138,12 +138,12 @@ export const InboxView: React.FC = () => {
                     key={item.id}
                     className={`p-3 rounded-xl border transition-colors flex items-center justify-between gap-3 ${
                       convertingItem?.id === item.id
-                        ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20'
+                        ? 'border-[var(--accent)] bg-[var(--surface-subtle)]'
                         : 'border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40'
                     }`}
                   >
                     <div className="flex items-center gap-3 truncate">
-                      <div className="w-2 h-2 rounded-full bg-[#087F83] shrink-0" />
+                      <div className="w-2 h-2 rounded-full bg-[var(--accent)] shrink-0" />
                       <span className="text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF] truncate">
                         {item.text}
                       </span>
@@ -152,7 +152,7 @@ export const InboxView: React.FC = () => {
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={() => startConversion(item)}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold cursor-pointer transition-colors"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)] text-xs font-semibold cursor-pointer transition-colors"
                       >
                         <CheckSquare className="w-3.5 h-3.5" />
                         <span>Convert to task</span>
@@ -213,7 +213,7 @@ export const InboxView: React.FC = () => {
                     required
                     value={taskTitle}
                     onChange={(e) => setTaskTitle(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs focus:ring-2 focus:ring-[#087F83]"
+                    className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs focus:ring-2 focus:ring-[var(--accent)]"
                   />
                 </div>
 
@@ -341,7 +341,7 @@ export const InboxView: React.FC = () => {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+                    className="flex-1 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)] font-semibold text-xs cursor-pointer"
                   >
                     Create task
                   </button>

@@ -269,7 +269,7 @@ export const WeightBMIView: React.FC = () => {
               onClick={() => handleUnitModeChange('kg')}
               className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 unitMode === 'kg'
-                  ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                  ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs font-semibold'
                   : 'hover:text-[#071A3A] dark:hover:text-[#EDF4FF]'
               }`}
             >
@@ -280,7 +280,7 @@ export const WeightBMIView: React.FC = () => {
               onClick={() => handleUnitModeChange('lb')}
               className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 unitMode === 'lb'
-                  ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                  ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs font-semibold'
                   : 'hover:text-[#071A3A] dark:hover:text-[#EDF4FF]'
               }`}
             >
@@ -294,7 +294,7 @@ export const WeightBMIView: React.FC = () => {
       {profileRecords.length === 0 && (
         <div
           data-testid="weight-empty-hero"
-          className="bg-teal-50/70 dark:bg-teal-950/30 rounded-2xl p-6 border border-teal-200 dark:border-teal-800/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
+          className="bg-[var(--accent-soft)] rounded-2xl p-6 border border-[var(--border-color)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
         >
           <div className="space-y-1">
             <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
@@ -314,7 +314,7 @@ export const WeightBMIView: React.FC = () => {
                 input.scrollIntoView({ behavior: 'smooth', block: 'center' });
               }
             }}
-            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>Log first reading</span>
@@ -335,7 +335,7 @@ export const WeightBMIView: React.FC = () => {
               onClick={() => setSelectedProfileId(p.id)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                 isSelected
-                  ? 'bg-[#087F83] text-white border-[#087F83] shadow-2xs'
+                  ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] border-[var(--btn-primary-bg)] shadow-2xs'
                   : 'bg-white dark:bg-[#152238] text-[#526782] border-slate-200 dark:border-slate-800 hover:border-slate-300'
               }`}
             >
@@ -353,7 +353,7 @@ export const WeightBMIView: React.FC = () => {
         {weightProfiles.length < 8 && (
           <button
             onClick={() => setIsAddProfileModalOpen(true)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-dashed border-slate-300 text-xs font-semibold text-[#087F83] hover:bg-teal-50/50 cursor-pointer"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-dashed border-slate-300 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent-soft)] cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add profile</span>
@@ -468,11 +468,11 @@ export const WeightBMIView: React.FC = () => {
 
                 return (
                   <div key={r.id} className="flex flex-col items-center gap-1.5">
-                    <span className="text-xs font-mono font-bold text-[#087F83] dark:text-[#38D0C5]">
+                    <span className="text-xs font-mono font-bold text-[var(--accent)]">
                       {rVal}
                     </span>
                     <div
-                      className="w-3.5 rounded-full bg-[#087F83] dark:bg-[#38D0C5] transition-all"
+                      className="w-3.5 rounded-full bg-[var(--accent)] transition-all"
                       style={{ height: `${hPct}px` }}
                       title={`${rVal} ${unitMode} on ${r.date}`}
                     />
@@ -571,7 +571,7 @@ export const WeightBMIView: React.FC = () => {
               <button
                 type="button"
                 onClick={handlePrefillLatest}
-                className="text-[11px] text-[#087F83] dark:text-[#38D0C5] hover:underline flex items-center gap-1 cursor-pointer"
+                className="text-[11px] text-[var(--accent)] hover:underline flex items-center gap-1 cursor-pointer"
                 title="Reset draft to latest measurement"
                 aria-label={`Reset draft to latest measurement (${displayedLatestWeight} ${unitMode})`}
               >
@@ -627,7 +627,7 @@ export const WeightBMIView: React.FC = () => {
                       onClick={() => handleUnitModeChange('kg')}
                       className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer ${
                         unitMode === 'kg'
-                          ? 'bg-[#087F83] text-white shadow-2xs'
+                          ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] shadow-2xs'
                           : 'text-[#526782] hover:text-[#071A3A]'
                       }`}
                     >
@@ -638,7 +638,7 @@ export const WeightBMIView: React.FC = () => {
                       onClick={() => handleUnitModeChange('lb')}
                       className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer ${
                         unitMode === 'lb'
-                          ? 'bg-[#087F83] text-white shadow-2xs'
+                          ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] shadow-2xs'
                           : 'text-[#526782] hover:text-[#071A3A]'
                       }`}
                     >
@@ -657,7 +657,7 @@ export const WeightBMIView: React.FC = () => {
                   value={inputWeightStr}
                   onChange={handleDraftInputChange}
                   placeholder={unitMode === 'kg' ? 'e.g. 72.0' : 'e.g. 158.7'}
-                  className="w-full px-3 py-2 pr-16 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-mono font-bold focus:outline-none focus:ring-1 focus:ring-[#087F83]"
+                  className="w-full px-3 py-2 pr-16 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-mono font-bold focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
                 />
                 <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-xs text-[#526782]">
                   <span className="font-semibold">{unitMode}</span>
@@ -755,7 +755,7 @@ export const WeightBMIView: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-2.5 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer shadow-xs transition-colors"
+              className="w-full py-2.5 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer shadow-xs transition-colors"
             >
               Save measurement
             </button>
@@ -841,7 +841,7 @@ export const WeightBMIView: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer"
             >
               Create profile
             </button>

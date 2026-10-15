@@ -124,17 +124,17 @@ Use matching before/after screenshots for Today, Tasks, Insights, Calendar, Quic
 
 ## Build and delivery gates
 
-- [x] Type checks pass (`npm.cmd run lint`, currently `tsc --noEmit`). *(Verified; 0 errors, 1728 modules checked)*
-- [x] Relevant behavioral tests pass; new metric/session/migration logic has meaningful coverage. *(Verified; all 25 suites in run-all-tests.ts + all 8 phase test scripts pass 100%)*
-- [x] `npm.cmd run verify` exits successfully, or remaining baseline failures are reported and readiness is conditional. *(Verified; exits with code 0 across lint, build, package, and test:all)*
-- [x] Tests were not disabled/deleted just to accept the redesign; revised structural checks still protect behavior. *(Verified; zero tests removed or disabled; accessibility and contract checks strengthened)*
-- [x] Production preview is inspected with no newly introduced console/network errors. *(Verified in headless browser sessions across all phase checks)*
-- [x] Generated standalone HTML is exercised as a local file with network unavailable, including storage and export/restore. *(Verified in test-offline-edition.ts, test-phase4-delivery.ts, and phase 08/09 suites)*
+- [x] Type checks pass (`npm.cmd run lint`, currently `tsc --noEmit`). *(Verified; 0 errors, 1728 modules transformed cleanly)*
+- [x] Relevant behavioral tests pass; new metric/session/migration logic has meaningful coverage. *(Verified; all 36 suites in run-all-tests.ts + F1–F4 verification suite pass 100%)*
+- [x] `npm.cmd run verify` exits successfully, or remaining baseline failures are reported and readiness is conditional. *(Verified; exits with code 0 across lint, build, package, and test:all [36/36 suites])*
+- [x] Tests were not disabled/deleted just to accept the redesign; revised structural checks still protect behavior. *(Verified; zero tests removed or disabled; accessibility, contrast, and navigation assertions strengthened)*
+- [x] Production preview is inspected with no newly introduced console/network errors. *(Verified in headless browser sessions across all phase checks and Apple color verification)*
+- [x] Generated standalone HTML is exercised as a local file with network unavailable, including storage and export/restore. *(Verified in test-offline-edition.ts, test-phase4-delivery.ts, and test-apple-color-system.ts)*
 - [x] Fonts, icons, charts, textures and dependencies render offline without missing chunks/assets. *(Verified; zero remote Google Fonts or CDN dependencies, inlined SVG icons and CSS tokens)*
 - [x] Hosted/PWA offline caching and update behavior are verified separately from the file edition. *(Verified in test-pwa-offline.ts; service worker precache and stale-while-revalidate confirmed)*
-- [x] Delivery ZIP contains current outputs and appropriate guides; reference evidence/private data/development files are excluded. *(Verified; dist/Our-Life-Planner-v1.0.0-Delivery.zip is 416,817 bytes < 20 MB Etsy limit)*
+- [x] Delivery ZIP contains current outputs and appropriate guides; reference evidence/private data/development files are excluded. *(Verified; dist/Our-Life-Planner-v1.0.0-Delivery.zip is 418,545 bytes < 20 MB Etsy limit)*
 - [x] Baseline/final performance and bundle measurements are compared; material regressions are addressed or explained. *(Verified in measure-performance.ts; load latency well within targets)*
 - [x] Final report links screenshots, recording, checks, known limitations, build and ZIP paths, and launch instructions. *(Documented in docs/premium-upgrade/FINAL-REPORT.md)*
-- [x] Every required phase and applicable row has evidence; unverified items are explicitly labeled. *(Verified; all phases 00–10 have explicit evidence saved under artifacts/premium-ui/)*
+- [x] Every required phase and applicable row has evidence; unverified items are explicitly labeled. *(Verified; all phases 00–10, R1–R8, and F1–F4 have explicit evidence saved under artifacts/premium-ui/)*
 
 The final report must distinguish implemented, tested, and visually verified. None of these labels automatically implies the others.

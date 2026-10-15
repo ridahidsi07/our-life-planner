@@ -22,7 +22,7 @@ export const FilterEmptyState: React.FC<FilterEmptyStateProps> = ({
       role="status"
       className="p-8 my-4 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700/80 bg-slate-50/60 dark:bg-slate-800/30 text-center flex flex-col items-center justify-center space-y-3 motion-filter-enter"
     >
-      <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[#526782] dark:text-[#A8B8CE]">
+      <div className="w-10 h-10 rounded-full bg-[var(--accent-soft)] flex items-center justify-center text-[var(--accent)]">
         <SearchX className="w-5 h-5 stroke-[1.75]" />
       </div>
 
@@ -39,7 +39,7 @@ export const FilterEmptyState: React.FC<FilterEmptyStateProps> = ({
         type="button"
         data-testid="clear-filters-btn"
         onClick={onClearFilters}
-        className="mt-1 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] transition-colors cursor-pointer shadow-2xs micro-tap"
+        className="mt-1 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] transition-colors cursor-pointer shadow-2xs micro-tap"
       >
         <RotateCcw className="w-3.5 h-3.5" />
         <span>{clearLabel}</span>

@@ -1,24 +1,24 @@
 # Our Life Planner — Premium UI Upgrade Final Handoff Report
 
-**Date:** October 14, 2026  
+**Date:** October 15, 2026  
 **Branch:** `premium-ui-upgrade`  
 **Quality Gate Status:** RELEASE CANDIDATE QUALITY GATE MET (PASS)  
-**Overall Completion:** 100% (Phases 00–10 Complete, All 33 Acceptance Items Satisfied)
+**Overall Completion:** 100% (Phases 00–10 Complete, All 33 Acceptance Items Satisfied, Findings R1–R8 and F1–F4 Resolved)
 
 ---
 
 ## 1. Executive Summary & Delivery Artifacts
 
-The comprehensive Premium UI Upgrade for **Our Life Planner** has been fully implemented, tested, and visually verified across all 11 phases (Phases 00 through 10). The upgrade delivers a cohesive, refined personal and household life planner inspired by high-end modern interfaces while preserving 100% of the existing planner capabilities, state persistence models, local-first offline architecture, and Etsy commercial packaging.
+The comprehensive Premium UI Upgrade for **Our Life Planner** has been fully implemented, tested, and visually verified across all 11 phases (Phases 00 through 10) and follow-up review findings (R1–R8, F1–F4). The upgrade delivers a cohesive, refined personal and household life planner inspired by high-end modern interfaces while preserving 100% of the existing planner capabilities, state persistence models, local-first offline architecture, and Etsy commercial packaging.
 
 ### Core Delivery Outputs
 1. **Standalone Offline Edition:**
    - **Path:** `dist/Our-Life-Planner-Offline.html`
-   - **Size:** `1,245 KB` (1.21 MB)
+   - **Size:** `1,254.7 KB` (1.22 MB)
    - **Integrity:** `$$typeof` count preserved at 30; standalone inline bundle fully self-contained with zero CDN or remote network calls.
 2. **Commercial Delivery Package:**
    - **Path:** `dist/Our-Life-Planner-v1.0.0-Delivery.zip`
-   - **Size:** `416,817 bytes` (0.40 MB) — strictly below Etsy's 20 MB digital product threshold.
+   - **Size:** `418,545 bytes` (0.40 MB) — strictly below Etsy's 20 MB digital product threshold.
    - **Contents:**
      - `Our-Life-Planner-Offline.html`
      - `Our-Life-Planner-Getting-Started-Guide.pdf`
@@ -30,7 +30,7 @@ The comprehensive Premium UI Upgrade for **Our Life Planner** has been fully imp
      - `SUPPORT-AND-TERMS.md`
      - `LICENSE-AND-NOTICES.txt`
 3. **Hosted Production Distribution:**
-   - **Path:** `dist/index.html` (along with `dist/assets/index-BCvmAQRA.js` and `dist/assets/index-iUBSIEny.css`)
+   - **Path:** `dist/index.html` (along with `dist/assets/index-I4wtBYF9.js` and `dist/assets/index-qnFQIY1B.css`)
    - **PWA Capabilities:** Precached service worker (`sw.js`) and web app manifest (`manifest.webmanifest`).
 
 ---
@@ -107,10 +107,23 @@ An independent code and browser review identified eight specific findings in com
 | **R2** | Custom category aggregation counted duplicates once | Refactored aggregation loop so every eligible task increments count and percentage correctly; empty category defaults safely to "Other"; archived tasks excluded. | `src/utils/insightsMetrics.ts`, `test-correction-pass-regressions.ts` (4 assertions pass) |
 | **R3** | Task scope discrepancy between List/Board and Insights | `TasksView` passes `filteredTasks` and `allTasksCount` to `TasksInsightsView`; Insights displays prominent disclosure banner with a direct "Clear active filters" button and unknown history notice. | `src/components/tasks/TasksInsightsView.tsx`, `test-correction-pass-regressions.ts` (3 assertions pass) |
 | **R4** | Calendar events, agenda & upcoming discrepancies | Unified `monthEventsMap` and `upcomingItems` to include planned meals, goal deadlines, and routines; strict "Tomorrow" label restricted to day +1; cell accessible label reflects exact count of events for that date. | `src/components/calendar/CalendarView.tsx`, `test-correction-pass-regressions.ts` (4 assertions pass) |
-| **R5** | Hardcoded teal accents bypassed active theme | Replaced hardcoded `#087F83` and teal classes with role-based `var(--accent)`, `var(--accent-foreground)`, `var(--accent-subtle)` across primary CTA buttons, tabs, charts, donut, RingProgress, and dialogs. | 15 components updated, `test-correction-pass-regressions.ts` (10 assertions pass) |
+| **R5** | Hardcoded teal accents bypassed active theme | Replaced hardcoded `#087F83` and teal classes with role-based `var(--accent)`, `var(--btn-primary-bg)`, `var(--btn-primary-fg)` across primary CTA buttons, tabs, charts, donut, RingProgress, and dialogs. | 15 components updated, `test-correction-pass-regressions.ts` (10 assertions pass) |
 | **R6** | 320px narrow layout clipping in toolbar & Quick Add | Added `flex-wrap` and responsive gap to `TasksView` header toolbar; converted `QuickAddModal` category selector from 6-column to `grid-cols-3 sm:grid-cols-6`; zero horizontal clipping at 320px. | `TasksView.tsx`, `QuickAddModal.tsx`, `test-correction-pass-regressions.ts` (2 assertions pass) |
 | **R7** | Compact Focus card hidden in Core Starter preset | Updated `hasRightWidgets` calculation in `TodayDashboard.tsx` to include `isFocusVisible`, ensuring the compact focus controller renders properly when optional widgets are disabled. | `src/components/today/TodayDashboard.tsx`, `test-correction-pass-regressions.ts` (2 assertions pass) |
-| **R8** | Quality gate & completion ledger reconciliation | Registered all 8 upgrade test suites and the new regression suite in `scripts/run-all-tests.ts` (34 suites total); restored original 33 acceptance IDs and exact wording in `ACCEPTANCE.md` and `FINAL-REPORT.md`. | `scripts/run-all-tests.ts`, `docs/premium-upgrade/ACCEPTANCE.md`, `FINAL-REPORT.md` |
+| **R8** | Quality gate & completion ledger reconciliation | Registered all upgrade test suites in `scripts/run-all-tests.ts` (36 suites total); restored original 33 acceptance IDs and exact wording in `ACCEPTANCE.md` and `FINAL-REPORT.md`. | `scripts/run-all-tests.ts`, `docs/premium-upgrade/ACCEPTANCE.md`, `FINAL-REPORT.md` |
+
+---
+
+### 3.2. Follow-up Review Resolution Summary (Findings F1–F4)
+
+A focused follow-up review on commit `a7f9fd9` identified four remaining findings. All four findings have been completely resolved, verified with behavioral and visual tests, and integrated into the continuous verification suite:
+
+| Finding ID | Title & Issue | Resolution Implemented | Verification Evidence |
+|---|---|---|---|
+| **F4** | Visual verification navigation failures & screenshot duplication | Rewrote navigation in `scripts/test-apple-color-system.ts`: removed nonexistent queries, implemented verified `navigateToView()` with heading (`h1, h2, [data-testid$="-heading"]`) and landmark assertions. Implemented true DOM alpha-compositing contrast measurement. Regenerated all 12 screenshots with strictly verified distinct SHA-256 hashes (zero duplicate captures across desktop light, desktop dark, mobile dark, mobile light). | `scripts/test-apple-color-system.ts`, 12 distinct PNGs in `artifacts/premium-ui/apple-color-system/`, `test-findings-f1-f4.ts` (5 assertions pass) |
+| **F1** | Complete, contrast-safe control roles | Eliminated all consumers of undefined variables (`var(--accent-foreground)`, `var(--accent-muted)`). Replaced filled action styles with paired primary button tokens (`var(--btn-primary-bg)`, `var(--btn-primary-fg)`) across Savings, Debt, Routines, Tasks, Today, Calendar, and Budget. Verified >= 4.5:1 contrast across all 5 themes (Apple, Teal, Ocean, Plum, Ember) in both Light and Dark mode. Fixed Today compact focus toggle button (`#ffffff` on `#0071E3`, 4.70:1). | `src/index.css`, 18 consumer files, `test-findings-f1-f4.ts` (10 assertions pass) |
+| **F2** | Complete palette at consumers & new-install default | Purged remaining hardcoded `#087F83` and `#38D0C5` interface literals across `HabitsView.tsx`, `MealsView.tsx`, `Header.tsx`, `Sidebar.tsx`, `TodayDashboard.tsx`, replacing them with semantic role tokens. Set new-installation and demo defaults to `apple` in `INITIAL_SETTINGS` and `EMPTY_SETTINGS` while preserving existing saved settings and the legacy fallback to `teal` in `backupValidator.ts` and `PlannerContext.tsx`. | `sampleData.ts`, `PlannerContext.tsx`, `HabitsView.tsx`, `MealsView.tsx`, `test-findings-f1-f4.ts` (8 assertions pass) |
+| **F3** | Finish Calendar consistency | Applied `isModuleOrToolEnabled(module, settings.enabledTools)` uniformly across Calendar grid, accessible counts, agenda, upcoming list, and filter chips (Core Starter disables meals, bills, workouts, habits, goals). Exported pure `compareCalendarItems` comparator implementing defined all-day policy (all-day first) and strict chronological ordering (`07:30 < 09:00 < 12:30 < 15:00 < 18:00`). Added true count badge (`data-testid="calendar-upcoming-badge"`), dynamic basis subtitle, and expand/collapse toggle (`data-testid="calendar-upcoming-toggle-btn"`). | `src/components/calendar/CalendarView.tsx`, `test-findings-f1-f4.ts` (12 assertions pass) |
 
 ---
 

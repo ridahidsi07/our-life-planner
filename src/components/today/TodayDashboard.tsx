@@ -646,7 +646,7 @@ export const TodayDashboard: React.FC = () => {
           <button
             type="button"
             onClick={goToToday}
-            className="min-h-[44px] sm:min-h-9 px-3.5 py-2 rounded-xl bg-[var(--accent)] text-white font-semibold hover:bg-[var(--accent-hover)] transition-colors cursor-pointer shrink-0 text-xs"
+            className="min-h-[44px] sm:min-h-9 px-3.5 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] font-semibold hover:bg-[var(--btn-primary-hover-bg)] transition-colors cursor-pointer shrink-0 text-xs"
           >
             Jump to Today
           </button>
@@ -927,7 +927,7 @@ export const TodayDashboard: React.FC = () => {
                 onClick={() => setCurrentDate(w.dateStr)}
                 className={`relative flex flex-col items-center justify-center flex-1 md:flex-none md:w-11 min-w-[44px] min-h-[44px] shrink-0 px-0.5 py-1.5 rounded-xl text-xs transition-colors cursor-pointer ${
                   w.isSelected
-                    ? 'bg-[var(--accent)] text-white font-bold shadow-xs'
+                    ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] font-bold shadow-xs'
                     : 'text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
@@ -936,7 +936,7 @@ export const TodayDashboard: React.FC = () => {
                 {w.isRealToday && (
                   <span
                     className={`absolute bottom-0.5 w-1 h-1 rounded-full ${
-                      w.isSelected ? 'bg-white' : 'bg-[var(--accent)]'
+                      w.isSelected ? 'bg-[var(--btn-primary-fg)]' : 'bg-[var(--accent)]'
                     }`}
                   />
                 )}
@@ -1115,7 +1115,7 @@ export const TodayDashboard: React.FC = () => {
           <div id="today-schedule-section" className="card-surface p-5 md:p-6 scroll-mt-20">
             <div className="flex items-center justify-between pb-4 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                <h2 data-testid="today-heading" className="text-lg font-bold text-[#071A3A] dark:text-[#EDF4FF]">
                   Your day
                 </h2>
                 <span className="text-xs text-[#526782] dark:text-[#A8B8CE]">
@@ -1145,7 +1145,7 @@ export const TodayDashboard: React.FC = () => {
                     type="button"
                     data-testid="today-empty-cta"
                     onClick={() => setActiveModal('quick_add')}
-                    className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold cursor-pointer shadow-xs transition-colors"
+                    className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold cursor-pointer shadow-xs transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Add your first item for today</span>
@@ -1183,7 +1183,7 @@ export const TodayDashboard: React.FC = () => {
                                 <span
                                   className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
                                     item.isCompleted
-                                      ? 'bg-[var(--accent)] text-white'
+                                      ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)]'
                                       : 'border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#152238] hover:border-[var(--accent)]'
                                   }`}
                                 >
@@ -1255,7 +1255,7 @@ export const TodayDashboard: React.FC = () => {
                               <span
                                 className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
                                   item.isCompleted
-                                    ? 'bg-[var(--accent)] text-white'
+                                    ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)]'
                                     : 'border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#152238] hover:border-[var(--accent)]'
                                 }`}
                               >
@@ -1427,7 +1427,7 @@ export const TodayDashboard: React.FC = () => {
                             <span
                               className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
                                 isChecked
-                                  ? 'bg-[var(--accent)] text-white'
+                                  ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)]'
                                   : 'border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#152238] hover:border-[var(--accent)]'
                               }`}
                             >
@@ -1456,14 +1456,14 @@ export const TodayDashboard: React.FC = () => {
             {isFocusVisible && (
               <div
                 data-testid="today-compact-focus-card"
-                className="bg-[#071A3A] dark:bg-[#0B1220] text-white p-5 rounded-2xl relative overflow-hidden border border-[#1E2D4A] shadow-md space-y-3"
+                className="bg-[var(--accent-deep)] text-white p-5 rounded-2xl relative overflow-hidden border border-[var(--border-strong)] shadow-md space-y-3"
               >
                 {/* Faint line / contour texture background (Reference frame-012.png) */}
                 <div
                   aria-hidden="true"
                   className="absolute inset-0 opacity-10 pointer-events-none"
                   style={{
-                    backgroundImage: `radial-gradient(circle at 80% 20%, rgba(56, 208, 197, 0.4) 0%, transparent 50%), radial-gradient(circle at 20% 80%, rgba(8, 127, 131, 0.4) 0%, transparent 60%)`,
+                    backgroundImage: `radial-gradient(circle at 80% 20%, var(--accent-soft) 0%, transparent 50%), radial-gradient(circle at 20% 80%, var(--accent-soft) 0%, transparent 60%)`,
                   }}
                 >
                   <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -1567,7 +1567,7 @@ export const TodayDashboard: React.FC = () => {
                     className={`flex-1 min-h-[40px] px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-xs ${
                       focusSession.isRunning
                         ? 'bg-amber-100 text-amber-950 hover:bg-amber-200'
-                        : 'bg-white text-[#071A3A] hover:bg-slate-100'
+                        : 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)]'
                     }`}
                   >
                     {focusSession.isRunning ? (
@@ -1577,7 +1577,7 @@ export const TodayDashboard: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        <Play className="w-3.5 h-3.5 text-[#071A3A] fill-current" />
+                        <Play className="w-3.5 h-3.5 text-[var(--btn-primary-fg)] fill-current" />
                         <span>{focusSession.isPaused ? 'Resume' : 'Start Focus'}</span>
                       </>
                     )}

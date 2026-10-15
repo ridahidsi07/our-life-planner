@@ -221,7 +221,7 @@ export const HabitsView: React.FC = () => {
               onClick={() => setActiveTab('this_week')}
               className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'this_week'
-                  ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                  ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs font-semibold'
                   : ''
               }`}
             >
@@ -231,7 +231,7 @@ export const HabitsView: React.FC = () => {
               onClick={() => setActiveTab('insights')}
               className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'insights'
-                  ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                  ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs font-semibold'
                   : ''
               }`}
             >
@@ -241,7 +241,7 @@ export const HabitsView: React.FC = () => {
 
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>New habit</span>
@@ -253,7 +253,7 @@ export const HabitsView: React.FC = () => {
       {habits.length === 0 && (
         <div
           data-testid="habits-empty-hero"
-          className="bg-teal-50/70 dark:bg-teal-950/30 rounded-2xl p-6 border border-teal-200 dark:border-teal-800/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
+          className="bg-[var(--accent-soft)] rounded-2xl p-6 border border-[var(--border-color)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
         >
           <div className="space-y-1">
             <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
@@ -267,7 +267,7 @@ export const HabitsView: React.FC = () => {
             type="button"
             data-testid="habits-empty-cta"
             onClick={openCreateModal}
-            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>Create your first habit</span>
@@ -287,7 +287,7 @@ export const HabitsView: React.FC = () => {
             }
             size={52}
             strokeWidth={5}
-            color="#087F83"
+            color="var(--accent)"
           >
             <span className="text-xs font-bold font-mono">
               {todayCompletedCount}/{habits.length}
@@ -408,7 +408,7 @@ export const HabitsView: React.FC = () => {
                         <Flame
                           className={`w-4 h-4 shrink-0 ${
                             isSelected
-                              ? 'text-[#087F83] dark:text-[#38D0C5]'
+                              ? 'text-[var(--accent)]'
                               : 'text-slate-400'
                           }`}
                         />
@@ -440,8 +440,8 @@ export const HabitsView: React.FC = () => {
                               }}
                               className={`w-6 h-6 rounded-full flex items-center justify-center cursor-pointer micro-checkbox ${
                                 isChecked
-                                  ? 'bg-[#087F83] text-white shadow-2xs'
-                                  : 'border border-slate-300 dark:border-slate-600 hover:border-[#087F83]'
+                                  ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] shadow-2xs'
+                                  : 'border border-slate-300 dark:border-slate-600 hover:border-[var(--accent)]'
                               }`}
                             >
                               {isChecked && <Check className="w-3.5 h-3.5 stroke-[3] motion-check-pop" />}
@@ -499,7 +499,7 @@ export const HabitsView: React.FC = () => {
               <div className="grid grid-cols-3 gap-4">
                 <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-center">
                   <div className="text-[11px] text-[#526782]">Current streak</div>
-                  <div className="text-xl font-bold font-mono text-[#087F83] dark:text-[#38D0C5] mt-1">
+                  <div className="text-xl font-bold font-mono text-[var(--accent)] mt-1">
                     {selectedHabitStreak.currentStreak} {selectedHabitStreak.isDaily ? 'days' : 'weeks'}
                   </div>
                 </div>
@@ -549,7 +549,7 @@ export const HabitsView: React.FC = () => {
 
               {/* Personal Note / Affirmation */}
               {selectedHabit.personalNote && (
-                <div className="p-3 rounded-xl bg-teal-50/60 dark:bg-teal-950/30 border border-teal-100 dark:border-teal-900/40 text-xs text-[#087F83] dark:text-[#38D0C5]">
+                <div className="p-3 rounded-xl bg-[var(--accent-soft)] border border-[var(--border-color)] text-xs text-[var(--accent)]">
                   <span className="font-semibold block text-[10px] uppercase tracking-wider mb-0.5">
                     My note
                   </span>
@@ -567,7 +567,7 @@ export const HabitsView: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-white dark:bg-[#152238] rounded-2xl p-4 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
               <div className="text-xs text-[#526782]">Total check-ins</div>
-              <div className="text-2xl font-bold font-mono text-[#087F83] mt-1">
+              <div className="text-2xl font-bold font-mono text-[var(--accent)] mt-1">
                 {insights28Days.totalCheckIns}
               </div>
               <div className="text-[10px] text-[#526782]">in last 28 days</div>
@@ -627,7 +627,7 @@ export const HabitsView: React.FC = () => {
                           {h.title}
                         </span>
                       </div>
-                      <span className="font-mono font-bold text-[#087F83] dark:text-[#38D0C5]">
+                      <span className="font-mono font-bold text-[var(--accent)]">
                         {h.checkedDates.length} check-ins
                       </span>
                     </div>
@@ -660,7 +660,7 @@ export const HabitsView: React.FC = () => {
               value={modalTitle}
               onChange={(e) => setModalTitle(e.target.value)}
               placeholder="e.g. Read 20 minutes, Drink water"
-              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs focus:ring-2 focus:ring-[#087F83]"
+              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs focus:ring-2 focus:ring-[var(--accent)]"
             />
           </div>
 
@@ -677,7 +677,7 @@ export const HabitsView: React.FC = () => {
                 onClick={() => setModalFreqType('daily')}
                 className={`py-2 rounded-xl text-xs font-semibold border cursor-pointer ${
                   modalFreqType === 'daily'
-                    ? 'bg-[#087F83] text-white border-[#087F83]'
+                    ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] border-[var(--btn-primary-bg)]'
                     : 'border-slate-200 dark:border-slate-700 text-[#526782]'
                 }`}
               >
@@ -688,7 +688,7 @@ export const HabitsView: React.FC = () => {
                 onClick={() => setModalFreqType('weekly')}
                 className={`py-2 rounded-xl text-xs font-semibold border cursor-pointer ${
                   modalFreqType === 'weekly'
-                    ? 'bg-[#087F83] text-white border-[#087F83]'
+                    ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] border-[var(--btn-primary-bg)]'
                     : 'border-slate-200 dark:border-slate-700 text-[#526782]'
                 }`}
               >
@@ -761,7 +761,7 @@ export const HabitsView: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+              className="px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer"
             >
               Save habit
             </button>

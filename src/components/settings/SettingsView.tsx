@@ -191,7 +191,7 @@ export const SettingsView: React.FC = () => {
       {/* Header */}
       <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] flex items-center justify-between shadow-2xs">
         <div>
-          <h2 className="text-xl font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+          <h2 data-testid="settings-heading" className="text-xl font-bold text-[#071A3A] dark:text-[#EDF4FF]">
             Settings
           </h2>
           <p className="text-xs text-[#526782] dark:text-[#A8B8CE]">
@@ -409,7 +409,7 @@ export const SettingsView: React.FC = () => {
             )}
             <button
               type="submit"
-              className="min-h-[44px] sm:min-h-9 px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90 cursor-pointer shadow-xs"
+              className="min-h-[44px] sm:min-h-9 px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)] text-xs font-semibold cursor-pointer shadow-xs"
             >
               Save preferences
             </button>
@@ -471,7 +471,7 @@ export const SettingsView: React.FC = () => {
               }
             }}
             disabled={!newMemberName.trim()}
-            className="min-h-[44px] sm:min-h-9 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--accent-foreground)] text-xs font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer shadow-xs transition-colors"
+            className="min-h-[44px] sm:min-h-9 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)] text-xs font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer shadow-xs transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Member</span>
@@ -598,7 +598,7 @@ export const SettingsView: React.FC = () => {
                     aria-label={`${tool.name}: ${isEnabled ? 'Enabled' : 'Hidden'}`}
                     className={`min-h-[44px] sm:min-h-8 px-3 py-1.5 rounded-lg flex items-center justify-center text-[11px] font-bold cursor-pointer transition-colors ${
                       isEnabled
-                        ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent-muted)] hover:opacity-90'
+                        ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--border-color)] hover:opacity-90'
                         : 'bg-slate-200 text-slate-700 border border-slate-300 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700'
                     }`}
                   >
@@ -690,6 +690,7 @@ export const SettingsView: React.FC = () => {
                     key={theme.id}
                     type="button"
                     role="radio"
+                    data-testid={`settings-theme-${theme.id}`}
                     aria-checked={isSelected}
                     aria-label={`${theme.label} mode`}
                     onClick={() => handleThemeChange(theme.id as any)}
@@ -1032,7 +1033,7 @@ export const SettingsView: React.FC = () => {
                 type="button"
                 data-testid="confirm-reload-demo-btn"
                 onClick={handleConfirmReloadDemo}
-                className="px-4 py-2 rounded-xl bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] text-xs font-semibold cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold cursor-pointer"
               >
                 Confirm &amp; Load Demo Data
               </button>

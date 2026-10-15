@@ -1,0 +1,225 @@
+- complementary:
+  - generic: Our Life Planner
+  - generic: A little more room for life
+  - generic: Plan
+  - button "Today":
+    - generic: Today
+  - button "Calendar":
+    - generic: Calendar
+  - button "Tasks 9":
+    - generic: Tasks 9
+  - button "Routines":
+    - generic: Routines
+  - button "Inbox":
+    - generic: Inbox
+  - generic: Growth
+  - button "Goals":
+    - generic: Goals
+  - button "Habits":
+    - generic: Habits
+  - generic: Money
+  - button "Budget & bills":
+    - generic: Budget & bills
+  - button "Savings":
+    - generic: Savings
+  - button "Debt payoff":
+    - generic: Debt payoff
+  - generic: Food
+  - button "Meals":
+    - generic: Meals
+  - button "Groceries":
+    - generic: Groceries
+  - generic: Health
+  - button "Workouts":
+    - generic: Workouts
+  - button "Weight":
+    - generic: Weight
+  - button "Water":
+    - generic: Water
+  - button "Focus":
+    - generic: Focus
+  - button "App Install":
+    - generic: App Install
+  - button "Manage profile and storage for Review Sample":
+    - generic: R
+    - generic: Review Sample
+    - generic: Profile & Storage
+  - button "Backup & Restore":
+    - generic: Backup & Restore
+  - button "Settings":
+    - generic: Settings
+  - generic: Saved locally
+- banner:
+  - heading "Good afternoon, Review Sample." [level=1]
+  - paragraph: Thursday, October 15, 2026
+  - button "Search planner":
+    - generic: Search planner…
+    - generic: ⌘K
+  - button "Quick add item":
+    - generic: Quick add
+  - 'button "Storage status: All changes saved locally to this device"':
+    - generic: Saved locally
+  - button "Profile and local storage for Review Sample":
+    - generic: R
+- status "Demo mode active":
+  - generic: Demo Mode
+  - generic: Exploring with sample records. Any personal items you add are preserved.
+  - button "Remove sample data"
+  - button "Dismiss demo banner":
+- main:
+  - generic: Viewing calendar date 2026-10-15. Showing 2 scheduled items.
+  - heading "October 2026" [level=2]
+  - generic: month view
+  - paragraph: Connect your daily tasks, routines, meals, workouts, and events
+  - button "month"
+  - button "week"
+  - button "day"
+  - button "Previous month":
+  - button "Today"
+  - button "Next month":
+  - button "Export .ics":
+    - generic: Export .ics
+  - button "Add entry":
+    - generic: Add entry
+  - switch "Filter Tasks":
+    - generic: Tasks
+  - switch "Filter Routines":
+    - generic: Routines
+  - switch "Filter Bills":
+    - generic: Bills
+  - switch "Filter Goals":
+    - generic: Goals
+  - switch "Filter Meals" [checked]:
+    - generic: Meals
+  - switch "Filter Workouts":
+    - generic: Workouts
+  - switch "Filter Events" [active]:
+    - generic: Events
+  - generic: Mon
+  - generic: Tue
+  - generic: Wed
+  - generic: Thu
+  - generic: Fri
+  - generic: Sat
+  - generic: Sun
+  - button "Monday, September 28, 2026, no scheduled items":
+    - generic: "28"
+  - button "Tuesday, September 29, 2026, no scheduled items":
+    - generic: "29"
+  - button "Wednesday, September 30, 2026, no scheduled items":
+    - generic: "30"
+  - button "Thursday, October 1, 2026, no scheduled items":
+    - generic: "1"
+  - button "Friday, October 2, 2026, no scheduled items":
+    - generic: "2"
+  - button "Saturday, October 3, 2026, no scheduled items":
+    - generic: "3"
+  - button "Sunday, October 4, 2026, no scheduled items":
+    - generic: "4"
+  - button "Monday, October 5, 2026, no scheduled items":
+    - generic: "5"
+  - button "Tuesday, October 6, 2026, no scheduled items":
+    - generic: "6"
+  - button "Wednesday, October 7, 2026, no scheduled items":
+    - generic: "7"
+  - button "Thursday, October 8, 2026, no scheduled items":
+    - generic: "8"
+  - button "Friday, October 9, 2026, no scheduled items":
+    - generic: "9"
+  - button "Saturday, October 10, 2026, no scheduled items":
+    - generic: "10"
+  - button "Sunday, October 11, 2026, no scheduled items":
+    - generic: "11"
+  - button "Monday, October 12, 2026, no scheduled items":
+    - generic: "12"
+  - button "Tuesday, October 13, 2026, no scheduled items":
+    - generic: "13"
+  - button "Wednesday, October 14, 2026, no scheduled items":
+    - generic: "14"
+  - button "Thursday, October 15, 2026, 2 scheduled items, Today, Selected" [pressed]:
+    - generic: "15"
+    - generic "Chicken & quinoa bowl (Meal)":
+      - generic: Chicken & quinoa bowl
+    - generic "Salmon & vegetables (Meal)":
+      - generic: Salmon & vegetables
+  - button "Friday, October 16, 2026, 2 scheduled items":
+    - generic: "16"
+    - generic "Lentil soup (Meal)":
+      - generic: Lentil soup
+    - generic "Vegetable stir-fry (Meal)":
+      - generic: Vegetable stir-fry
+  - button "Saturday, October 17, 2026, 1 scheduled item":
+    - generic: "17"
+    - generic "Rice bowl (Meal)":
+      - generic: Rice bowl
+  - button "Sunday, October 18, 2026, 1 scheduled item":
+    - generic: "18"
+    - generic "Tomato pasta (Meal)":
+      - generic: Tomato pasta
+  - button "Monday, October 19, 2026, 1 scheduled item":
+    - generic: "19"
+    - generic "Roast vegetables (Meal)":
+      - generic: Roast vegetables
+  - button "Tuesday, October 20, 2026, no scheduled items":
+    - generic: "20"
+  - button "Wednesday, October 21, 2026, no scheduled items":
+    - generic: "21"
+  - button "Thursday, October 22, 2026, no scheduled items":
+    - generic: "22"
+  - button "Friday, October 23, 2026, no scheduled items":
+    - generic: "23"
+  - button "Saturday, October 24, 2026, no scheduled items":
+    - generic: "24"
+  - button "Sunday, October 25, 2026, no scheduled items":
+    - generic: "25"
+  - button "Monday, October 26, 2026, no scheduled items":
+    - generic: "26"
+  - button "Tuesday, October 27, 2026, no scheduled items":
+    - generic: "27"
+  - button "Wednesday, October 28, 2026, no scheduled items":
+    - generic: "28"
+  - button "Thursday, October 29, 2026, no scheduled items":
+    - generic: "29"
+  - button "Friday, October 30, 2026, no scheduled items":
+    - generic: "30"
+  - button "Saturday, October 31, 2026, no scheduled items":
+    - generic: "31"
+  - button "Sunday, November 1, 2026, no scheduled items":
+    - generic: "1"
+  - heading "Selected day" [level=3]
+  - paragraph: 2026-10-15
+  - generic: 0%
+  - generic: 0 of 2 complete
+  - checkbox "Mark \"Chicken & quinoa bowl\" as complete"
+  - generic: Chicken & quinoa bowl
+  - generic: 12:30
+  - generic: Meal
+  - checkbox "Mark \"Salmon & vegetables\" as complete"
+  - generic: Salmon & vegetables
+  - generic: 19:30
+  - generic: Meal
+  - button "Add entry to this day":
+    - generic: Add entry to this day
+  - heading "Coming up" [level=3]
+  - paragraph: Next 7 days
+  - generic: "5"
+  - 'button "Jump to Tomorrow: Lentil soup (Meal)"':
+    - generic: Lentil soup
+    - generic: Tomorrow · 12:30
+    - generic: Meal
+  - 'button "Jump to Tomorrow: Vegetable stir-fry (Meal)"':
+    - generic: Vegetable stir-fry
+    - generic: Tomorrow · 19:00
+    - generic: Meal
+  - 'button "Jump to Sat, Oct 17: Rice bowl (Meal)"':
+    - generic: Rice bowl
+    - generic: Sat, Oct 17 · 19:00
+    - generic: Meal
+  - 'button "Jump to Sun, Oct 18: Tomato pasta (Meal)"':
+    - generic: Tomato pasta
+    - generic: Sun, Oct 18 · 19:00
+    - generic: Meal
+  - 'button "Jump to Mon, Oct 19: Roast vegetables (Meal)"':
+    - generic: Roast vegetables
+    - generic: Mon, Oct 19 · 19:00
+    - generic: Meal

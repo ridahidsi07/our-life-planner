@@ -141,7 +141,7 @@ export const HydrationView: React.FC = () => {
             setCustomTime(getCurrentTimeStr());
             setIsAddDrinkModalOpen(true);
           }}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Add drink</span>
@@ -160,13 +160,13 @@ export const HydrationView: React.FC = () => {
               aria-label={`Select date ${d.dayName} ${d.dayNum}`}
               className={`flex-1 p-2.5 rounded-xl border transition-all cursor-pointer ${
                 d.isToday
-                  ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/20 ring-1 ring-[#087F83]'
+                  ? 'border-[var(--accent)] bg-[var(--accent-soft)] ring-1 ring-[var(--accent)]'
                   : 'border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
               }`}
             >
               <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] uppercase">{d.dayName}</div>
               <div className="font-bold text-[#071A3A] dark:text-[#EDF4FF]">{d.dayNum}</div>
-              <div className="font-mono text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] mt-1">
+              <div className="font-mono text-xs font-semibold text-[var(--accent)] mt-1">
                 {d.intakeL} L
               </div>
             </button>
@@ -192,7 +192,7 @@ export const HydrationView: React.FC = () => {
               progress={progressPct}
               size={110}
               strokeWidth={9}
-              color="#087F83"
+              color="var(--accent)"
             >
               <div className="text-center font-mono">
                 <span className="text-lg font-bold text-[#071A3A] dark:text-[#EDF4FF] block leading-none">
@@ -205,7 +205,7 @@ export const HydrationView: React.FC = () => {
             </RingProgress>
 
             <div className="space-y-1 text-center sm:text-left">
-              <span className="text-xs font-bold text-[#087F83] dark:text-[#38D0C5] uppercase tracking-wider">
+              <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider">
                 {progressPct}% completed
               </span>
               <div className="text-3xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF]">
@@ -222,21 +222,21 @@ export const HydrationView: React.FC = () => {
             <button
               type="button"
               onClick={() => addWaterLog(250)}
-              className="flex-1 py-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 text-[#087F83] dark:text-[#38D0C5] text-xs font-bold cursor-pointer transition-colors"
+              className="flex-1 py-2 rounded-xl bg-[var(--accent-soft)] hover:bg-[var(--accent-soft)]/80 text-[var(--accent)] text-xs font-bold cursor-pointer transition-colors"
             >
               +250 ml
             </button>
             <button
               type="button"
               onClick={() => addWaterLog(500)}
-              className="flex-1 py-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 text-[#087F83] dark:text-[#38D0C5] text-xs font-bold cursor-pointer transition-colors"
+              className="flex-1 py-2 rounded-xl bg-[var(--accent-soft)] hover:bg-[var(--accent-soft)]/80 text-[var(--accent)] text-xs font-bold cursor-pointer transition-colors"
             >
               +500 ml
             </button>
             <button
               type="button"
               onClick={() => addWaterLog(750)}
-              className="flex-1 py-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 text-[#087F83] dark:text-[#38D0C5] text-xs font-bold cursor-pointer transition-colors"
+              className="flex-1 py-2 rounded-xl bg-[var(--accent-soft)] hover:bg-[var(--accent-soft)]/80 text-[var(--accent)] text-xs font-bold cursor-pointer transition-colors"
             >
               +750 ml
             </button>
@@ -279,7 +279,7 @@ export const HydrationView: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-2.5 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer shadow-xs"
+              className="w-full py-2.5 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer shadow-xs"
             >
               Save target
             </button>
@@ -287,8 +287,8 @@ export const HydrationView: React.FC = () => {
 
           {/* Over-target preview card (Board 17) */}
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs flex items-center gap-3">
-            <RingProgress progress={100} size={36} strokeWidth={4} color="#087F83">
-              <Check className="w-3.5 h-3.5 text-[#087F83]" />
+            <RingProgress progress={100} size={36} strokeWidth={4} color="var(--accent)">
+              <Check className="w-3.5 h-3.5 text-[var(--accent)]" />
             </RingProgress>
             <div>
               <span className="font-semibold text-[#071A3A] dark:text-[#EDF4FF] block">
@@ -316,7 +316,7 @@ export const HydrationView: React.FC = () => {
                 setCustomTime(getCurrentTimeStr());
                 setIsAddDrinkModalOpen(true);
               }}
-              className="text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline cursor-pointer"
+              className="text-xs font-semibold text-[var(--accent)] hover:underline cursor-pointer"
             >
               + Add drink
             </button>
@@ -343,7 +343,7 @@ export const HydrationView: React.FC = () => {
                   entriesWithRunning.map((entry) => (
                     <tr key={entry.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                       <td className="py-2.5 px-3">{entry.time}</td>
-                      <td className="py-2.5 px-3 font-bold text-[#087F83] dark:text-[#38D0C5]">
+                      <td className="py-2.5 px-3 font-bold text-[var(--accent)]">
                         {entry.amountMl} ml
                       </td>
                       <td className="py-2.5 px-3 text-[#526782] dark:text-[#A8B8CE]">
@@ -379,11 +379,11 @@ export const HydrationView: React.FC = () => {
               const hPct = Math.min(100, Math.max(10, (d.intakeMl / 2500) * 100));
               return (
                 <div key={d.iso} className="flex flex-col items-center gap-1">
-                  <span className="text-[10px] font-mono text-[#087F83]">
+                  <span className="text-[10px] font-mono text-[var(--accent)]">
                     {d.intakeL}
                   </span>
                   <div
-                    className="w-4 rounded-t-xs bg-[#087F83] dark:bg-[#38D0C5] transition-all"
+                    className="w-4 rounded-t-xs bg-[var(--accent)] transition-all"
                     style={{ height: `${hPct}px` }}
                   />
                   <span className="text-[9px] text-[#526782]">{d.dayName}</span>
@@ -407,7 +407,7 @@ export const HydrationView: React.FC = () => {
             </div>
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
               <span className="text-[10px] text-[#526782] block">Weekly average</span>
-              <span className="text-base font-bold font-mono text-[#087F83] mt-0.5 block">
+              <span className="text-base font-bold font-mono text-[var(--accent)] mt-0.5 block">
                 {weeklyAverageL} L
               </span>
             </div>
@@ -470,7 +470,7 @@ export const HydrationView: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+              className="px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer"
             >
               Add drink
             </button>

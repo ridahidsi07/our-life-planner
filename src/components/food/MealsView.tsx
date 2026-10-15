@@ -221,7 +221,7 @@ export const MealsView: React.FC = () => {
               aria-pressed={activeTab === 'weekly_plan'}
               className={`min-h-[44px] sm:min-h-9 px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'weekly_plan'
-                  ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                  ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs font-semibold'
                   : 'hover:text-[#071A3A] dark:hover:text-[#EDF4FF]'
               }`}
             >
@@ -233,7 +233,7 @@ export const MealsView: React.FC = () => {
               aria-pressed={activeTab === 'food_library'}
               className={`min-h-[44px] sm:min-h-9 px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'food_library'
-                  ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                  ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs font-semibold'
                   : 'hover:text-[#071A3A] dark:hover:text-[#EDF4FF]'
               }`}
             >
@@ -245,7 +245,7 @@ export const MealsView: React.FC = () => {
             <button
               type="button"
               onClick={() => openPlanMealModalFor(currentDate, 'dinner')}
-              className="min-h-[44px] flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+              className="min-h-[44px] flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Plan meal</span>
@@ -254,7 +254,7 @@ export const MealsView: React.FC = () => {
             <button
               type="button"
               onClick={openCreateRecipe}
-              className="min-h-[44px] flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+              className="min-h-[44px] flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>New recipe</span>
@@ -347,8 +347,8 @@ export const MealsView: React.FC = () => {
                               }}
                               className={`min-h-[44px] p-2 rounded-xl border text-left cursor-pointer transition-all ${
                                 isSelected
-                                  ? 'border-[#087F83] bg-teal-50/50 dark:bg-teal-950/30'
-                                  : 'border-slate-200 dark:border-slate-700 hover:border-[#087F83] dark:hover:border-[#38D0C5] bg-slate-50 dark:bg-slate-800/60'
+                                  ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+                                  : 'border-slate-200 dark:border-slate-700 hover:border-[var(--accent)] bg-slate-50 dark:bg-slate-800/60'
                               }`}
                             >
                               <div className="font-semibold text-[11px] text-[#071A3A] dark:text-[#EDF4FF] truncate">
@@ -368,7 +368,7 @@ export const MealsView: React.FC = () => {
                               type="button"
                               aria-label={`Add ${mType} for ${w.name}, ${w.num} ${w.monthName} (${w.dateStr})`}
                               onClick={() => openPlanMealModalFor(w.dateStr, mType)}
-                              className="w-full min-h-[44px] py-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-[#526782] dark:text-[#A8B8CE] hover:text-[#087F83] dark:hover:text-[#38D0C5] hover:border-[#087F83] dark:hover:border-[#38D0C5] hover:bg-teal-50/40 dark:hover:bg-teal-950/30 text-[10px] font-medium flex items-center justify-center transition-colors cursor-pointer"
+                              className="w-full min-h-[44px] py-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-[#526782] dark:text-[#A8B8CE] hover:text-[var(--accent)] hover:border-[var(--accent)] hover:bg-[var(--accent-soft)] text-[10px] font-medium flex items-center justify-center transition-colors cursor-pointer"
                             >
                               + Add
                             </button>
@@ -407,7 +407,7 @@ export const MealsView: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-3 text-xs">
-                    <span className="px-2.5 py-1 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] font-semibold">
+                    <span className="px-2.5 py-1 rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] font-semibold">
                       {selectedMeal.plannedServings} servings
                     </span>
                     <span className="text-[#526782] dark:text-[#A8B8CE]">
@@ -464,7 +464,7 @@ export const MealsView: React.FC = () => {
                       className={`w-full min-h-[44px] py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors ${
                         selectedMeal.isConsumed
                           ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950/70 dark:text-emerald-200 dark:border-emerald-800 dark:hover:bg-emerald-900/80'
-                          : 'bg-[#087F83] text-white hover:bg-[#06676A] dark:bg-[#38D0C5] dark:text-[#071A3A] dark:hover:bg-[#2BB5AB]'
+                          : 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)]'
                       }`}
                     >
                       <Check className="w-4 h-4" />
@@ -498,7 +498,7 @@ export const MealsView: React.FC = () => {
           {/* Generate Grocery List Action Banner (Board 13) */}
           <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-[var(--accent-soft)] text-[var(--accent)] flex items-center justify-center">
                 <ShoppingCart className="w-5 h-5" />
               </div>
               <div>
@@ -514,7 +514,7 @@ export const MealsView: React.FC = () => {
             <button
               type="button"
               onClick={handleGenerateGroceries}
-              className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs shadow-xs cursor-pointer whitespace-nowrap"
+              className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] font-semibold text-xs shadow-xs cursor-pointer whitespace-nowrap"
             >
               Generate grocery list
             </button>
@@ -547,7 +547,7 @@ export const MealsView: React.FC = () => {
                     onClick={() => setRecipeCategoryFilter(c)}
                     className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors whitespace-nowrap ${
                       recipeCategoryFilter === c
-                        ? 'bg-[#087F83] text-white shadow-2xs font-semibold'
+                        ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] shadow-2xs font-semibold'
                         : 'bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-200 dark:hover:bg-slate-700'
                     }`}
                   >
@@ -579,7 +579,7 @@ export const MealsView: React.FC = () => {
                   <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
                     {recipe.title}
                   </h3>
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] mt-1 inline-block">
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-[var(--accent-soft)] text-[var(--accent)] mt-1 inline-block">
                     {recipe.category}
                   </span>
                 </div>
@@ -754,7 +754,7 @@ export const MealsView: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+              className="px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer"
             >
               Save meal
             </button>
@@ -860,7 +860,7 @@ export const MealsView: React.FC = () => {
                 onClick={() =>
                   setRecIngredients([...recIngredients, { name: '', amount: 100, unit: 'g' }])
                 }
-                className="text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline"
+                className="text-xs font-semibold text-[var(--accent)] hover:underline cursor-pointer"
               >
                 + Add ingredient
               </button>
@@ -934,7 +934,7 @@ export const MealsView: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+              className="px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer"
             >
               Save recipe
             </button>

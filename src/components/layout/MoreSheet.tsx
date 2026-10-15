@@ -161,7 +161,7 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
               placeholder="Search tools…"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full min-h-[44px] pl-9 pr-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#087F83] text-[#071A3A] dark:text-[#EDF4FF]"
+              className="w-full min-h-[44px] pl-9 pr-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-[var(--accent)] text-[#071A3A] dark:text-[#EDF4FF]"
             />
           </div>
         </div>
@@ -171,7 +171,7 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           {!searchTerm.trim() && pinnedItems.length > 0 && (
             <div data-testid="moresheet-favorites-section">
               <h4 className="flex items-center gap-1.5 text-[11px] font-semibold text-[#526782] dark:text-[#A8B8CE] uppercase tracking-wider mb-2">
-                <Pin className="w-3 h-3 text-[#087F83] dark:text-[#38D0C5]" />
+                <Pin className="w-3 h-3 text-[var(--accent)]" />
                 <span>Favorites</span>
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -183,13 +183,13 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                       type="button"
                       data-testid={`moresheet-favorite-${item.id}`}
                       onClick={() => handleSelect(item.id)}
-                      className="min-h-[48px] flex items-center gap-3 p-2.5 rounded-xl text-left bg-teal-50/50 dark:bg-teal-950/30 border border-teal-100 dark:border-teal-900/50 hover:bg-[#E0F2F1] dark:hover:bg-[#163642] transition-colors cursor-pointer group"
+                      className="min-h-[48px] flex items-center gap-3 p-2.5 rounded-xl text-left bg-[var(--surface-subtle)] border border-[var(--border-color)] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer group"
                     >
-                      <div className="w-9 h-9 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center text-[#087F83] dark:text-[#38D0C5] shrink-0 shadow-2xs">
+                      <div className="w-9 h-9 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center text-[var(--accent)] shrink-0 shadow-2xs">
                         <Icon className="w-5 h-5" />
                       </div>
                       <div>
-                        <div className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] group-hover:text-[#087F83] dark:group-hover:text-[#38D0C5]">
+                        <div className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] group-hover:text-[var(--accent)]">
                           {item.label}
                         </div>
                         <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE]">
@@ -217,13 +217,13 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                       type="button"
                       data-testid={`moresheet-tool-${item.id}`}
                       onClick={() => handleSelect(item.id)}
-                      className="min-h-[48px] flex items-center gap-3 p-2.5 rounded-xl text-left bg-slate-50 dark:bg-slate-800/60 hover:bg-[#E0F2F1] dark:hover:bg-[#163642] transition-colors cursor-pointer group"
+                      className="min-h-[48px] flex items-center gap-3 p-2.5 rounded-xl text-left bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer group"
                     >
-                      <div className="w-9 h-9 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center text-[#087F83] dark:text-[#38D0C5] shrink-0 shadow-2xs">
+                      <div className="w-9 h-9 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center text-[var(--accent)] shrink-0 shadow-2xs">
                         <Icon className="w-5 h-5" />
                       </div>
                       <div>
-                        <div className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] group-hover:text-[#087F83] dark:group-hover:text-[#38D0C5]">
+                        <div className="text-xs font-semibold text-[#071A3A] dark:text-[#EDF4FF] group-hover:text-[var(--accent)]">
                           {item.label}
                         </div>
                         <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE]">
@@ -247,11 +247,12 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
               }}
               className="w-full min-h-[44px] flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
             >
-              <User className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+              <User className="w-4 h-4 text-[var(--accent)]" />
               <span>Profile & Local Storage</span>
             </button>
             <button
               type="button"
+              data-testid="moresheet-settings"
               onClick={() => {
                 setActiveView('settings');
                 onClose();
@@ -280,7 +281,7 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
               }}
               className="w-full min-h-[44px] flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-[#071A3A] dark:text-[#EDF4FF]"
             >
-              <Mail className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+              <Mail className="w-4 h-4 text-[var(--accent)]" />
               <span>Customer Support Desk</span>
             </button>
             <button

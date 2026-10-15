@@ -1,0 +1,45 @@
+{
+  "commit": "a7f9fd9722d651ff9d4a1308db9f8f88136dc459",
+  "legacy": {
+    "completed": 0,
+    "unknown": 1,
+    "onTime": null
+  },
+  "midnightInCasablanca": "2026-10-14",
+  "emptyOnTime": null,
+  "custom": {
+    "count": 3,
+    "percentage": 100,
+    "color": "#64748B"
+  },
+  "invalid": {
+    "completed": 0,
+    "unknown": 1
+  },
+  "contrastFromObservedComputedColors": [
+    {
+      "control": "Savings New pot / Add deposit light",
+      "fg": "#1D1D1F",
+      "bg": "#0066CC",
+      "ratio": 3.02
+    },
+    {
+      "control": "Savings New pot / Add deposit dark",
+      "fg": "#F5F5F7",
+      "bg": "#2997FF",
+      "ratio": 2.77
+    },
+    {
+      "control": "Today selected day dark",
+      "fg": "#FFFFFF",
+      "bg": "#2997FF",
+      "ratio": 3.02
+    },
+    {
+      "control": "Correct primary button",
+      "fg": "#FFFFFF",
+      "bg": "#0071E3",
+      "ratio": 4.7
+    }
+  ]
+}

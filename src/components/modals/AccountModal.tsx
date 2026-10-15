@@ -286,7 +286,7 @@ export const AccountModal: React.FC = () => {
         <div className="p-4 rounded-2xl bg-white dark:bg-[#152238] border border-slate-200 dark:border-slate-700/80 shadow-2xs space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#087F83] to-[#38D0C5] text-white flex items-center justify-center font-bold text-lg shadow-xs">
+              <div className="w-12 h-12 rounded-2xl bg-[var(--accent)] text-white flex items-center justify-center font-bold text-lg shadow-xs">
                 {(ownerName || 'M').charAt(0)}
               </div>
               <div>
@@ -354,7 +354,7 @@ export const AccountModal: React.FC = () => {
               <div className="sm:col-span-2 flex justify-end gap-2">
                 <button
                   type="submit"
-                  className="px-3.5 py-1.5 rounded-xl bg-[#087F83] text-white font-semibold text-xs hover:bg-[#06676A] cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)] font-semibold text-xs cursor-pointer transition-colors"
                 >
                   Save Profile
                 </button>
@@ -378,7 +378,7 @@ export const AccountModal: React.FC = () => {
         <div className="p-4 rounded-2xl bg-white dark:bg-[#152238] border border-slate-200 dark:border-slate-700/80 shadow-2xs space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <Cloud className="w-4 h-4 text-[#087F83] dark:text-[#38D0C5]" />
+              <Cloud className="w-4 h-4 text-[var(--accent)]" />
               <h4 className="font-bold text-xs text-[#071A3A] dark:text-[#EDF4FF]">
                 Online Account & Cross-Device Sync
               </h4>
@@ -398,7 +398,7 @@ export const AccountModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowEndpointConfig(!showEndpointConfig)}
-                className="text-[10px] text-[#087F83] dark:text-[#38D0C5] hover:underline cursor-pointer"
+                className="text-[10px] text-[var(--accent)] hover:underline cursor-pointer"
               >
                 {showEndpointConfig ? 'Hide server URL' : 'Server URL'}
               </button>
@@ -423,7 +423,7 @@ export const AccountModal: React.FC = () => {
                   setCloudApiBaseUrl(apiEndpoint);
                   setShowEndpointConfig(false);
                 }}
-                className="px-2.5 py-1 rounded-lg bg-[#087F83] text-white text-[11px] font-semibold cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)] text-[11px] font-semibold cursor-pointer"
               >
                 Apply
               </button>

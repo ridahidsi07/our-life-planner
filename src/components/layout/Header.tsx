@@ -33,7 +33,7 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({
   }, [currentDate]);
 
   return (
-    <header className="h-16 px-4 md:px-6 flex items-center justify-between border-b border-[#E2E8F0] dark:border-[#1E2D4A] bg-white/85 dark:bg-[#152238]/85 backdrop-blur-md sticky top-0 z-30 select-none">
+    <header className="h-16 px-4 md:px-6 flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--surface)]/85 backdrop-blur-md sticky top-0 z-30 select-none">
       <div className="flex items-center gap-3 min-w-0 flex-1 sm:flex-initial mr-2 sm:mr-3">
         {/* Mobile menu trigger */}
         <button
@@ -116,7 +116,7 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({
         >
           {savingState === 'saving' ? (
             <>
-              <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#087F83] dark:text-[#38D0C5] shrink-0" />
+              <RefreshCw className="w-3.5 h-3.5 animate-spin text-[var(--accent)] shrink-0" />
               <span className="font-medium text-[11.5px] hidden xl:inline">Saving…</span>
             </>
           ) : savingState === 'saved_cloud' ? (
@@ -158,7 +158,7 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({
               savingState === 'could_not_save'
                 ? 'bg-rose-500'
                 : savingState === 'saving'
-                ? 'bg-[#087F83]'
+                ? 'bg-[var(--accent)]'
                 : 'bg-emerald-500'
             }`}
           />

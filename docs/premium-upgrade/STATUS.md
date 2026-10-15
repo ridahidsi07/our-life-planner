@@ -18,6 +18,7 @@ This document tracks progress across all phases of the Our Life Planner premium 
 | 09 Motion/responsive/states | **Complete** | Responsive matrix (1440x900, 1280x720, 768x1024, 390x844, 320px spot-check), zero page overflow, reduced motion compliance, state stability, and relative sample data generation on explicit load. 10/10 checks passed, 8 screenshots in `artifacts/premium-ui/phase-09/`. |
 | 10 Verification/delivery | **Complete** | All 33 acceptance items satisfied, 34/34 automated test suites passing in `npm.cmd run verify`, standalone offline HTML verified ($$typeof count 30), delivery package ZIP verified (416,817 bytes < 20 MB), and comprehensive `FINAL-REPORT.md` delivered. |
 | **Independent Review Corrections** | **Complete** | Findings R1–R8 from independent review on commit `8dc53a4` resolved: truthful completion analytics (R1), custom category counting (R2), view scope alignment & disclosure (R3), calendar items & counts reconciliation (R4), role-based accent tokens across UI & charts (R5), 320px responsive wrapping & category grid (R6), compact Focus card in Core Starter (R7), and test runner / 33 acceptance IDs ledger reconciliation (R8). Verified with 37 behavioral assertions in `test-correction-pass-regressions.ts`. |
+| **Findings F1–F4 Follow-up Pass** | **Complete** | Findings F1–F4 from second review resolved: F4 navigation rewrite in `test-apple-color-system.ts` with destination assertions and distinct SHA-256 hashes across all 12 screenshots; F1 complete elimination of undefined `--accent-foreground` / `--accent-muted` and paired primary button tokens meeting >= 4.5:1 contrast; F2 removal of `#087F83` / `#38D0C5` literals at consumers, default accent set to Apple for new installations (`INITIAL_SETTINGS` & `EMPTY_SETTINGS`) with preserved legacy fallback to Teal; F3 unified Calendar module filtering, chronological + all-day sorting (`compareCalendarItems`), and upcoming true count disclosure & toggle (`calendar-upcoming-badge`, `calendar-upcoming-toggle-btn`). Verified with 39 assertions in `test-findings-f1-f4.ts`. |
 
 ## Environment and baseline
 
@@ -29,7 +30,7 @@ This document tracks progress across all phases of the Our Life Planner premium 
 - **Test data and enabled modules:** Demo sample records with all 15 modules enabled for navigation verification.
 - **Protected delivery outputs / data-backup procedure:** Standalone bundle `dist/Our-Life-Planner-Offline.html` and release package `dist/Our-Life-Planner-v1.0.0-Delivery.zip` verified and protected. User backup export available via Settings > Data & Storage > Export JSON Backup (`Ctrl+B`).
 - **Baseline commands, exit codes and failures:**
-  - `npm.cmd run verify`: Exit code `0` (Lint: PASS, Build: PASS, Standalone inline bundle: PASS with `$$typeof` count 30, Package: PASS at 393.9 KB, Test Suites: 34/34 PASSED).
+  - `npm.cmd run verify`: Exit code `0` (Lint: PASS, Build: PASS, Standalone inline bundle: PASS with `$$typeof` count 30, Package: PASS at 418.5 KB, Test Suites: 36/36 PASSED).
 - **Baseline screenshots (`artifacts/premium-ui/phase-00/`):**
   - Desktop 1440x900: `today-1440x900-light.png`, `today-1440x900-dark.png`, `tasks-list-1440x900-light.png`, `tasks-insights-1440x900-light.png`, `quick-add-1440x900-light.png`, `calendar-1440x900-light.png`, `settings-1440x900-light.png`, `routines-1440x900-light.png`, `habits-1440x900-light.png`, `budget-1440x900-light.png`, `meals-1440x900-light.png`, `workouts-1440x900-light.png`.
   - Desktop 1280x720: `today-1280x720-light.png` (demonstrating current above-the-fold limitation).
@@ -37,12 +38,12 @@ This document tracks progress across all phases of the Our Life Planner premium 
 
 ## Current handoff
 
-- **Last completed phase:** Independent Review Correction Pass (October 15, 2026)
-- **Current status:** All 11 phases (00 through 10) and Independent Review findings (R1–R8) 100% complete, fully implemented, visually inspected, and reconciled against all 33 original acceptance items in `docs/premium-upgrade/ACCEPTANCE.md`.
-- **Quality gate:** Release Candidate Quality Gate PASSED. `npm.cmd run verify` passes with exit code 0 (Lint: 0 errors; Build: PASS; Package: PASS; Automated tests: 34/34 suites passed).
+- **Last completed phase:** Findings F1–F4 Follow-up Pass (October 15, 2026)
+- **Current status:** All 11 phases (00 through 10), Independent Review findings (R1–R8), and Second Review findings (F1–F4) 100% complete, fully implemented, visually verified, and reconciled against all 33 original acceptance items in `docs/premium-upgrade/ACCEPTANCE.md`.
+- **Quality gate:** Release Candidate Quality Gate PASSED. `npm.cmd run verify` passes with exit code 0 (Lint: 0 errors; Build: PASS; Package: PASS; Automated tests: 36/36 suites passed).
 - **Core delivery artifacts:**
-  - Standalone Offline HTML: `dist/Our-Life-Planner-Offline.html` (1,245 KB, `$$typeof` count preserved at 30).
-  - Delivery Package ZIP: `dist/Our-Life-Planner-v1.0.0-Delivery.zip` (416,817 bytes, strictly under Etsy's 20 MB limit).
+  - Standalone Offline HTML: `dist/Our-Life-Planner-Offline.html` (1,254.7 KB, `$$typeof` count preserved at 30).
+  - Delivery Package ZIP: `dist/Our-Life-Planner-v1.0.0-Delivery.zip` (418,545 bytes, strictly under Etsy's 20 MB limit).
   - Final Report: `docs/premium-upgrade/FINAL-REPORT.md`.
 - **Git branch:** `premium-ui-upgrade`. Ready for final commit and push to `origin/premium-ui-upgrade`.
 

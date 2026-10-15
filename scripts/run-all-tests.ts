@@ -52,6 +52,7 @@ const suites: TestSuite[] = [
 
   // 5. Apple-Inspired Color System & Neutral Design
   { name: 'Apple-Inspired Color System & Neutral Surfaces', command: 'npx tsx scripts/test-apple-color-system.ts', category: 'Apple Color System' },
+  { name: 'Review Findings F1–F4 Verification', command: 'npx tsx scripts/test-findings-f1-f4.ts', category: 'Apple Color System' },
 ];
 
 console.log('================================================================');

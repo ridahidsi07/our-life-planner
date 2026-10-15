@@ -399,6 +399,7 @@ export const TasksView: React.FC = () => {
         <div>
           <h2
             tabIndex={-1}
+            data-testid="tasks-heading"
             className="text-xl font-bold text-[#071A3A] dark:text-[#EDF4FF] outline-none"
           >
             Tasks
@@ -483,7 +484,7 @@ export const TasksView: React.FC = () => {
               type="button"
               onClick={handleRevealHiddenTask}
               data-testid="reveal-hidden-task-btn"
-              className="px-3 py-1.5 rounded-lg bg-[var(--accent)] text-[var(--accent-foreground)] font-semibold hover:opacity-90 transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] font-semibold transition-colors cursor-pointer"
             >
               Show task
             </button>
@@ -555,7 +556,7 @@ export const TasksView: React.FC = () => {
             type="button"
             data-testid="tasks-empty-cta"
             onClick={() => openCreateModal()}
-            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[var(--accent)] hover:opacity-90 text-[var(--accent-foreground)] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>Create your first task</span>
@@ -672,9 +673,9 @@ export const TasksView: React.FC = () => {
                 onClick={() => setSelectedDateFilter(isSelected ? 'all' : d.iso)}
                 className={`flex flex-col items-center justify-center py-1.5 px-0.5 rounded-lg transition-all cursor-pointer min-w-0 ${
                   isSelected
-                    ? 'bg-[var(--accent)] text-[var(--accent-foreground)] font-bold shadow-xs'
+                    ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] font-bold shadow-xs'
                     : isToday
-                    ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent-muted)]'
+                    ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--border-color)]'
                     : 'text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
                 title={`${d.name} (${d.iso})`}
@@ -684,7 +685,7 @@ export const TasksView: React.FC = () => {
                 <span
                   className={`text-[9px] px-1 rounded-full font-mono mt-0.5 ${
                     isSelected
-                      ? 'bg-white/20 text-white font-bold'
+                      ? 'bg-[var(--btn-primary-fg)]/20 text-[var(--btn-primary-fg)] font-bold'
                       : d.count > 0
                       ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-bold'
                       : 'text-slate-400 dark:text-slate-500'
@@ -787,7 +788,7 @@ export const TasksView: React.FC = () => {
                 <Filter className="w-3.5 h-3.5" />
                 <span>Filters</span>
                 {activeFilterCount > 0 && (
-                  <span className="w-4 h-4 rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] text-[10px] flex items-center justify-center font-bold">
+                  <span className="w-4 h-4 rounded-full bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-[10px] flex items-center justify-center font-bold">
                     {activeFilterCount}
                   </span>
                 )}
@@ -979,7 +980,7 @@ export const TasksView: React.FC = () => {
                       onClick={() => toggleTaskCompletion(task.id)}
                       className={`w-5 h-5 mt-0.5 rounded-md flex items-center justify-center shrink-0 cursor-pointer micro-checkbox ${
                         task.status === 'completed'
-                          ? 'bg-[var(--accent)] text-[var(--accent-foreground)]'
+                          ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)]'
                           : 'border border-slate-300 dark:border-slate-600 hover:border-[var(--accent)]'
                       }`}
                       aria-label={`Mark task "${task.title}" as ${task.status === 'completed' ? 'incomplete' : 'complete'}`}
@@ -1156,7 +1157,7 @@ export const TasksView: React.FC = () => {
                             onClick={() => toggleTaskCompletion(task.id)}
                             className={`w-4.5 h-4.5 rounded-md flex items-center justify-center cursor-pointer micro-checkbox ${
                               task.status === 'completed'
-                                ? 'bg-[var(--accent)] text-[var(--accent-foreground)] shadow-2xs'
+                                ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] shadow-2xs'
                                 : 'border border-slate-300 dark:border-slate-600 hover:border-[var(--accent)]'
                             }`}
                           >

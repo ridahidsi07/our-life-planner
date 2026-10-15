@@ -163,7 +163,7 @@ export const GoalsView: React.FC = () => {
 
         <button
           onClick={openCreateModal}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Set a goal</span>
@@ -174,7 +174,7 @@ export const GoalsView: React.FC = () => {
       {goals.length === 0 && (
         <div
           data-testid="goals-empty-hero"
-          className="bg-teal-50/70 dark:bg-teal-950/30 rounded-2xl p-6 border border-teal-200 dark:border-teal-800/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
+          className="bg-[var(--accent-soft)] rounded-2xl p-6 border border-[var(--border-color)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
         >
           <div className="space-y-1">
             <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
@@ -188,7 +188,7 @@ export const GoalsView: React.FC = () => {
             type="button"
             data-testid="goals-empty-cta"
             onClick={openCreateModal}
-            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>Set your first goal</span>
@@ -204,7 +204,7 @@ export const GoalsView: React.FC = () => {
             progress={overallMetrics.avgProgress}
             size={58}
             strokeWidth={6}
-            color="#087F83"
+            color="var(--accent)"
           >
             <span className="text-sm font-bold font-mono">
               {overallMetrics.avgProgress}%
@@ -254,7 +254,7 @@ export const GoalsView: React.FC = () => {
               onClick={() => setCategoryFilter(cat)}
               className={`px-3 py-1 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
                 categoryFilter === cat
-                  ? 'bg-[#087F83] text-white shadow-2xs'
+                  ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] shadow-2xs'
                   : 'bg-white dark:bg-[#152238] text-[#526782] hover:bg-slate-100 border border-slate-200 dark:border-slate-800'
               }`}
             >
@@ -285,7 +285,7 @@ export const GoalsView: React.FC = () => {
                 onClick={() => setSelectedGoalId(goal.id)}
                 className={`p-5 rounded-2xl border transition-all cursor-pointer bg-white dark:bg-[#152238] shadow-2xs ${
                   isSelected
-                    ? 'border-[#087F83] ring-1 ring-[#087F83]'
+                    ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]'
                     : 'border-[#E2E8F0] dark:border-[#1E2D4A] hover:border-slate-300'
                 }`}
               >
@@ -305,7 +305,7 @@ export const GoalsView: React.FC = () => {
                   </div>
 
                   <div className="text-right">
-                    <span className="text-sm font-bold font-mono text-[#087F83] dark:text-[#38D0C5]">
+                    <span className="text-sm font-bold font-mono text-[var(--accent)]">
                       {pct}%
                     </span>
                     <div className="text-[10px] text-[#526782]">
@@ -317,7 +317,7 @@ export const GoalsView: React.FC = () => {
                 {/* Progress bar */}
                 <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden my-3">
                   <div
-                    className="bg-[#087F83] dark:bg-[#38D0C5] h-full rounded-full transition-all duration-300"
+                    className="bg-[var(--accent)] h-full rounded-full transition-all duration-300"
                     style={{ width: `${pct}%` }}
                   />
                 </div>
@@ -423,7 +423,7 @@ export const GoalsView: React.FC = () => {
                         onClick={() => toggleGoalStep(selectedGoal.id, step.id)}
                         className={`w-5 h-5 rounded-md flex items-center justify-center cursor-pointer transition-colors ${
                           step.isCompleted
-                            ? 'bg-[#087F83] text-white'
+                            ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)]'
                             : 'border border-slate-300 dark:border-slate-600'
                         }`}
                       >
@@ -449,12 +449,12 @@ export const GoalsView: React.FC = () => {
                     value={newStepText}
                     onChange={(e) => setNewStepText(e.target.value)}
                     placeholder="Add a smaller action step…"
-                    className="flex-1 px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-slate-50 dark:bg-slate-800 text-xs focus:ring-2 focus:ring-[#087F83]"
+                    className="flex-1 px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-slate-50 dark:bg-slate-800 text-xs focus:ring-2 focus:ring-[var(--accent)]"
                   />
                   <button
                     type="submit"
                     disabled={!newStepText.trim()}
-                    className="px-3.5 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] disabled:opacity-50 cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] disabled:opacity-50 cursor-pointer"
                   >
                     Add step
                   </button>
@@ -491,7 +491,7 @@ export const GoalsView: React.FC = () => {
               value={modalTitle}
               onChange={(e) => setModalTitle(e.target.value)}
               placeholder="e.g. Finish portfolio, Learn Spanish"
-              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs focus:ring-2 focus:ring-[#087F83]"
+              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs focus:ring-2 focus:ring-[var(--accent)]"
             />
           </div>
 
@@ -598,7 +598,7 @@ export const GoalsView: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+              className="px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] text-xs font-semibold hover:bg-[var(--btn-primary-hover-bg)] cursor-pointer"
             >
               Save goal
             </button>

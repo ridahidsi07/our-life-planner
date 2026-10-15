@@ -1,0 +1,105 @@
+
+> our-life-planner@1.0.0 verify
+> npm run lint && npm run build && npm run package && npm run test:all
+
+
+> our-life-planner@1.0.0 lint
+> tsc --noEmit
+
+
+> our-life-planner@1.0.0 build
+> vite build && node scripts/build-standalone.mjs
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vite.config.ts:15:45). Use `import.meta.dirname` instead
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+vite v8.3.4 building client environment for production...
+transforming...
+✓ 1728 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                     2.64 kB │ gzip:   0.96 kB
+dist/assets/index-DHwfJ67t.css    152.03 kB │ gzip:  23.33 kB
+dist/assets/index-BeDB54lJ.js   1,130.51 kB │ gzip: 249.02 kB
+
+✓ built in 698ms
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+Successfully generated and verified standalone offline HTML bundle ($$typeof count preserved: 30)!
+
+> our-life-planner@1.0.0 package
+> node scripts/package-delivery.mjs
+
+Assembling package files...
+  ✓ Our-Life-Planner-Offline.html (1255.0 KB)
+  ✓ Our-Life-Planner-Getting-Started-Guide.pdf (167.3 KB)
+  ✓ README-START-HERE.txt (3.5 KB)
+  ✓ ETSY-DOWNLOAD-INSTRUCTIONS.md (3.7 KB)
+  ✓ ONLINE-ACCESS-INSTRUCTIONS.md (3.6 KB)
+  ✓ BACKUP-AND-UPGRADE-GUIDE.md (4.3 KB)
+  ✓ COMPATIBILITY-AND-REQUIREMENTS.md (3.4 KB)
+  ✓ SUPPORT-AND-TERMS.md (2.6 KB)
+  ✓ LICENSE-AND-NOTICES.txt (6.3 KB)
+Compressing into zip archive...
+
+Successfully created Our-Life-Planner-v1.0.0-Delivery.zip:
+  Size: 419054 bytes (0.40 MB)
+  Etsy Limit Check: PASSED (< 20 MB)
+
+> our-life-planner@1.0.0 test:all
+> npx tsx scripts/run-all-tests.ts
+
+================================================================
+OUR LIFE PLANNER — COMPREHENSIVE AUTOMATED VERIFICATION SUITE
+Running 35 test suites...
+================================================================
+
+• Running [Security] Secret & Credential Scan... PASS (180ms)
+• Running [Performance] LP-19 Performance & Bundle Latency... PASS (7271ms)
+• Running [End-to-End Rehearsal] Section 8 Complete Buyer Journey Rehearsal... PASS (3033ms)
+• Running [Core Modules] Recurrence Rules (Daily/Weekly/Monthly)... PASS (1170ms)
+• Running [Core Modules] Tab Sync & Coordination... PASS (1185ms)
+• Running [Core Modules] Budget & Bills Ledger... PASS (1310ms)
+• Running [Core Modules] Backup Validation & Schema Integrity... PASS (1142ms)
+• Running [Core Modules] Dialog Accessibility & Focus Trap... PASS (4429ms)
+• Running [Core Modules] Support Delivery & Mailto Helper... PASS (7353ms)
+• Running [Core Modules] Module Visibility & Customization... PASS (24250ms)
+• Running [Core Modules] Calendar .ics Export... PASS (25210ms)
+• Running [Core Modules] Habit Streaks & Rest Days... PASS (25239ms)
+• Running [Core Modules] PWA Service Worker & Offline Caching... PASS (28298ms)
+• Running [Core Modules] Standalone Offline HTML Edition... PASS (3557ms)
+• Running [Core Modules] Grocery List Aggregation & Units... PASS (25339ms)
+• Running [Core Modules] Weekly Review Guided Workflow... PASS (29224ms)
+• Running [Remediation] Phase 1: Core Reliability (LP-01 - LP-12)... PASS (7423ms)
+• Running [Remediation] Phase 2: Accessibility & Mobile (LP-13, LP-14)... PASS (24155ms)
+• Running [Remediation] Phase 3: Visual Polish & Clarity (LP-20)... PASS (13369ms)
+• Running [Remediation] Stage 3: Refocus Today & Responsive Navigation... PASS (7477ms)
+• Running [Remediation] Stage 4: Buyer First Session & Saving Confidence... PASS (10263ms)
+• Running [Remediation] Stage 5: Standardized Shared Interactions & Validation... PASS (11842ms)
+• Running [Remediation] Stage 6: Restrained Motion & Microinteractions... PASS (7868ms)
+• Running [Remediation] Stage 7: Customer Readiness & Design Quality Validation... PASS (12323ms)
+• Running [Remediation] Phase 4: Buyer Delivery & Packaging (LP-15 - LP-17)... PASS (2350ms)
+• Running [Premium Upgrade] Phase 01: Foundations & Shell Corrections... PASS (13560ms)
+• Running [Premium Upgrade] Phase 03: Tasks Hierarchy & Working Board... PASS (8837ms)
+• Running [Premium Upgrade] Phase 04: Insights & Useful Analytics... PASS (7707ms)
+• Running [Premium Upgrade] Phase 05: Contextual Capture & Details... PASS (10144ms)
+• Running [Premium Upgrade] Phase 06: Calendar Grid, Agenda & Sync... PASS (13261ms)
+• Running [Premium Upgrade] Phase 07: Shared Focus Controller... PASS (17793ms)
+• Running [Premium Upgrade] Phase 08: Themes, Accents & Modules... PASS (15488ms)
+• Running [Premium Upgrade] Phase 09: Polish, Motion & Responsive Matrix... PASS (8005ms)
+• Running [Premium Upgrade] Independent Review Corrections (R1–R8 Regressions)... PASS (1256ms)
+• Running [Apple Color System] Apple-Inspired Color System & Neutral Surfaces... PASS (13169ms)
+
+================================================================
+VERIFICATION SUMMARY
+================================================================
+Total Suites Executed: 35
+Passed:                35
+Failed:                0
+================================================================
+
+ALL VERIFICATION SUITES PASSED! RELEASE CANDIDATE QUALITY GATE MET.
+

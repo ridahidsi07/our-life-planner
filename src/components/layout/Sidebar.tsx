@@ -115,9 +115,9 @@ export const Sidebar: React.FC = () => {
     .filter((group) => group.items.length > 0);
 
   return (
-    <aside className="w-[220px] bg-white dark:bg-[#152238] border-r border-[#E2E8F0] dark:border-[#1E2D4A] flex flex-col h-screen shrink-0 sticky top-0 overflow-y-auto select-none transition-all">
+    <aside className="w-[220px] bg-[var(--surface)] border-r border-[var(--border-color)] flex flex-col h-screen shrink-0 sticky top-0 overflow-y-auto select-none transition-all">
       {/* Brand Header */}
-      <div className="px-4 py-4 border-b border-slate-100 dark:border-slate-800/80 shrink-0">
+      <div className="px-4 py-4 border-b border-[var(--border-color)] shrink-0">
         <Logo />
       </div>
 
@@ -131,14 +131,14 @@ export const Sidebar: React.FC = () => {
           >
             <div className="flex items-center justify-between px-2.5 py-1">
               <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#475569] dark:text-[#94A3B8]">
-                <Pin className="w-3 h-3 text-[#087F83] dark:text-[#38D0C5]" />
+                <Pin className="w-3 h-3 text-[var(--accent)]" />
                 <span>Favorites</span>
               </div>
               <button
                 type="button"
                 onClick={() => updateSettings({ pinnedTools: [] })}
                 title="Hide pinned favorites section"
-                className="text-[10px] font-medium text-[#526782] dark:text-[#A8B8CE] hover:text-[#087F83] dark:hover:text-[#38D0C5] cursor-pointer"
+                className="text-[10px] font-medium text-[#526782] dark:text-[#A8B8CE] hover:text-[var(--accent)] cursor-pointer"
               >
                 Clear
               </button>
@@ -236,13 +236,13 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Footer Profile, Shortcuts & Settings */}
-      <div className="p-2.5 border-t border-[#E2E8F0] dark:border-[#1E2D4A] space-y-1 shrink-0 bg-white/60 dark:bg-[#152238]/60">
+      <div className="p-2.5 border-t border-[var(--border-color)] space-y-1 shrink-0 bg-[var(--surface)]/60">
         {/* Quick Modals Toolbar */}
         <div className="grid grid-cols-2 gap-1 mb-1.5">
           <button
             type="button"
             onClick={() => setActiveModal('focus_mode')}
-            className="flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5] text-[11px] font-semibold hover:bg-teal-100 dark:hover:bg-teal-900/70 transition-colors cursor-pointer"
+            className="flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] text-[11px] font-semibold hover:opacity-90 transition-colors cursor-pointer"
           >
             <Zap className="w-3 h-3" />
             <span>Focus</span>
@@ -290,7 +290,7 @@ export const Sidebar: React.FC = () => {
           onClick={() => setActiveModal('backup_restore')}
           className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium text-[#526782] dark:text-[#A8B8CE] hover:text-[#071A3A] dark:hover:text-[#EDF4FF] hover:bg-slate-100/70 dark:hover:bg-slate-800 cursor-pointer transition-colors"
         >
-          <ShieldCheck className="w-3.5 h-3.5 text-[#087F83] dark:text-[#38D0C5]" />
+          <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent)]" />
           <span>Backup & Restore</span>
         </button>
 

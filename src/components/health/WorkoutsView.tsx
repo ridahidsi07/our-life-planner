@@ -396,7 +396,7 @@ export const WorkoutsView: React.FC = () => {
                 aria-pressed={activeTab === t}
                 className={`min-h-[44px] sm:min-h-[36px] px-3.5 py-1.5 rounded-lg capitalize transition-colors cursor-pointer ${
                   activeTab === t
-                    ? 'bg-white dark:bg-[#152238] text-[#087F83] dark:text-[#38D0C5] shadow-xs'
+                    ? 'bg-white dark:bg-[#152238] text-[var(--accent)] shadow-xs font-semibold'
                     : 'hover:text-[#071A3A] dark:hover:text-[#EDF4FF]'
                 }`}
               >
@@ -408,7 +408,7 @@ export const WorkoutsView: React.FC = () => {
           <button
             type="button"
             onClick={() => openCreateModal(selectedDate)}
-            className="min-h-[44px] flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+            className="min-h-[44px] flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] font-semibold text-xs transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>New workout</span>
@@ -420,7 +420,7 @@ export const WorkoutsView: React.FC = () => {
       {workouts.length === 0 && (
         <div
           data-testid="workouts-empty-hero"
-          className="bg-white dark:bg-[#152238] rounded-2xl p-6 border-2 border-dashed border-[#087F83]/35 dark:border-[#38D0C5]/35 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+          className="bg-white dark:bg-[#152238] rounded-2xl p-6 border-2 border-dashed border-[var(--border-color)] shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
         >
           <div className="space-y-1">
             <h2 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
@@ -434,7 +434,7 @@ export const WorkoutsView: React.FC = () => {
             type="button"
             data-testid="workouts-empty-cta"
             onClick={() => openCreateModal(selectedDate)}
-            className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#087F83] hover:bg-[#06676A] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A] text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0"
+            className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover-bg)] text-[var(--btn-primary-fg)] text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0"
           >
             <Plus className="w-4 h-4" />
             <span>Create your first workout</span>
@@ -514,9 +514,9 @@ export const WorkoutsView: React.FC = () => {
                 }}
                 className={`p-3 rounded-xl border text-xs transition-all cursor-pointer select-none text-left flex flex-col justify-between ${
                   isColSelected
-                    ? 'border-[#087F83] ring-2 ring-[#087F83]/30 bg-teal-50/60 dark:bg-teal-950/30'
+                    ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/30 bg-[var(--accent-soft)]'
                     : col.isToday
-                    ? 'border-teal-300 dark:border-teal-800 bg-teal-50/20 dark:bg-teal-950/10'
+                    ? 'border-[var(--accent)]/40 bg-[var(--accent-soft)]/20'
                     : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-700'
                 }`}
               >
@@ -526,7 +526,7 @@ export const WorkoutsView: React.FC = () => {
                       {col.dayName} {col.dayNum}
                     </span>
                     {col.isToday && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#087F83]" title="Today" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" title="Today" />
                     )}
                   </div>
                   <div className="font-bold text-[#071A3A] dark:text-[#EDF4FF] mt-1.5 truncate">
@@ -542,7 +542,7 @@ export const WorkoutsView: React.FC = () => {
                         ? 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                         : col.status === 'Completed'
                         ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
-                        : 'bg-teal-100 dark:bg-teal-900/60 text-[#087F83] dark:text-[#38D0C5]'
+                        : 'bg-[var(--accent-soft)] text-[var(--accent)]'
                     }`}
                   >
                     {col.status}
@@ -580,7 +580,7 @@ export const WorkoutsView: React.FC = () => {
                             ? 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
                             : selectedSession.isCompleted
                             ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
-                            : 'bg-teal-50 dark:bg-teal-950/60 text-[#087F83] dark:text-[#38D0C5]'
+                            : 'bg-[var(--accent-soft)] text-[var(--accent)]'
                         }`}
                       >
                         {selectedSession.isRestDay
@@ -612,7 +612,7 @@ export const WorkoutsView: React.FC = () => {
                       title="Edit session details"
                       aria-label={`Edit session details for "${selectedSession.title}"`}
                     >
-                      <Edit2 className="w-3.5 h-3.5 text-[#087F83] dark:text-[#38D0C5]" />
+                      <Edit2 className="w-3.5 h-3.5 text-[var(--accent)]" />
                       <span>Edit</span>
                     </button>
 
@@ -637,7 +637,7 @@ export const WorkoutsView: React.FC = () => {
                       className={`min-h-[44px] sm:min-h-9 px-3.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${
                         selectedSession.isCompleted
                           ? 'bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-200 dark:hover:bg-slate-700'
-                          : 'bg-[#087F83] text-white hover:bg-[#06676A] dark:bg-[#38D0C5] dark:text-[#071A3A] dark:hover:bg-[#2BB5AB]'
+                          : 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)]'
                       }`}
                     >
                       {selectedSession.isCompleted ? 'Mark active' : 'Complete'}
@@ -678,7 +678,7 @@ export const WorkoutsView: React.FC = () => {
                       setNewExDefaultRest(60);
                       setIsAddExerciseModalOpen(true);
                     }}
-                    className="min-h-[44px] sm:min-h-9 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900/70 text-[#087F83] dark:text-[#38D0C5] text-xs font-semibold cursor-pointer border border-teal-200 dark:border-teal-900/60 transition-colors"
+                    className="min-h-[44px] sm:min-h-9 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)] text-xs font-semibold cursor-pointer transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Add exercise</span>
@@ -693,7 +693,7 @@ export const WorkoutsView: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setIsAddExerciseModalOpen(true)}
-                        className="mt-2 min-h-[44px] px-3 text-xs font-semibold text-[#087F83] dark:text-[#38D0C5] hover:underline"
+                        className="mt-2 min-h-[44px] px-3 text-xs font-semibold text-[var(--accent)] hover:underline"
                       >
                         + Add first exercise
                       </button>
@@ -724,7 +724,7 @@ export const WorkoutsView: React.FC = () => {
                             </div>
 
                             <div className="flex items-center gap-1.5">
-                              <span className="text-xs font-mono font-bold text-[#087F83] dark:text-[#38D0C5]">
+                              <span className="text-xs font-mono font-bold text-[var(--accent)]">
                                 {exVol} {settings.weightUnit} ({completedSets}/{ex.sets.length} sets)
                               </span>
 
@@ -841,12 +841,12 @@ export const WorkoutsView: React.FC = () => {
                                         onClick={() =>
                                           toggleSetCompleted(selectedSession.id, ex.id, set.setNumber)
                                         }
-                                        className="min-w-[44px] min-h-[44px] p-2 rounded-lg inline-flex items-center justify-center cursor-pointer transition-colors hover:bg-teal-50/70 dark:hover:bg-teal-950/40"
+                                        className="min-w-[44px] min-h-[44px] p-2 rounded-lg inline-flex items-center justify-center cursor-pointer transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
                                       >
                                         <span
                                           className={`w-5.5 h-5.5 rounded-md inline-flex items-center justify-center transition-colors ${
                                             set.isCompleted
-                                              ? 'bg-[#087F83] dark:bg-[#38D0C5] text-white dark:text-[#071A3A] border border-[#087F83] dark:border-[#38D0C5]'
+                                              ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] border border-[var(--btn-primary-bg)]'
                                               : 'border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-[#152238]'
                                           }`}
                                         >
@@ -879,7 +879,7 @@ export const WorkoutsView: React.FC = () => {
                               type="button"
                               aria-label={`Add set for ${ex.name}`}
                               onClick={() => addSetToExercise(selectedSession.id, ex.id)}
-                              className="min-h-[44px] sm:min-h-8 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-[#087F83] dark:text-[#38D0C5] hover:bg-teal-50 dark:hover:bg-teal-950/50 border border-teal-200 dark:border-teal-900/50 inline-flex items-center gap-1 cursor-pointer transition-colors"
+                              className="min-h-[44px] sm:min-h-8 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-[var(--accent)] hover:bg-slate-100 dark:hover:bg-slate-800 border border-[var(--border-color)] inline-flex items-center gap-1 cursor-pointer transition-colors"
                             >
                               <Plus className="w-3.5 h-3.5" />
                               <span>Add set</span>
@@ -898,7 +898,7 @@ export const WorkoutsView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => openCreateModal(selectedDate)}
-                  className="mt-3 min-h-[44px] px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] cursor-pointer"
+                  className="mt-3 min-h-[44px] px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)] text-xs font-semibold cursor-pointer"
                 >
                   Schedule workout on this date
                 </button>
@@ -924,7 +924,7 @@ export const WorkoutsView: React.FC = () => {
 
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
                   <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">Volume</div>
-                  <div className="text-xl font-bold font-mono text-[#087F83] dark:text-[#38D0C5] mt-1">
+                  <div className="text-xl font-bold font-mono text-[var(--accent)] mt-1">
                     {sessionVolume.toLocaleString()} {settings.weightUnit}
                   </div>
                 </div>
@@ -948,7 +948,7 @@ export const WorkoutsView: React.FC = () => {
                   className={`w-full min-h-[44px] py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${
                     selectedSession.isCompleted
                       ? 'bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-200 dark:hover:bg-slate-700'
-                      : 'bg-[#071A3A] hover:bg-[#0B2552] dark:bg-[#38D0C5] dark:hover:bg-[#2BB5AB] text-white dark:text-[#071A3A]'
+                      : 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)]'
                   }`}
                 >
                   {selectedSession.isCompleted ? 'Session completed ✓' : 'Finish session'}
@@ -1005,7 +1005,7 @@ export const WorkoutsView: React.FC = () => {
                   </span>
                   <div
                     aria-labelledby="cardio-calc-speed-label"
-                    className="min-h-[40px] px-2.5 py-1.5 rounded-xl flex items-center bg-slate-50 dark:bg-slate-800 text-xs font-mono font-bold text-[#087F83] dark:text-[#38D0C5]"
+                    className="min-h-[40px] px-2.5 py-1.5 rounded-xl flex items-center bg-slate-50 dark:bg-slate-800 text-xs font-mono font-bold text-[var(--accent)]"
                   >
                     {calculatedSpeed ? `${calculatedSpeed} km/h` : '–'}
                   </div>
@@ -1038,7 +1038,7 @@ export const WorkoutsView: React.FC = () => {
 
             <div className="bg-white dark:bg-[#152238] rounded-2xl p-4 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
               <div className="text-xs text-[#526782] dark:text-[#A8B8CE]">Total volume</div>
-              <div className="text-2xl font-bold font-mono text-[#087F83] dark:text-[#38D0C5] mt-1">
+              <div className="text-2xl font-bold font-mono text-[var(--accent)] mt-1">
                 {workouts.reduce((sum, w) => sum + calculateWorkoutVolume(w, settings.weightUnit), 0).toLocaleString()} {settings.weightUnit}
               </div>
               <div className="text-[10px] text-emerald-600 font-medium">
@@ -1073,7 +1073,7 @@ export const WorkoutsView: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60">
                 <span className="text-[#526782] dark:text-[#A8B8CE] block text-[11px]">Legs</span>
-                <span className="text-lg font-bold text-[#087F83] dark:text-[#38D0C5] mt-1 block">
+                <span className="text-lg font-bold text-[var(--accent)] mt-1 block">
                   {workouts.filter((w) => w.muscleGroups?.some((mg) => mg.toLowerCase().includes('leg'))).length} sessions
                 </span>
               </div>
@@ -1167,7 +1167,7 @@ export const WorkoutsView: React.FC = () => {
               value={createTitle}
               onChange={(e) => setCreateTitle(e.target.value)}
               placeholder="e.g. QA TEST — workout, Lower body strength, Morning run"
-              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-semibold focus:ring-2 focus:ring-[#087F83]"
+              className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#1E2D4A] bg-white dark:bg-[#152238] text-xs font-semibold focus:ring-2 focus:ring-[var(--accent)]"
             />
           </div>
 
@@ -1276,7 +1276,7 @@ export const WorkoutsView: React.FC = () => {
                         },
                       ]);
                     }}
-                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-[#087F83] text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer"
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-[var(--accent)] text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer"
                   >
                     + {preset.name}
                   </button>
@@ -1417,7 +1417,7 @@ export const WorkoutsView: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="min-h-[44px] px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A] dark:bg-[#38D0C5] dark:text-[#071A3A] dark:hover:bg-[#2BB5AB] cursor-pointer"
+              className="min-h-[44px] px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)] text-xs font-semibold cursor-pointer"
             >
               Save workout
             </button>
@@ -1532,7 +1532,7 @@ export const WorkoutsView: React.FC = () => {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+                className="px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)] text-xs font-semibold cursor-pointer"
               >
                 Save changes
               </button>
@@ -1580,7 +1580,7 @@ export const WorkoutsView: React.FC = () => {
                       setNewExDefaultWeight(preset.defaultWeight);
                       setNewExDefaultReps(preset.defaultReps);
                     }}
-                    className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-teal-50 dark:hover:bg-teal-950/60 text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer"
+                    className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer"
                   >
                     {preset.name}
                   </button>
@@ -1719,7 +1719,7 @@ export const WorkoutsView: React.FC = () => {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+                className="px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)] text-xs font-semibold cursor-pointer"
               >
                 Add exercise
               </button>
@@ -1827,7 +1827,7 @@ export const WorkoutsView: React.FC = () => {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl bg-[#087F83] text-white text-xs font-semibold hover:bg-[#06676A]"
+                className="px-4 py-2 rounded-xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover-bg)] text-xs font-semibold cursor-pointer"
               >
                 Save
               </button>
