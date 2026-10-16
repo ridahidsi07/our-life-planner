@@ -1,0 +1,16 @@
+2026-10-16 09:19:35.531: [INFO] CurrentProfilePath: C:\Users\Rida\Desktop\web app business\our-life-planner build\dist\.tmp-edge-stage3-1792142375228\Default
+2026-10-16 09:19:35.531: [INFO] Profiles total count: 1
+2026-10-16 09:19:35.531: [INFO] Profile: name=Profile 1 path=C:\Users\Rida\Desktop\web app business\our-life-planner build\dist\.tmp-edge-stage3-1792142375228\Default lastActive=null
+2026-10-16 09:19:35.531: [INFO] LastUsedProfileDir: C:\Users\Rida\Desktop\web app business\our-life-planner build\dist\.tmp-edge-stage3-1792142375228\Default
+2026-10-16 09:19:35.531: [INFO] VisibilityChanged: 0
+2026-10-16 09:19:35.559: [INFO] OnDoneLoading sync enabled: 0
+2026-10-16 09:19:35.559: [INFO] BookmarkModelLoaded, ids_reassigned: 0
+2026-10-16 09:19:35.559: [INFO] BookmarksLoadDropped droppedNodes=0
+2026-10-16 09:19:35.559: [INFO] BookmarksSnapshot Startup total=0 bar=0 other=0 mobile=0 showBar=0 showBarNTP=1
+2026-10-16 09:19:35.560: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-10-16 09:19:35.771: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-10-16 09:19:35.772: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-10-16 09:19:35.774: [INFO] Primary account changed.
+2026-10-16 09:19:35.774: [INFO] OnPrimaryAccountChanged PrimaryAccountChangeEvent::Type::kSet
+2026-10-16 09:19:35.779: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-10-16 09:19:35.780: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0

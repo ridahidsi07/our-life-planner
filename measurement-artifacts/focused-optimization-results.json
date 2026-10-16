@@ -1,0 +1,123 @@
+{
+  "testedAt": "2026-10-11T18:08:32.758Z",
+  "environment": {
+    "url": "http://127.0.0.1:5050",
+    "nodeVersion": "v22.23.2",
+    "browserVersion": "Chrome/148.0.7778.97"
+  },
+  "persistenceCheck": {
+    "task1InitialStatus": "not_started",
+    "toggleClicked": false,
+    "writesPerformed": [],
+    "task1StatusAfterToggle": "not_started",
+    "task1StatusAfterReload": "not_started",
+    "domCheckedAfterReload": false,
+    "verified": false
+  },
+  "desktopMeasurements": {
+    "tasksNavigation": {
+      "durationMs": 113.1,
+      "longTasksCount": 1,
+      "longTasks": [
+        {
+          "duration": 91,
+          "startTime": 3243
+        }
+      ],
+      "domRows": 12,
+      "domCards": 12
+    },
+    "paginationTest": {
+      "page2FirstTask": "Renew car insurance",
+      "page1FirstTask": "Renew car insurance",
+      "nextAndPrevFunctioning": false
+    },
+    "searchTyping": {
+      "query": "milestone",
+      "keyLatencies": [
+        0.8,
+        16.4,
+        16.4,
+        16.6,
+        16.6,
+        16.8,
+        16.8,
+        16.8,
+        17.2
+      ],
+      "medianKeyLatencyMs": 16.6,
+      "maxKeyLatencyMs": 17.2,
+      "longTasksCount": 0,
+      "longTasks": [],
+      "renderedItems": 0,
+      "hasShowMoreButton": false
+    }
+  },
+  "mobileMeasurements": {
+    "throttlingProfile": "4x CPU slowdown, Viewport 390x844 (Mobile iPhone 14/15 size)",
+    "tasksNavigation": {
+      "durationMs": 619.6,
+      "longTasksCount": 1,
+      "longTasks": [
+        {
+          "duration": 562,
+          "startTime": 5437
+        }
+      ],
+      "renderedCards": 12
+    },
+    "taskToggleInteraction": {
+      "inpDurationMs": 1098.6,
+      "longTasksCount": 0,
+      "longTasks": []
+    },
+    "searchTyping": {
+      "query": "milestone",
+      "medianKeyLatencyMs": 188.8,
+      "maxKeyLatencyMs": 527.3,
+      "longTasksCount": 8,
+      "longTasks": [
+        {
+          "duration": 76,
+          "startTime": 12416
+        },
+        {
+          "duration": 94,
+          "startTime": 12510
+        },
+        {
+          "duration": 94,
+          "startTime": 12605
+        },
+        {
+          "duration": 177,
+          "startTime": 12710
+        },
+        {
+          "duration": 181,
+          "startTime": 12898
+        },
+        {
+          "duration": 95,
+          "startTime": 13082
+        },
+        {
+          "duration": 330,
+          "startTime": 13179
+        },
+        {
+          "duration": 172,
+          "startTime": 13624
+        }
+      ]
+    }
+  },
+  "offlineVerification": {
+    "offlineModeActive": true,
+    "navigationResults": {
+      "Tasks": true,
+      "Today": true
+    },
+    "passed": true
+  }
+}

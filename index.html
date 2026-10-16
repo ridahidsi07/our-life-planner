@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Our Life Planner</title>
+    <meta name="description" content="Complete, responsive personal planning application with 15 integrated daily, habit, money, meal, and health tools." />
+    <meta property="og:title" content="Our Life Planner" />
+    <meta property="og:description" content="Complete, responsive personal planning application with 15 integrated daily, habit, money, meal, and health tools." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#087F83" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Life Planner" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="./icon-192.svg" />
+    <link rel="apple-touch-icon" href="./icon-192.svg" />
+
+    <script>
+      (function() {
+        try {
+          var stored = localStorage.getItem('our_life_planner_settings_v1') || localStorage.getItem('life_planner_settings_v1');
+          var theme = 'light';
+          if (stored) {
+            var parsed = JSON.parse(stored);
+            if (parsed && parsed.theme) theme = parsed.theme;
+          }
+          var isDark = false;
+          if (theme === 'dark') {
+            isDark = true;
+          } else if (theme === 'light') {
+            isDark = false;
+          } else {
+            isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          }
+          var root = document.documentElement;
+          if (isDark) {
+            root.classList.add('dark');
+            root.classList.remove('light');
+            root.setAttribute('data-theme', 'dark');
+            root.style.colorScheme = 'dark';
+          } else {
+            root.classList.remove('dark');
+            root.classList.add('light');
+            root.setAttribute('data-theme', 'light');
+            root.style.colorScheme = 'light';
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" crossorigin src="./assets/index-DhShGUpM.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CErgn_Z2.css">
+  </head>
+  <body class="bg-[#F3F8FC] dark:bg-[#0B1220] text-[#071A3A] dark:text-[#EDF4FF] antialiased">
+    <div id="root"></div>
+  </body>
+</html>
+

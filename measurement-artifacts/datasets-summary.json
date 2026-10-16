@@ -1,0 +1,56 @@
+{
+  "smallDataset": {
+    "totalRecords": 86,
+    "isValid": true,
+    "errorCount": 0,
+    "counts": {
+      "tasks": 12,
+      "routines": 7,
+      "goals": 2,
+      "habits": 4,
+      "inbox": 5,
+      "transactions": 6,
+      "bills": 3,
+      "savingsPots": 2,
+      "debts": 1,
+      "recipes": 3,
+      "plannedMeals": 7,
+      "groceries": 8,
+      "workouts": 8,
+      "weightProfiles": 2,
+      "weightRecords": 3,
+      "hydrationEntries": 9,
+      "hydrationTargets": 1,
+      "calendarEvents": 3
+    },
+    "rawBytes": 19061,
+    "gzipBytes": 4166
+  },
+  "stressDataset": {
+    "totalRecords": 3045,
+    "isValid": true,
+    "errorCount": 0,
+    "counts": {
+      "tasks": 1000,
+      "routines": 7,
+      "goals": 2,
+      "habits": 4,
+      "inbox": 5,
+      "transactions": 1000,
+      "bills": 3,
+      "savingsPots": 2,
+      "debts": 1,
+      "recipes": 3,
+      "plannedMeals": 7,
+      "groceries": 8,
+      "workouts": 250,
+      "weightProfiles": 2,
+      "weightRecords": 250,
+      "hydrationEntries": 350,
+      "hydrationTargets": 1,
+      "calendarEvents": 150
+    },
+    "rawBytes": 665739,
+    "gzipBytes": 35209
+  }
+}
