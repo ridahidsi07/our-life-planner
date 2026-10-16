@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
 import { Modal } from '../ui/Modal';
 import {
@@ -51,11 +51,19 @@ export const AccountModal: React.FC = () => {
   } = usePlanner();
 
   // Local profile editing (explicitly local-only)
-  const [ownerName, setOwnerName] = useState(settings.ownerName);
-  const [email, setEmail] = useState(settings.email || 'user@example.com');
+  const [ownerName, setOwnerName] = useState(settings.ownerName || '');
+  const [email, setEmail] = useState(settings.email || '');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [saveFeedback, setSaveFeedback] = useState(false);
   const [exportFeedback, setExportFeedback] = useState(false);
+
+  // Synchronize profile draft fields when settings change or modal opens
+  useEffect(() => {
+    if (!isEditingProfile) {
+      setOwnerName(settings.ownerName || '');
+      setEmail(settings.email || '');
+    }
+  }, [settings.ownerName, settings.email, activeModal, isEditingProfile]);
 
   // Online Cloud Account state
   const [authTab, setAuthTab] = useState<'login' | 'register' | 'recover'>('login');
@@ -78,7 +86,7 @@ export const AccountModal: React.FC = () => {
     e.preventDefault();
     updateSettings({
       ownerName: ownerName.trim() || 'Owner',
-      email: email.trim() || 'user@example.com',
+      email: email.trim(),
     });
     setIsEditingProfile(false);
     setSaveFeedback(true);
@@ -283,24 +291,24 @@ export const AccountModal: React.FC = () => {
     >
       <div className="space-y-5 text-xs text-[#071A3A] dark:text-[#EDF4FF]">
         {/* Local Profile Card */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-[#152238] border border-slate-200 dark:border-slate-700/80 shadow-2xs space-y-4">
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-[var(--accent)] text-white flex items-center justify-center font-bold text-lg shadow-xs">
-                {(ownerName || 'M').charAt(0)}
+                {(settings.ownerName || ownerName || 'M').charAt(0).toUpperCase()}
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
-                    {ownerName || 'Me'}
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                    {settings.ownerName || 'Me'}
                   </h3>
                   <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold text-[10px]">
                     Local Device Profile Only
                   </span>
                 </div>
-                <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE] flex items-center gap-1.5 mt-0.5">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
                   <Mail className="w-3.5 h-3.5" />
-                  <span>{email}</span>
+                  <span>{settings.email || (cloudSyncState.accountId ? cloudSyncState.email : '') || 'No email configured'}</span>
                 </div>
               </div>
             </div>
@@ -322,7 +330,7 @@ export const AccountModal: React.FC = () => {
               <div>
                 <label
                   htmlFor="account-owner-name"
-                  className="block text-[11px] font-semibold text-[#526782] dark:text-[#A8B8CE] mb-1"
+                  className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1"
                 >
                   Owner / Display Name
                 </label>
@@ -330,25 +338,26 @@ export const AccountModal: React.FC = () => {
                   id="account-owner-name"
                   type="text"
                   required
+                  placeholder="Your Name"
                   value={ownerName}
                   onChange={(e) => setOwnerName(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1220] text-xs font-semibold"
+                  className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-semibold"
                 />
               </div>
               <div>
                 <label
                   htmlFor="account-profile-email"
-                  className="block text-[11px] font-semibold text-[#526782] dark:text-[#A8B8CE] mb-1"
+                  className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1"
                 >
-                  Local Contact Email (Metadata)
+                  Local Contact Email (Optional Metadata)
                 </label>
                 <input
                   id="account-profile-email"
                   type="email"
-                  required
+                  placeholder="name@example.com (optional)"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1220] text-xs"
+                  className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs"
                 />
               </div>
               <div className="sm:col-span-2 flex justify-end gap-2">
@@ -375,11 +384,11 @@ export const AccountModal: React.FC = () => {
         </div>
 
         {/* Online Account & Cross-Device Cloud Sync (LP-01) */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-[#152238] border border-slate-200 dark:border-slate-700/80 shadow-2xs space-y-3">
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Cloud className="w-4 h-4 text-[var(--accent)]" />
-              <h4 className="font-bold text-xs text-[#071A3A] dark:text-[#EDF4FF]">
+              <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100">
                 Online Account & Cross-Device Sync
               </h4>
             </div>
@@ -388,7 +397,7 @@ export const AccountModal: React.FC = () => {
                 className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                   isCloudConnected
                     ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
-                    : 'bg-slate-100 dark:bg-slate-800 text-[#526782] dark:text-[#A8B8CE]'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                 }`}
               >
                 {isCloudConnected
@@ -415,7 +424,7 @@ export const AccountModal: React.FC = () => {
                 type="url"
                 value={apiEndpoint}
                 onChange={(e) => setApiEndpoint(e.target.value)}
-                className="flex-1 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1220] text-xs font-mono"
+                className="flex-1 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-mono"
               />
               <button
                 type="button"
@@ -511,7 +520,7 @@ export const AccountModal: React.FC = () => {
                     value={cloudEmail}
                     onChange={(e) => setCloudEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1220] text-xs"
+                    className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs"
                   />
                 </div>
 
@@ -526,7 +535,7 @@ export const AccountModal: React.FC = () => {
                       value={cloudDisplayName}
                       onChange={(e) => setCloudDisplayName(e.target.value)}
                       placeholder="Your name"
-                      className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1220] text-xs"
+                      className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs"
                     />
                   </div>
                 )}
@@ -544,7 +553,7 @@ export const AccountModal: React.FC = () => {
                       value={cloudPassword}
                       onChange={(e) => setCloudPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1220] text-xs"
+                      className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs"
                     />
                   </div>
                 ) : (
@@ -560,7 +569,7 @@ export const AccountModal: React.FC = () => {
                         value={recoveryKeyInput}
                         onChange={(e) => setRecoveryKeyInput(e.target.value)}
                         placeholder="OLP-XXXX-XXXX-XXXX-XXXX"
-                        className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1220] text-xs font-mono"
+                        className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-mono"
                       />
                     </div>
                     <div className="sm:col-span-2">
@@ -575,7 +584,7 @@ export const AccountModal: React.FC = () => {
                         value={newRecoveryPassword}
                         onChange={(e) => setNewRecoveryPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1220] text-xs"
+                        className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs"
                       />
                     </div>
                   </>
@@ -629,7 +638,7 @@ export const AccountModal: React.FC = () => {
                   id="cloud-migration-mode"
                   value={migrationChoice}
                   onChange={(e) => setMigrationChoice(e.target.value as any)}
-                  className="flex-1 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1220] text-xs"
+                  className="flex-1 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs"
                 >
                   <option value="merge">3-Way Merge (Preserve both local & cloud changes)</option>
                   <option value="use_cloud">Use Cloud Data (Replace local with server snapshot)</option>
@@ -704,9 +713,9 @@ export const AccountModal: React.FC = () => {
         {/* Advanced Storage & Footprint Details */}
         <details
           data-testid="account-advanced-details"
-          className="rounded-2xl bg-white dark:bg-[#152238] border border-slate-200 dark:border-slate-700/80 shadow-2xs p-4"
+          className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs p-4"
         >
-          <summary className="font-bold text-xs text-[#071A3A] dark:text-[#EDF4FF] cursor-pointer select-none flex items-center justify-between">
+          <summary className="font-bold text-xs text-slate-900 dark:text-slate-100 cursor-pointer select-none flex items-center justify-between">
             <span className="flex items-center gap-2">
               <Database className="w-4 h-4 text-[var(--accent)]" />
               <span>Advanced details: Browser storage &amp; record footprint (~{estimatedStorageKb} KB)</span>
@@ -724,58 +733,58 @@ export const AccountModal: React.FC = () => {
                   Local-First Browser Storage (localStorage)
                 </h4>
               </div>
-              <p className="text-[11px] text-[#526782] dark:text-[#A8B8CE] leading-relaxed">
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
                 All planner records are stored durably in this browser&apos;s local storage (<code className="text-[10px] font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">localStorage</code>). Unless you explicitly connect an Online Account above, zero personal data leaves your device.
               </p>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
-                <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE]">Tasks & Routines</div>
-                <div className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF] mt-0.5">
+                <div className="text-[10px] text-slate-500 dark:text-slate-400">Tasks & Routines</div>
+                <div className="text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                   {tasks.length + routines.length}
                 </div>
               </div>
 
               <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
-                <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE]">Finances & Bills</div>
-                <div className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF] mt-0.5">
+                <div className="text-[10px] text-slate-500 dark:text-slate-400">Finances & Bills</div>
+                <div className="text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                   {transactions.length + bills.length + savingsPots.length}
                 </div>
               </div>
 
               <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
-                <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE]">Habits & Notes</div>
-                <div className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF] mt-0.5">
+                <div className="text-[10px] text-slate-500 dark:text-slate-400">Habits & Notes</div>
+                <div className="text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                   {habits.length + inbox.length}
                 </div>
               </div>
 
               <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
-                <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE]">Storage Used</div>
-                <div className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF] mt-0.5">
+                <div className="text-[10px] text-slate-500 dark:text-slate-400">Storage Used</div>
+                <div className="text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                   ~{estimatedStorageKb} KB
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-[#526782] dark:text-[#A8B8CE]">
-              <span>Total records saved: <strong className="text-[#071A3A] dark:text-[#EDF4FF]">{totalItemsCount} items</strong></span>
-              <span>Last backup export: <strong className="text-[#071A3A] dark:text-[#EDF4FF]">{settings.lastBackupDate || 'Not yet exported'}</strong></span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
+              <span>Total records saved: <strong className="text-slate-900 dark:text-slate-100">{totalItemsCount} items</strong></span>
+              <span>Last backup export: <strong className="text-slate-900 dark:text-slate-100">{settings.lastBackupDate || 'Not yet exported'}</strong></span>
             </div>
           </div>
         </details>
 
         {/* Backups & Multi-Device Transfer Guidance */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-[#152238] border border-slate-200 dark:border-slate-700/80 shadow-2xs space-y-3">
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-3">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-[var(--accent)]" />
-            <h4 className="font-bold text-xs text-[#071A3A] dark:text-[#EDF4FF]">
+            <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100">
               Offline Backups & Standalone Bundle
             </h4>
           </div>
 
-          <p className="text-[11px] text-[#526782] dark:text-[#A8B8CE] leading-relaxed">
+          <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
             You can always export or restore full versioned JSON backups or download the standalone offline HTML application with zero server dependency:
           </p>
 
@@ -787,11 +796,11 @@ export const AccountModal: React.FC = () => {
               }}
               className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors cursor-pointer"
             >
-              <div className="font-bold text-[11px] text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-1.5">
+              <div className="font-bold text-[11px] text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                 <Database className="w-3.5 h-3.5 text-[var(--accent)]" />
                 <span>Backup & Restore</span>
               </div>
-              <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] mt-1">
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                 Import or export complete versioned JSON snapshots.
               </div>
             </button>
@@ -801,11 +810,11 @@ export const AccountModal: React.FC = () => {
               onClick={handleQuickExport}
               className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors cursor-pointer"
             >
-              <div className="font-bold text-[11px] text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-1.5">
+              <div className="font-bold text-[11px] text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                 <FileText className="w-3.5 h-3.5 text-[var(--accent)]" />
                 <span>Export JSON File</span>
               </div>
-              <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] mt-1">
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                 Save an instant backup file directly to your downloads.
               </div>
             </button>
@@ -817,11 +826,11 @@ export const AccountModal: React.FC = () => {
               }}
               className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors cursor-pointer"
             >
-              <div className="font-bold text-[11px] text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-1.5">
+              <div className="font-bold text-[11px] text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                 <Download className="w-3.5 h-3.5 text-[var(--accent)]" />
                 <span>Standalone App</span>
               </div>
-              <div className="text-[10px] text-[#526782] dark:text-[#A8B8CE] mt-1">
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                 Download single-file HTML bundle to run offline anywhere.
               </div>
             </button>

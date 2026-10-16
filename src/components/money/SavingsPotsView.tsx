@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { usePlanner } from '../../context/PlannerContext';
-import { getCurrencySymbol } from '../../utils/formatters';
+import { getCurrencySymbol, formatCurrency, formatExactCurrency } from '../../utils/formatters';
 import { RingProgress } from '../ui/RingProgress';
 import { Modal } from '../ui/Modal';
 import {
@@ -170,16 +170,16 @@ export const SavingsPotsView: React.FC = () => {
       {/* Top Metric Cards Row (Board 11) */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Total saved */}
-        <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
-          <div className="text-xs text-[#526782] dark:text-[#A8B8CE]">Total saved</div>
-          <div className="text-3xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] mt-1">
-            {currencySymbol}{combinedMetrics.totalSaved.toFixed(0)}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="text-xs text-slate-500 dark:text-slate-400">Total saved</div>
+          <div className="text-3xl font-bold font-mono text-slate-900 dark:text-slate-100 mt-1">
+            {formatCurrency(combinedMetrics.totalSaved, currencySymbol)}
           </div>
-          <div className="text-xs font-mono text-[#526782] mt-1">
+          <div className="text-xs font-mono text-slate-500 dark:text-slate-400 mt-1">
             {savingsPots.length === 0 ? (
               <span className="text-slate-400 dark:text-slate-500">No savings pots configured yet</span>
             ) : (
-              `of ${currencySymbol}${combinedMetrics.totalTarget.toFixed(0)} target`
+              `of ${formatCurrency(combinedMetrics.totalTarget, currencySymbol)} target`
             )}
           </div>
         </div>
@@ -218,12 +218,12 @@ export const SavingsPotsView: React.FC = () => {
         </div>
 
         {/* Total remaining */}
-        <div className="bg-white dark:bg-[#152238] rounded-2xl p-5 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
-          <div className="text-xs text-[#526782]">Total remaining</div>
-          <div className="text-2xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF] mt-1">
-            {currencySymbol}{combinedMetrics.remaining.toFixed(0)}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="text-xs text-slate-500 dark:text-slate-400">Total remaining</div>
+          <div className="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100 mt-1">
+            {formatCurrency(combinedMetrics.remaining, currencySymbol)}
           </div>
-          <div className="text-xs text-[#526782] mt-1">
+          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             to reach all targets
           </div>
         </div>
@@ -233,7 +233,7 @@ export const SavingsPotsView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Pots list (5 cols) */}
         <div className="lg:col-span-5 space-y-3">
-          <div className="text-xs font-bold text-[#526782] uppercase tracking-wider mb-2">
+          <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
             Your savings pots
           </div>
 
@@ -248,19 +248,19 @@ export const SavingsPotsView: React.FC = () => {
               <div
                 key={pot.id}
                 onClick={() => setSelectedPotId(pot.id)}
-                className={`p-5 rounded-2xl border transition-all cursor-pointer bg-white dark:bg-[#152238] shadow-2xs ${
+                className={`p-5 rounded-2xl border transition-all cursor-pointer bg-white dark:bg-slate-900 shadow-2xs ${
                   isSelected
                     ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]'
-                    : 'border-[#E2E8F0] dark:border-[#1E2D4A] hover:border-slate-300'
+                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                    <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
                       {pot.name}
                     </h3>
-                    <div className="text-xs font-mono text-[#526782] mt-0.5">
-                      {currencySymbol}{currentBal.toFixed(0)} of {currencySymbol}{pot.targetAmount.toFixed(0)}
+                    <div className="text-xs font-mono text-slate-500 dark:text-slate-400 mt-0.5">
+                      {formatCurrency(currentBal, currencySymbol)} of {formatCurrency(pot.targetAmount, currencySymbol)}
                     </div>
                   </div>
 
@@ -278,12 +278,12 @@ export const SavingsPotsView: React.FC = () => {
                   />
                 </div>
 
-                <div className="flex items-center justify-between text-[11px] text-[#526782]">
+                <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
                   <span>Target {pot.targetDate}</span>
                   {isComplete ? (
-                    <span className="text-emerald-600 font-semibold">Complete</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Complete</span>
                   ) : (
-                    <span>{currencySymbol}{(pot.targetAmount - currentBal).toFixed(0)} remaining</span>
+                    <span>{formatCurrency(pot.targetAmount - currentBal, currencySymbol)} remaining</span>
                   )}
                 </div>
               </div>
@@ -340,11 +340,11 @@ export const SavingsPotsView: React.FC = () => {
                 </RingProgress>
 
                 <div>
-                  <div className="text-2xl font-bold font-mono text-[#071A3A] dark:text-[#EDF4FF]">
-                    {currencySymbol}{selectedPotMetrics.currentBalance.toFixed(0)}
+                  <div className="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100">
+                    {formatCurrency(selectedPotMetrics.currentBalance, currencySymbol, 2)}
                   </div>
-                  <div className="text-xs text-[#526782]">
-                    of {currencySymbol}{selectedPot.targetAmount.toFixed(0)} · {currencySymbol}{selectedPotMetrics.remaining.toFixed(0)} remaining
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    of {formatCurrency(selectedPot.targetAmount, currencySymbol)} · {formatCurrency(selectedPotMetrics.remaining, currencySymbol, 2)} remaining
                   </div>
                 </div>
               </div>
@@ -352,28 +352,28 @@ export const SavingsPotsView: React.FC = () => {
               {/* 3 Metric Stats */}
               <div className="grid grid-cols-3 gap-3 text-center text-xs">
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                  <span className="text-[#526782] block text-[10px]">Opening balance</span>
-                  <span className="text-sm font-bold font-mono mt-0.5 block">
-                    {currencySymbol}{selectedPot.openingBalance.toFixed(0)}
+                  <span className="text-slate-500 dark:text-slate-400 block text-[10px]">Opening balance</span>
+                  <span className="text-sm font-bold font-mono mt-0.5 block text-slate-900 dark:text-slate-100">
+                    {formatCurrency(selectedPot.openingBalance, currencySymbol, 2)}
                   </span>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                  <span className="text-[#526782] block text-[10px]">Total deposits</span>
-                  <span className="text-sm font-bold font-mono mt-0.5 block">
-                    {currencySymbol}{selectedPotMetrics.totalDeposits.toFixed(0)}
+                  <span className="text-slate-500 dark:text-slate-400 block text-[10px]">Total deposits</span>
+                  <span className="text-sm font-bold font-mono mt-0.5 block text-slate-900 dark:text-slate-100">
+                    {formatCurrency(selectedPotMetrics.totalDeposits, currencySymbol, 2)}
                   </span>
                 </div>
                 <div className="p-3 rounded-xl bg-[var(--accent-subtle)] text-[var(--accent)]">
                   <span className="opacity-80 block text-[10px]">Current balance</span>
                   <span className="text-sm font-bold font-mono mt-0.5 block">
-                    {currencySymbol}{selectedPotMetrics.currentBalance.toFixed(0)}
+                    {formatCurrency(selectedPotMetrics.currentBalance, currencySymbol, 2)}
                   </span>
                 </div>
               </div>
 
               {/* Transaction History for this pot */}
               <div>
-                <h4 className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF] uppercase tracking-wider mb-3">
+                <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider mb-3">
                   Transaction history
                 </h4>
 
@@ -381,15 +381,15 @@ export const SavingsPotsView: React.FC = () => {
                   {/* Opening record */}
                   <div className="py-2.5 flex items-center justify-between">
                     <div>
-                      <div className="font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
+                      <div className="font-semibold text-slate-900 dark:text-slate-100">
                         Opening balance
                       </div>
-                      <div className="text-[10px] text-[#526782]">
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400">
                         {selectedPot.openingDate} · Initial amount for this pot
                       </div>
                     </div>
-                    <span className="font-mono font-bold">
-                      {currencySymbol}{selectedPot.openingBalance.toFixed(0)}
+                    <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
+                      {formatExactCurrency(selectedPot.openingBalance, currencySymbol)}
                     </span>
                   </div>
 
@@ -397,18 +397,18 @@ export const SavingsPotsView: React.FC = () => {
                   {selectedPot.deposits.map((dep) => (
                     <div key={dep.id} className="py-2.5 flex items-center justify-between">
                       <div>
-                        <div className="font-semibold text-[#071A3A] dark:text-[#EDF4FF]">
+                        <div className="font-semibold text-slate-900 dark:text-slate-100">
                           Deposit
                         </div>
-                        <div className="text-[10px] text-[#526782]">
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">
                           {dep.date} ·{' '}
                           {dep.source === 'spending_balance'
                             ? 'From Planner spending balance'
                             : 'From Money outside planner'}
                         </div>
                       </div>
-                      <span className="font-mono font-bold text-emerald-600">
-                        +{currencySymbol}{dep.amount.toFixed(0)}
+                      <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                        +{formatExactCurrency(dep.amount, currencySymbol)}
                       </span>
                     </div>
                   ))}
@@ -416,7 +416,7 @@ export const SavingsPotsView: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="bg-white dark:bg-[#152238] rounded-2xl p-8 border border-[#E2E8F0] dark:border-[#1E2D4A] text-center text-xs text-[#526782]">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500 dark:text-slate-400">
               Select a savings pot to view details and add deposits.
             </div>
           )}

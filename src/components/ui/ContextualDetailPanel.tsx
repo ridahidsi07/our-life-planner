@@ -43,7 +43,7 @@ export const ContextualDetailPanel: React.FC<ContextualDetailPanelProps> = ({
         aria-hidden="true"
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
+      <div className="fixed inset-y-0 right-0 max-w-full w-full sm:w-auto flex justify-end pointer-events-none">
         <div
           ref={dialogRef}
           role="dialog"
@@ -53,16 +53,16 @@ export const ContextualDetailPanel: React.FC<ContextualDetailPanelProps> = ({
           aria-label={!title ? (ariaLabel || 'Contextual detail panel') : undefined}
           tabIndex={-1}
           data-testid={dataTestId}
-          className={`w-screen ${width} bg-white dark:bg-[#152238] shadow-2xl border-l border-[#E2E8F0] dark:border-[#1E2D4A] flex flex-col outline-none motion-panel-enter`}
+          className={`w-full max-w-full sm:w-96 md:w-[28rem] ${width} pointer-events-auto bg-white dark:bg-slate-900 shadow-2xl border-l border-slate-200 dark:border-slate-800 flex flex-col outline-none motion-panel-enter`}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0] dark:border-[#1E2D4A] shrink-0 bg-slate-50/50 dark:bg-slate-900/30">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800 shrink-0 bg-slate-50/70 dark:bg-slate-900/50">
             <div className="min-w-0 pr-3">
               <div className="flex items-center gap-2 flex-wrap">
                 {title && (
                   <h3
                     id={titleId}
-                    className="text-base font-bold text-[#071A3A] dark:text-[#EDF4FF] truncate"
+                    className="text-base font-bold text-slate-900 dark:text-slate-100 truncate"
                   >
                     {title}
                   </h3>
@@ -72,7 +72,7 @@ export const ContextualDetailPanel: React.FC<ContextualDetailPanelProps> = ({
               {subtitle && (
                 <p
                   id={subtitleId}
-                  className="text-xs text-[#526782] dark:text-[#A8B8CE] mt-0.5 truncate"
+                  className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate"
                 >
                   {subtitle}
                 </p>
@@ -83,7 +83,7 @@ export const ContextualDetailPanel: React.FC<ContextualDetailPanelProps> = ({
               type="button"
               onClick={onClose}
               data-testid="detail-panel-close-btn"
-              className="min-w-[40px] min-h-[40px] p-2 rounded-xl flex items-center justify-center text-[#526782] hover:text-[#071A3A] dark:text-[#A8B8CE] dark:hover:text-[#EDF4FF] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="min-w-[44px] min-h-[44px] p-2.5 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               aria-label={`Close ${title || 'detail panel'}`}
               title="Close panel (Esc)"
             >
@@ -98,7 +98,7 @@ export const ContextualDetailPanel: React.FC<ContextualDetailPanelProps> = ({
 
           {/* Optional Footer Actions */}
           {footer && (
-            <div className="px-5 py-3.5 border-t border-[#E2E8F0] dark:border-[#1E2D4A] bg-slate-50/70 dark:bg-slate-900/40 shrink-0">
+            <div className="px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 shrink-0">
               {footer}
             </div>
           )}

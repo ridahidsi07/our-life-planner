@@ -179,6 +179,58 @@ export function setCloudApiBaseUrl(
   }
 }
 
+export const STORAGE_KEY_CLOUD_ACK_BASE_PREFIX = 'our_life_planner_cloud_ack_base_v1_';
+
+export interface StoredCloudAckBase {
+  snapshot: PlannerBackupData;
+  serverRevision: number;
+  etag: string;
+  acknowledgedAt: string;
+}
+
+export function getStoredCloudAckBase(
+  userId: string,
+  storage: SimpleStorageLike | null = getDefaultStorage()
+): StoredCloudAckBase | null {
+  if (!storage || !userId) return null;
+  try {
+    const raw = storage.getItem(`${STORAGE_KEY_CLOUD_ACK_BASE_PREFIX}${userId}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.snapshot && typeof parsed.serverRevision === 'number') {
+      return parsed as StoredCloudAckBase;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+export function saveStoredCloudAckBase(
+  userId: string,
+  ack: StoredCloudAckBase,
+  storage: SimpleStorageLike | null = getDefaultStorage()
+): void {
+  if (!storage || !userId) return;
+  try {
+    storage.setItem(`${STORAGE_KEY_CLOUD_ACK_BASE_PREFIX}${userId}`, JSON.stringify(ack));
+  } catch {
+    // ignore
+  }
+}
+
+export function clearStoredCloudAckBase(
+  userId: string,
+  storage: SimpleStorageLike | null = getDefaultStorage()
+): void {
+  if (!storage || !userId) return;
+  try {
+    storage.removeItem(`${STORAGE_KEY_CLOUD_ACK_BASE_PREFIX}${userId}`);
+  } catch {
+    // ignore
+  }
+}
+
 export function clearCloudSession(
   storage: SimpleStorageLike | null = getDefaultStorage()
 ): void {
@@ -206,6 +258,7 @@ export async function registerCloudAccount(
     email: string;
     password: string;
     displayName: string;
+    claimCode?: string;
   },
   options: CloudClientOptions = {}
 ): Promise<{
@@ -235,6 +288,7 @@ export async function registerCloudAccount(
         email: params.email.trim().toLowerCase(),
         password: params.password,
         displayName: params.displayName.trim() || 'Me',
+        claimCode: params.claimCode?.trim().toUpperCase(),
       }),
     });
 
@@ -462,6 +516,12 @@ export async function logoutCloudAccount(
     }
   }
 
+  const currentState = getStoredCloudSyncState(storage);
+  const currentUserId = currentState.accountUserId || currentState.accountId;
+  if (currentUserId) {
+    clearStoredCloudAckBase(currentUserId, storage);
+  }
+
   saveStoredCloudToken(null, storage);
   return saveStoredCloudSyncState(
     {
@@ -615,10 +675,14 @@ export async function syncPlannerWithCloud(
     };
   }
 
+  const activeUserId = currentSyncState.accountUserId || currentSyncState.accountId || '';
+  const storedAck = activeUserId ? getStoredCloudAckBase(activeUserId, storage) : null;
+  const effectiveBaseSnapshot =
+    params.baseSnapshot !== undefined ? params.baseSnapshot : storedAck?.snapshot;
   const baseRevision =
     params.baseRevision !== undefined
       ? params.baseRevision
-      : currentSyncState.serverRevision ?? 0;
+      : storedAck?.serverRevision ?? currentSyncState.serverRevision ?? 0;
 
   // Handle explicit 'use_cloud' migration mode by pulling from server
   if (params.migrationMode === 'use_cloud') {
@@ -655,6 +719,20 @@ export async function syncPlannerWithCloud(
         },
         storage
       );
+
+      if (activeUserId && fetched.serverRevision) {
+        saveStoredCloudAckBase(
+          activeUserId,
+          {
+            snapshot: fetched.snapshot,
+            serverRevision: fetched.serverRevision,
+            etag: fetched.etag || '',
+            acknowledgedAt: fetched.updatedAt || new Date().toISOString(),
+          },
+          storage
+        );
+      }
+
       return {
         success: true,
         outcome: 'synced',
@@ -679,7 +757,7 @@ export async function syncPlannerWithCloud(
       body: JSON.stringify({
         baseRevision,
         clientSnapshot: params.localSnapshot,
-        baseSnapshot: params.baseSnapshot || undefined,
+        baseSnapshot: effectiveBaseSnapshot || undefined,
         migrationMode: params.migrationMode,
       }),
     });
@@ -765,6 +843,20 @@ export async function syncPlannerWithCloud(
     );
 
     const finalSnapshot = payload.snapshot || params.localSnapshot;
+
+    if (activeUserId && payload.serverRevision) {
+      saveStoredCloudAckBase(
+        activeUserId,
+        {
+          snapshot: finalSnapshot,
+          serverRevision: payload.serverRevision,
+          etag: payload.etag || '',
+          acknowledgedAt: payload.updatedAt || new Date().toISOString(),
+        },
+        storage
+      );
+    }
+
     return {
       success: true,
       outcome: payload.status === 'merged' ? 'merged' : 'synced',
@@ -916,3 +1008,68 @@ export async function deleteCloudAccount(
     };
   }
 }
+
+export async function claimCloudPurchaseCode(
+  claimCode: string,
+  options: CloudClientOptions = {}
+): Promise<{
+  success: boolean;
+  entitlement?: CloudEntitlement;
+  statusCode?: number;
+  error?: string;
+  message?: string;
+}> {
+  const storage = options.storage !== undefined ? options.storage : getDefaultStorage();
+  const fetchFn = options.fetchImpl || fetch;
+  const endpointUrl = normalizeEndpoint(options.endpointUrl, storage);
+  const token = options.token !== undefined ? options.token : getStoredCloudToken(storage);
+
+  if (!endpointUrl || !token) {
+    return {
+      success: false,
+      error: 'Must be signed in to an online account to claim a purchase code.',
+    };
+  }
+
+  try {
+    const res = await fetchFn(`${endpointUrl}/api/auth/claim`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ claimCode }),
+    });
+    const payload = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return {
+        success: false,
+        statusCode: res.status,
+        error: payload?.error || 'Claiming purchase code failed.',
+      };
+    }
+
+    if (payload.entitlement) {
+      const currentState = getStoredCloudSyncState(storage);
+      saveStoredCloudSyncState(
+        {
+          ...currentState,
+          entitlement: payload.entitlement,
+        },
+        storage
+      );
+    }
+
+    return {
+      success: true,
+      entitlement: payload.entitlement,
+      message: payload.message || 'Lifetime sync access successfully activated.',
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Network error during code claim.',
+    };
+  }
+}
+

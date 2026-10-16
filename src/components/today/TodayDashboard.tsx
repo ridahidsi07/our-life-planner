@@ -97,6 +97,7 @@ export const TodayDashboard: React.FC = () => {
 
   const [isCalmMode, setIsCalmMode] = useState(false);
   const [isOverdueExpanded, setIsOverdueExpanded] = useState(false);
+  const [isMobileStatsOpen, setIsMobileStatsOpen] = useState(false);
 
   const currencySymbol = settings.currencySymbol || getCurrencySymbol(settings.currency) || '$';
 
@@ -681,7 +682,7 @@ export const TodayDashboard: React.FC = () => {
                 onClick={() => setActiveModal('weekly_review')}
                 className="btn-secondary min-h-[40px] px-3.5 py-2 text-xs font-semibold"
               >
-                <Calendar className="w-3.5 h-3.5 text-[#526782] dark:text-[#A8B8CE]" />
+                <Calendar className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                 <span>Weekly Review</span>
               </button>
               <button
@@ -706,7 +707,23 @@ export const TodayDashboard: React.FC = () => {
         />
       </div>
 
-      {/* Mobile-only compact action toolbar */}
+      {/* Mobile Page Header & Primary Action */}
+      <div className="sm:hidden flex items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Today</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{formattedCurrentDate}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setActiveModal('quick_add')}
+          className="btn-primary min-h-[38px] px-3.5 py-1.5 text-xs font-semibold flex items-center gap-1.5 shadow-xs shrink-0"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Add</span>
+        </button>
+      </div>
+
+      {/* Mobile-only compact secondary action toolbar */}
       <div className="flex sm:hidden items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <button
@@ -722,7 +739,7 @@ export const TodayDashboard: React.FC = () => {
             onClick={() => setActiveModal('weekly_review')}
             className="btn-secondary min-h-[36px] px-2.5 py-1 text-xs font-semibold"
           >
-            <Calendar className="w-3.5 h-3.5 text-[#526782] dark:text-[#A8B8CE]" />
+            <Calendar className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
             <span>Weekly Review</span>
           </button>
         </div>
@@ -968,12 +985,33 @@ export const TodayDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* 4 Today Metrics */}
-      <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 overflow-x-auto sm:overflow-visible no-scrollbar gap-2.5 sm:gap-4 pb-1 sm:pb-0">
+      {/* 4 Today Metrics: Collapsible disclosure toggle on mobile (<sm), always visible on tablet/desktop (sm:) */}
+      <div className="sm:hidden mb-2">
+        <button
+          type="button"
+          onClick={() => setIsMobileStatsOpen((prev) => !prev)}
+          aria-expanded={isMobileStatsOpen}
+          aria-controls="today-metrics-container"
+          className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer"
+        >
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[var(--accent)]" />
+            <span>Daily Metrics &amp; Summary ({completedCount}/{totalCompletable} done)</span>
+          </div>
+          <span className="text-[11px] text-[var(--accent)] font-normal">
+            {isMobileStatsOpen ? 'Hide stats' : 'Show stats'}
+          </span>
+        </button>
+      </div>
+
+      <div
+        id="today-metrics-container"
+        className={`${isMobileStatsOpen ? 'grid' : 'hidden'} sm:grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4`}
+      >
         <MetricCard
           variant="featured"
           testId="today-metric-commitments"
-          className="min-w-[140px] sm:min-w-0 shrink-0 sm:shrink flex-1 sm:flex-initial p-2.5 sm:p-5"
+          className="p-3.5 sm:p-5"
           title="Commitments Today"
           value={totalCompletable}
           subtitle={
@@ -996,7 +1034,7 @@ export const TodayDashboard: React.FC = () => {
         <MetricCard
           variant="standard"
           testId="today-metric-completed"
-          className="min-w-[140px] sm:min-w-0 shrink-0 sm:shrink flex-1 sm:flex-initial p-2.5 sm:p-5"
+          className="p-3.5 sm:p-5"
           title="Completed Today"
           value={completedCount}
           subtitle={`${completionPercentage}% of daily commitments`}
@@ -1013,7 +1051,7 @@ export const TodayDashboard: React.FC = () => {
         <MetricCard
           variant="standard"
           testId="today-metric-overdue"
-          className="min-w-[140px] sm:min-w-0 shrink-0 sm:shrink flex-1 sm:flex-initial p-2.5 sm:p-5"
+          className="p-3.5 sm:p-5"
           title="Needs Attention"
           value={overdueTasks.length}
           subtitle="overdue across all dates"
@@ -1035,7 +1073,7 @@ export const TodayDashboard: React.FC = () => {
         <MetricCard
           variant="standard"
           testId="today-metric-consistency"
-          className="min-w-[140px] sm:min-w-0 shrink-0 sm:shrink flex-1 sm:flex-initial p-2.5 sm:p-5"
+          className="p-3.5 sm:p-5"
           title="Weekly Consistency"
           value={`${weeklyConsistencyRate}%`}
           subtitle={`${weeklyCompletedCount} of ${weeklyTotalCount} this week`}

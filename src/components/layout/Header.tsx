@@ -124,6 +124,11 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({
               <Cloud className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
               <span className="font-medium text-[11.5px] hidden xl:inline">Synced</span>
             </>
+          ) : savingState === 'waiting_to_sync' ? (
+            <>
+              <Cloud className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <span className="font-medium text-[11.5px] hidden xl:inline text-amber-600 dark:text-amber-400">Sync pending</span>
+            </>
           ) : savingState === 'could_not_save' ? (
             <>
               <AlertCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />

@@ -445,44 +445,85 @@ export const WeightBMIView: React.FC = () => {
       {/* Main 2-Column Area: Weight Trend Chart (7 cols) & Add Measurement (5 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Trend Chart (7 cols) */}
-        <div className="lg:col-span-7 bg-white dark:bg-[#152238] rounded-2xl p-6 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#1E2D4A]">
-            <h3 className="text-sm font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+        <div className="lg:col-span-7 bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
               Weight trend ({unitMode})
             </h3>
-            <span className="text-xs text-[#526782]">Recent history ({unitMode})</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">Recent history ({unitMode})</span>
           </div>
 
-          {/* Sparkline / Step Line Chart */}
-          {profileRecords.length > 0 ? (
-            <div className="h-44 pt-6 flex items-end justify-between border-b border-l border-slate-200 dark:border-slate-700 px-4">
-              {profileRecords.slice(0, 7).reverse().map((r) => {
-                const convertedValues = profileRecords.slice(0, 7).map((p) =>
-                  unitMode === 'kg' ? p.weightKg : convertKgToLb(p.weightKg)
-                );
-                const minW = Math.min(...convertedValues);
-                const maxW = Math.max(...convertedValues);
-                const span = maxW > minW ? maxW - minW : 4;
-                const rVal = unitMode === 'kg' ? r.weightKg : convertKgToLb(r.weightKg);
-                const hPct = Math.min(100, Math.max(15, ((rVal - minW) / span) * 85 + 15));
+          {/* Contextual Scaled Chart */}
+          {profileRecords.length > 0 ? (() => {
+            const recent = profileRecords.slice(0, 7).reverse();
+            const convertedValues = recent.map((p) =>
+              unitMode === 'kg' ? p.weightKg : convertKgToLb(p.weightKg)
+            );
+            const actualMin = Math.min(...convertedValues);
+            const actualMax = Math.max(...convertedValues);
+            const buffer = unitMode === 'kg' ? 1.5 : 3;
+            const minBound = Math.floor(Math.max(0, actualMin - buffer));
+            const maxBound = Math.ceil(actualMax + buffer);
+            const midBound = Math.round(((minBound + maxBound) / 2) * 10) / 10;
+            const span = maxBound - minBound || 5;
 
-                return (
-                  <div key={r.id} className="flex flex-col items-center gap-1.5">
-                    <span className="text-xs font-mono font-bold text-[var(--accent)]">
-                      {rVal}
-                    </span>
-                    <div
-                      className="w-3.5 rounded-full bg-[var(--accent)] transition-all"
-                      style={{ height: `${hPct}px` }}
-                      title={`${rVal} ${unitMode} on ${r.date}`}
-                    />
-                    <span className="text-[10px] text-[#526782]">{r.date.slice(5)}</span>
+            const delta = convertedValues.length > 1
+              ? Math.round((convertedValues[convertedValues.length - 1] - convertedValues[0]) * 10) / 10
+              : 0;
+
+            return (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                  <span>
+                    Range: <strong>{actualMin} – {actualMax} {unitMode}</strong>
+                  </span>
+                  <span>
+                    7-day change:{' '}
+                    <strong className={delta > 0 ? 'text-amber-600 dark:text-amber-400' : delta < 0 ? 'text-emerald-600 dark:text-emerald-400' : ''}>
+                      {delta > 0 ? `+${delta}` : delta} {unitMode}
+                    </strong>
+                  </span>
+                </div>
+
+                <div className="relative flex items-stretch gap-2 h-48 pt-4">
+                  {/* Y-Axis Scale Reference */}
+                  <div className="flex flex-col justify-between items-end text-[10px] font-mono text-slate-400 dark:text-slate-500 pr-1 select-none w-14 shrink-0 border-r border-slate-200 dark:border-slate-800 pb-5">
+                    <span>{maxBound} {unitMode}</span>
+                    <span>{midBound}</span>
+                    <span>{minBound} {unitMode}</span>
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="h-44 flex items-center justify-center text-xs text-[#526782] border border-dashed rounded-xl">
+
+                  {/* Chart Plot Area */}
+                  <div className="relative flex-1 flex items-end justify-between px-3 border-b border-slate-200 dark:border-slate-800">
+                    <div className="absolute inset-x-0 top-0 border-b border-dashed border-slate-100 dark:border-slate-800/80 pointer-events-none" />
+                    <div className="absolute inset-x-0 top-1/2 border-b border-dashed border-slate-100 dark:border-slate-800/80 pointer-events-none" />
+
+                    {recent.map((r, idx) => {
+                      const rVal = convertedValues[idx];
+                      const hPct = Math.min(95, Math.max(12, ((rVal - minBound) / span) * 100));
+
+                      return (
+                        <div key={r.id} className="relative flex flex-col items-center gap-1.5 z-10 flex-1">
+                          <span className="text-[11px] font-mono font-bold text-[var(--accent)]">
+                            {rVal}
+                          </span>
+                          <div
+                            className="w-4 rounded-t-lg bg-[var(--accent)] transition-all hover:opacity-90"
+                            style={{ height: `${hPct * 1.15}px` }}
+                            title={`${rVal} ${unitMode} on ${r.date} (${r.time || '07:00'})`}
+                          />
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                            {r.date.slice(5)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            );
+          })() : (
+            <div className="h-44 flex items-center justify-center text-xs text-slate-500 dark:text-slate-400 border border-dashed rounded-xl border-slate-200 dark:border-slate-800">
               No measurements logged yet{selectedProfile ? ` for ${selectedProfile.name}` : ''}. Record your first entry below.
             </div>
           )}

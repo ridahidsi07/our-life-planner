@@ -3,6 +3,7 @@ import { usePlanner } from '../../context/PlannerContext';
 import { getWeekDaysForDate, getWeekStartDate } from '../../utils/formatters';
 import { Modal } from '../ui/Modal';
 import { FilterEmptyState } from '../ui/FilterEmptyState';
+import { SearchInput } from '../ui/SearchInput';
 import {
   Utensils,
   Plus,
@@ -527,15 +528,13 @@ export const MealsView: React.FC = () => {
         <div className="space-y-4">
           {recipes.length > 0 && (
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-              <div className="relative flex-1 sm:max-w-xs">
-                <Search className="w-4 h-4 absolute left-3 top-2.5 text-[#526782]" />
-                <input
-                  type="text"
+              <div className="flex-1 sm:max-w-xs">
+                <SearchInput
                   aria-label="Search recipes"
                   placeholder="Search recipes…"
                   value={recipeSearch}
                   onChange={(e) => setRecipeSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs text-[#071A3A] dark:text-[#EDF4FF]"
+                  onClear={() => setRecipeSearch('')}
                 />
               </div>
 

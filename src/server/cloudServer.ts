@@ -38,20 +38,30 @@ export interface CloudDatabaseState {
   users: Record<string, StoredCloudUser>; // keyed by userId
   sessions: Record<string, StoredCloudSession>; // keyed by tokenHash
   snapshots: Record<string, StoredUserCloudSnapshot>; // keyed by userId
+  claimedCodes?: Record<string, { userId: string; claimedAt: string; plan: string }>;
 }
 
 export interface CloudSyncServerOptions {
   storageFilePath?: string;
   sessionTtlMs?: number;
+  allowTestRoutes?: boolean;
+  defaultPlan?: 'lifetime_bundle' | 'free_local';
+  maxPayloadBytes?: number;
 }
 
-function hashSecretScrypt(secret: string, saltHex: string): string {
-  return crypto.scryptSync(secret, Buffer.from(saltHex, 'hex'), 64).toString('hex');
+function hashSecretScrypt(secret: string, saltHex: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    crypto.scrypt(secret, Buffer.from(saltHex, 'hex'), 64, (err, derived) => {
+      if (err) reject(err);
+      else resolve(derived.toString('hex'));
+    });
+  });
 }
 
-function verifySecretScrypt(secret: string, saltHex: string, expectedHashHex: string): boolean {
+async function verifySecretScrypt(secret: string, saltHex: string, expectedHashHex: string): Promise<boolean> {
   try {
-    const actual = Buffer.from(hashSecretScrypt(secret, saltHex), 'hex');
+    const derivedHex = await hashSecretScrypt(secret, saltHex);
+    const actual = Buffer.from(derivedHex, 'hex');
     const expected = Buffer.from(expectedHashHex, 'hex');
     if (actual.length !== expected.length) return false;
     return crypto.timingSafeEqual(actual, expected);
@@ -86,19 +96,27 @@ export function createCloudSyncServer(options: CloudSyncServerOptions = {}) {
     users: {},
     sessions: {},
     snapshots: {},
+    claimedCodes: {},
   };
 
   if (storageFilePath && fs.existsSync(storageFilePath)) {
     try {
       const raw = fs.readFileSync(storageFilePath, 'utf-8');
-      const parsed = JSON.parse(raw) as CloudDatabaseState;
-      if (parsed && typeof parsed === 'object') {
-        db.users = parsed.users || {};
-        db.sessions = parsed.sessions || {};
-        db.snapshots = parsed.snapshots || {};
+      if (raw.trim()) {
+        const parsed = JSON.parse(raw) as CloudDatabaseState;
+        if (parsed && typeof parsed === 'object') {
+          db.users = parsed.users || {};
+          db.sessions = parsed.sessions || {};
+          db.snapshots = parsed.snapshots || {};
+          db.claimedCodes = parsed.claimedCodes || {};
+        } else {
+          throw new Error('Database file does not contain a valid object structure');
+        }
       }
-    } catch {
-      // ignore initial load error on fresh file
+    } catch (parseErr) {
+      throw new Error(
+        `CRITICAL: Storage file at ${storageFilePath} is corrupted or unreadable (${parseErr instanceof Error ? parseErr.message : String(parseErr)}). Server refusing to start to prevent data loss. Restore from backup or quarantine.`
+      );
     }
   }
 
@@ -147,27 +165,46 @@ export function createCloudSyncServer(options: CloudSyncServerOptions = {}) {
     return rawToken;
   };
 
+  const requestCounts = new Map<string, { count: number; resetAt: number }>();
+  const isRateLimited = (key: string, limit = 120, windowMs = 60000): boolean => {
+    const now = Date.now();
+    const entry = requestCounts.get(key);
+    if (!entry || now > entry.resetAt) {
+      requestCounts.set(key, { count: 1, resetAt: now + windowMs });
+      return false;
+    }
+    entry.count++;
+    return entry.count > limit;
+  };
+
   const sendJson = (res: http.ServerResponse, statusCode: number, body: unknown) => {
     res.writeHead(statusCode, {
       'Content-Type': 'application/json; charset=utf-8',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, If-Match',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
       'Cache-Control': 'no-store',
     });
     res.end(JSON.stringify(body));
   };
 
+  const maxPayloadBytes = options.maxPayloadBytes ?? 10 * 1024 * 1024;
   const readJsonBody = (req: http.IncomingMessage): Promise<any> =>
     new Promise((resolve, reject) => {
       let data = '';
+      let destroyed = false;
       req.on('data', (chunk) => {
         data += chunk;
-        if (data.length > 15 * 1024 * 1024) {
+        if (data.length > maxPayloadBytes) {
+          destroyed = true;
+          req.destroy(new Error('Payload too large'));
           reject(new Error('Payload too large'));
         }
       });
       req.on('end', () => {
+        if (destroyed) return;
         if (!data.trim()) {
           resolve({});
           return;
@@ -178,7 +215,9 @@ export function createCloudSyncServer(options: CloudSyncServerOptions = {}) {
           reject(new Error('Invalid JSON request body'));
         }
       });
-      req.on('error', reject);
+      req.on('error', (err) => {
+        if (!destroyed) reject(err);
+      });
     });
 
   const formatPublicUser = (user: StoredCloudUser) => ({
@@ -203,6 +242,12 @@ export function createCloudSyncServer(options: CloudSyncServerOptions = {}) {
     const urlObj = new URL(req.url || '/', 'http://127.0.0.1');
     const pathname = urlObj.pathname;
 
+    const clientIp = req.socket.remoteAddress || '127.0.0.1';
+    if (isRateLimited(clientIp, 240, 60000)) {
+      sendJson(res, 429, { error: 'Too many requests. Please slow down and try again.' });
+      return;
+    }
+
     try {
       // 1. POST /api/auth/register
       if (pathname === '/api/auth/register' && req.method === 'POST') {
@@ -210,6 +255,7 @@ export function createCloudSyncServer(options: CloudSyncServerOptions = {}) {
         const email = String(body.email || '').trim().toLowerCase();
         const password = String(body.password || '');
         const displayName = String(body.displayName || '').trim() || 'Planner Owner';
+        const claimCode = body.claimCode ? String(body.claimCode).trim().toUpperCase() : '';
 
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
           sendJson(res, 400, { error: 'A valid email address is required.' });
@@ -228,13 +274,55 @@ export function createCloudSyncServer(options: CloudSyncServerOptions = {}) {
 
         const userId = `usr_${crypto.randomBytes(12).toString('hex')}`;
         const passwordSalt = crypto.randomBytes(16).toString('hex');
-        const passwordHash = hashSecretScrypt(password, passwordSalt);
+        const passwordHash = await hashSecretScrypt(password, passwordSalt);
 
         const recoveryKey = generateRecoveryKey();
         const recoveryKeySalt = crypto.randomBytes(16).toString('hex');
-        const recoveryKeyHash = hashSecretScrypt(recoveryKey, recoveryKeySalt);
+        const recoveryKeyHash = await hashSecretScrypt(recoveryKey, recoveryKeySalt);
 
         const nowIso = new Date().toISOString();
+
+        // Entitlement determination
+        let entitlement: CloudEntitlement;
+        if (claimCode) {
+          if (!/^OLP-(ETSY-)?[A-Z0-9]{4,8}-[A-Z0-9]{4,8}$/.test(claimCode)) {
+            sendJson(res, 400, { error: 'Invalid purchase claim code format.' });
+            return;
+          }
+          if (!db.claimedCodes) db.claimedCodes = {};
+          if (db.claimedCodes[claimCode]) {
+            sendJson(res, 409, { error: 'This purchase claim code has already been redeemed.' });
+            return;
+          }
+          db.claimedCodes[claimCode] = {
+            userId,
+            claimedAt: nowIso,
+            plan: 'lifetime_bundle',
+          };
+          entitlement = {
+            status: 'active',
+            plan: 'lifetime_bundle',
+            canSync: true,
+          };
+        } else if (
+          options.defaultPlan === 'free_local' ||
+          (options.allowTestRoutes === false && options.defaultPlan !== 'lifetime_bundle')
+        ) {
+          // Production unverified account starts in free tier (local-only)
+          entitlement = {
+            status: 'active',
+            plan: 'free_local',
+            canSync: false,
+          };
+        } else {
+          // Test/dev server convenience tier
+          entitlement = {
+            status: 'active',
+            plan: 'lifetime_bundle',
+            canSync: true,
+          };
+        }
+
         const newUser: StoredCloudUser = {
           id: userId,
           email,
@@ -245,11 +333,7 @@ export function createCloudSyncServer(options: CloudSyncServerOptions = {}) {
           recoveryKeyHash,
           createdAt: nowIso,
           updatedAt: nowIso,
-          entitlement: {
-            status: 'active',
-            plan: 'lifetime_bundle',
-            canSync: true,
-          },
+          entitlement,
         };
 
         db.users[userId] = newUser;
@@ -271,7 +355,7 @@ export function createCloudSyncServer(options: CloudSyncServerOptions = {}) {
         const password = String(body.password || '');
 
         const user = Object.values(db.users).find((u) => u.email === email);
-        if (!user || !verifySecretScrypt(password, user.passwordSalt, user.passwordHash)) {
+        if (!user || !(await verifySecretScrypt(password, user.passwordSalt, user.passwordHash))) {
           sendJson(res, 401, { error: 'Invalid email or password.' });
           return;
         }
@@ -303,7 +387,7 @@ export function createCloudSyncServer(options: CloudSyncServerOptions = {}) {
         const user = Object.values(db.users).find((u) => u.email === email);
         if (
           !user ||
-          !verifySecretScrypt(recoveryKey, user.recoveryKeySalt, user.recoveryKeyHash)
+          !(await verifySecretScrypt(recoveryKey, user.recoveryKeySalt, user.recoveryKeyHash))
         ) {
           sendJson(res, 401, { error: 'Invalid email or recovery key.' });
           return;
@@ -312,12 +396,12 @@ export function createCloudSyncServer(options: CloudSyncServerOptions = {}) {
         // Rotate password and recovery key, and revoke all existing sessions for this user
         const newPasswordSalt = crypto.randomBytes(16).toString('hex');
         user.passwordSalt = newPasswordSalt;
-        user.passwordHash = hashSecretScrypt(newPassword, newPasswordSalt);
+        user.passwordHash = await hashSecretScrypt(newPassword, newPasswordSalt);
 
         const newRecoveryKey = generateRecoveryKey();
         const newRecoverySalt = crypto.randomBytes(16).toString('hex');
         user.recoveryKeySalt = newRecoverySalt;
-        user.recoveryKeyHash = hashSecretScrypt(newRecoveryKey, newRecoverySalt);
+        user.recoveryKeyHash = await hashSecretScrypt(newRecoveryKey, newRecoverySalt);
         user.updatedAt = new Date().toISOString();
 
         for (const [tHash, sess] of Object.entries(db.sessions)) {
@@ -337,6 +421,8 @@ export function createCloudSyncServer(options: CloudSyncServerOptions = {}) {
         });
         return;
       }
+
+
 
       // 4. POST /api/auth/logout
       if (pathname === '/api/auth/logout' && req.method === 'POST') {
@@ -584,8 +670,54 @@ export function createCloudSyncServer(options: CloudSyncServerOptions = {}) {
         return;
       }
 
-      // Admin/test helper to update entitlement in local/staging tests
+      // POST /api/auth/claim — buyer claim code activation
+      if (pathname === '/api/auth/claim' && req.method === 'POST') {
+        const body = await readJsonBody(req);
+        const claimCode = String(body.claimCode || '').trim().toUpperCase();
+
+        if (!claimCode || !/^OLP-(ETSY-)?[A-Z0-9]{4,8}-[A-Z0-9]{4,8}$/.test(claimCode)) {
+          sendJson(res, 400, {
+            error: 'Invalid purchase claim code format. Example: OLP-ETSY-A1B2-C3D4 or OLP-7B8C-9D0E.',
+          });
+          return;
+        }
+
+        if (!db.claimedCodes) db.claimedCodes = {};
+        if (db.claimedCodes[claimCode]) {
+          sendJson(res, 409, {
+            error: 'This purchase claim code has already been redeemed.',
+          });
+          return;
+        }
+
+        db.claimedCodes[claimCode] = {
+          userId: authedUser.id,
+          claimedAt: new Date().toISOString(),
+          plan: 'lifetime_bundle',
+        };
+
+        authedUser.entitlement = {
+          status: 'active',
+          plan: 'lifetime_bundle',
+          canSync: true,
+        };
+        authedUser.updatedAt = new Date().toISOString();
+        persistDb();
+
+        sendJson(res, 200, {
+          success: true,
+          entitlement: authedUser.entitlement,
+          message: 'Lifetime sync access successfully activated.',
+        });
+        return;
+      }
+
+      // Admin/test helper to update entitlement in local/staging tests ONLY
       if (pathname === '/api/__test/entitlement' && req.method === 'POST') {
+        if (!options.allowTestRoutes) {
+          sendJson(res, 404, { error: 'Not found' });
+          return;
+        }
         const body = await readJsonBody(req);
         if (body.entitlement) {
           authedUser.entitlement = {

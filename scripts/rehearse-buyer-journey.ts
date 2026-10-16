@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
+// @ts-ignore
+import { extractZip } from './portable-zip.mjs';
 import {
   APP_NAME,
   APP_VERSION,
@@ -51,9 +53,14 @@ if (fs.existsSync(testExtractDir)) {
 }
 fs.mkdirSync(testExtractDir, { recursive: true });
 
-// Extract the ZIP archive
-const psUnzipCmd = `powershell -NoProfile -Command "Expand-Archive -Path '${zipPath}' -DestinationPath '${testExtractDir}' -Force"`;
-execSync(psUnzipCmd);
+// Extract the ZIP archive using portable zip utility
+try {
+  extractZip(zipPath, testExtractDir);
+} catch (zipErr) {
+  console.warn('Portable extraction fallback...', zipErr);
+  const psUnzipCmd = `powershell -NoProfile -Command "Expand-Archive -Path '${zipPath}' -DestinationPath '${testExtractDir}' -Force"`;
+  execSync(psUnzipCmd);
+}
 
 const expectedExtractedFiles = [
   OFFLINE_FILE_NAME,

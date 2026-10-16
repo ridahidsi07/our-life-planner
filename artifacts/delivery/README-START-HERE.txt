@@ -20,8 +20,9 @@ WHAT IS INCLUDED IN THIS PACKAGE
    does not allow digital downloads inside the Etsy mobile app).
 
 4. ONLINE-ACCESS-INSTRUCTIONS.md
-   Clear directions for accessing the web browser/PWA edition, understanding
-   local vs. cloud storage boundaries, and setting up home-screen shortcuts.
+   Clear directions for accessing the hosted web app (https://ridahidsi07.github.io/our-life-planner/),
+   understanding local-first vs. optional cloud sync storage boundaries, and setting
+   up home-screen shortcuts on iPhone, Android, and desktop.
 
 5. BACKUP-AND-UPGRADE-GUIDE.md
    Step-by-step instructions for exporting regular JSON backups, moving your data
@@ -41,24 +42,27 @@ WHAT IS INCLUDED IN THIS PACKAGE
 --------------------------------------------------------------------------------
 QUICK START (HOW TO LAUNCH IN 60 SECONDS)
 --------------------------------------------------------------------------------
-Step 1: Save the folder somewhere safe on your device (e.g., your Documents folder).
-Step 2: Double-click "Our-Life-Planner-Offline.html".
-Step 3: It will open in your default browser (Microsoft Edge, Google Chrome,
-        Apple Safari, or Mozilla Firefox).
-Step 4: Follow the 2-minute Setup Wizard to choose your name, light/dark theme,
-        week start day, and local currency.
-Step 5: You're ready to plan! Open Today, press Ctrl+K (or Cmd+K) to add your
-        first task, or press F to enter calm Focus Mode.
+Option A (Offline): Double-click "Our-Life-Planner-Offline.html" to open locally.
+Option B (Web/PWA): Open https://ridahidsi07.github.io/our-life-planner/ in your browser.
+
+Follow the 2-minute Setup Wizard to choose your name, light/dark theme, week
+start day, and local currency. Open Today, press Ctrl+K (or Cmd+K) to capture
+your first task, or press F to enter calm Focus Mode.
 
 --------------------------------------------------------------------------------
-IMPORTANT PRIVACY & DATA SAFETY NOTE
+DATA PRIVACY & STORAGE SAFETY NOTE
 --------------------------------------------------------------------------------
-Our Life Planner runs entirely client-side. Your data is stored safely in your
-browser's local origin database (localStorage). No accounts, trackers, or cloud
-servers are used.
+By default, Our Life Planner stores all data locally in your device browser
+database (localStorage). Zero tracking cookies, ad networks, or third-party
+telemetry are used.
 
-Because data is stored locally in your browser, remember to:
-- Export a JSON backup once a week from Settings > Data & Storage.
+If you choose to enable Optional Multi-Device Cloud Sync in Account settings,
+your data synchronizes securely via encrypted HTTPS with atomic conflict
+resolution. You can redeem your Etsy claim code (OLP-ETSY-XXXX-XXXX) to activate
+lifetime cloud access across your devices.
+
+Remember to:
+- Export a JSON backup regularly from Settings > Data & Storage.
 - Keep your backup JSON files safe if you ever clear browser browsing data.
 
 --------------------------------------------------------------------------------

@@ -106,6 +106,8 @@ import {
   syncWithCloud,
   clearCloudSession,
   CloudSyncResult,
+  getStoredCloudAckBase,
+  saveStoredCloudAckBase,
 } from '../utils/cloudSyncClient';
 import {
   buildStandaloneFallbackHtml,
@@ -1048,14 +1050,19 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  // Online Account Cloud Sync action (LP-01)
+  // Online Account Cloud Sync action (LP-01, R01, R06)
   const syncWithCloudNow = useCallback(
     async (migrationMode?: 'merge' | 'use_cloud' | 'overwrite_cloud'): Promise<CloudSyncResult> => {
       setSavingState('saving');
       const localSnapshot = createDataSnapshot();
+      const currentCloudState = getStoredCloudSyncState();
+      const activeUserId = currentCloudState.accountUserId || currentCloudState.accountId;
+      const ackBase = activeUserId ? getStoredCloudAckBase(activeUserId) : null;
+
       const res = await syncWithCloud({
         localSnapshot,
-        baseSnapshot: baseSnapshotRef.current,
+        baseSnapshot: ackBase ? ackBase.snapshot : undefined,
+        baseRevision: ackBase ? ackBase.serverRevision : 0,
         migrationMode,
       });
       setCloudSyncState(getStoredCloudSyncState());
@@ -1082,20 +1089,39 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
           baseSnapshotRef.current = hydrated;
           setLastSaveError(null);
           syncManagerRef.current?.broadcast(nextRevision, hydrated);
-        }
 
-        if (res.conflicts && res.conflicts.length > 0) {
-          enqueueConflicts(res.conflicts);
+          // Update acknowledged cloud base
+          if (activeUserId && res.serverRevision) {
+            saveStoredCloudAckBase(activeUserId, {
+              snapshot: hydrated,
+              serverRevision: res.serverRevision,
+              etag: res.etag || '',
+              acknowledgedAt: res.updatedAt || new Date().toISOString(),
+            });
+          }
+
+          if (res.conflicts && res.conflicts.length > 0) {
+            enqueueConflicts(res.conflicts);
+          } else {
+            setSavingState('saved_cloud');
+          }
         } else {
-          setSavingState('saved_cloud');
+          setLastSaveError(writeResult.error || 'Failed to save locally after cloud sync');
+          setSavingState('could_not_save');
         }
       } else {
-        setSavingState('saved_local');
+        if (lastSaveError) {
+          setSavingState('could_not_save');
+        } else if (currentCloudState.accountId) {
+          setSavingState('waiting_to_sync');
+        } else {
+          setSavingState('saved_local');
+        }
       }
 
       return res;
     },
-    [createDataSnapshot, applyStateFromBackup, enqueueConflicts]
+    [createDataSnapshot, applyStateFromBackup, enqueueConflicts, lastSaveError]
   );
 
   // Budget period range computation

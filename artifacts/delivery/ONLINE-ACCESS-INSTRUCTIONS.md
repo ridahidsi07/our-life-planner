@@ -2,24 +2,31 @@
 
 Our Life Planner is provided in two complementary formats:
 
-1. **Standalone Offline HTML Application (`Our-Life-Planner-Offline.html`)**: A completely self-contained file stored locally on your device.
-2. **Web Browser / PWA Edition**: An online Progressive Web App accessible via standard web browser URL and installable to your phone or desktop home screen.
+1. **Standalone Offline HTML Application (`Our-Life-Planner-Offline.html`)**: A completely self-contained file stored locally on your device with 100% offline capabilities and zero network calls.
+2. **Web Browser / PWA Edition**: An online Progressive Web App accessible via:
+   **Live Web App URL**: [https://ridahidsi07.github.io/our-life-planner/](https://ridahidsi07.github.io/our-life-planner/)
+   Installable to your smartphone, tablet, or desktop home screen for seamless full-screen planning.
 
 ---
 
-## 🔒 Crucial Storage Architecture & Privacy Boundaries
+## 🔒 Storage Architecture & Privacy Boundaries
 
-To ensure complete privacy and zero monthly subscription fees, Our Life Planner uses a **client-side local-first architecture**:
+To ensure user privacy, data sovereignty, and flexibility, Our Life Planner offers two storage options:
 
-### 1. Where Your Data Lives
-* All tasks, routines, habits, budgets, workouts, and personal notes are saved inside your device's browser local database (`localStorage`).
-* **Zero personal data leaves your device.** There are no remote tracking scripts, analytics beacons, or centralized database servers logging your life.
+### 1. Local-First Storage (Default for Both Editions)
+* All tasks, routines, habits, budgets, workouts, and personal notes are saved securely in your browser's local database (`localStorage`).
+* When using the Standalone Offline HTML file or the Web Edition in Local Mode, **zero personal data leaves your device**. There are no remote tracking scripts, marketing beacons, or external database telemetry.
 
-### 2. Offline vs. Online Storage Isolation
+### 2. Optional Multi-Device Cloud Sync
+* If you wish to seamlessly synchronize your planner between your phone, tablet, and computer, Our Life Planner includes optional account-based Cloud Sync.
+* **Activation**: You can activate sync by creating an account in **Account & Cloud Sync** and redeeming your Etsy purchase claim code (`OLP-ETSY-XXXX-XXXX`).
+* **Privacy & Security**: When Cloud Sync is activated, snapshots are transmitted over encrypted HTTPS/TLS directly to your private account for conflict-free multi-device synchronization. Data is never sold, shared with third parties, or scanned for advertising.
+
+### 3. Offline vs. Online Storage Isolation
 * Modern web browsers strictly isolate local storage between different web origins and file paths:
   * Data entered into the offline file `Our-Life-Planner-Offline.html` remains stored in that local file's origin.
-  * Data entered into the web browser version remains stored in that web domain's origin.
-* **Important:** Running the offline HTML file **does not automatically synchronize** to the web URL when your internet connection reconnects. There is no automated cloud sync running in the background.
+  * Data entered into the web browser version (`https://ridahidsi07.github.io/our-life-planner/`) remains stored in that web domain's origin.
+* If you do not use Cloud Sync, running the offline HTML file **does not automatically synchronize** to the web URL. Use the JSON backup transfer steps below to migrate your data anytime.
 
 ---
 

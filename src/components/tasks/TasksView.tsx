@@ -4,6 +4,7 @@ import { getWeekDaysForDate } from '../../utils/formatters';
 import { RingProgress } from '../ui/RingProgress';
 import { ContextualDetailPanel } from '../ui/ContextualDetailPanel';
 import { FilterEmptyState } from '../ui/FilterEmptyState';
+import { SearchInput } from '../ui/SearchInput';
 import {
   Check,
   Plus,
@@ -636,11 +637,73 @@ export const TasksView: React.FC = () => {
         </div>
       </div>
 
-      {/* 7-Day Week Selector Strip (No horizontal scrolling on phone width) */}
-      <div className="bg-white dark:bg-[#152238] rounded-xl p-3 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs">
+      {/* 7-Day Week Selector Strip: Collapsible on mobile, persistent on desktop */}
+      <details
+        className="md:hidden bg-white dark:bg-slate-900 rounded-xl p-2.5 border border-slate-200 dark:border-slate-800 shadow-2xs group"
+        open={selectedDateFilter !== 'all'}
+      >
+        <summary className="flex items-center justify-between cursor-pointer select-none text-xs font-bold text-slate-900 dark:text-slate-100">
+          <div className="flex items-center gap-2">
+            <span>Weekly dates</span>
+            {selectedDateFilter !== 'all' && (
+              <span className="text-[10px] font-semibold text-[var(--accent)]">
+                ({selectedDateFilter})
+              </span>
+            )}
+          </div>
+          <span className="text-[11px] font-normal text-[var(--accent)] group-open:hidden">
+            {selectedDateFilter !== 'all' ? 'Change date' : 'Filter by day'}
+          </span>
+          <span className="text-[11px] font-normal text-slate-400 hidden group-open:inline">
+            Collapse
+          </span>
+        </summary>
+        <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="grid grid-cols-7 gap-1 w-full text-center">
+            {next7DaysCounts.map((d) => {
+              const isSelected = selectedDateFilter === d.iso;
+              const isToday = d.iso === currentDate;
+              return (
+                <button
+                  key={d.iso}
+                  type="button"
+                  aria-pressed={isSelected}
+                  aria-current={isToday ? 'date' : undefined}
+                  aria-label={`${d.name} ${d.dayNum}, ${d.count} tasks due${isSelected ? ' (Selected)' : ''}`}
+                  onClick={() => setSelectedDateFilter(isSelected ? 'all' : d.iso)}
+                  className={`flex flex-col items-center justify-center py-1.5 px-0.5 rounded-lg transition-all cursor-pointer min-w-0 ${
+                    isSelected
+                      ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] font-bold shadow-xs'
+                      : isToday
+                      ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--border-color)]'
+                      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                  title={`${d.name} (${d.iso})`}
+                >
+                  <span className="text-[9px] uppercase tracking-tighter truncate w-full">{d.name}</span>
+                  <span className="text-xs font-semibold leading-tight">{d.dayNum}</span>
+                  <span
+                    className={`text-[9px] px-1 rounded-full font-mono mt-0.5 ${
+                      isSelected
+                        ? 'bg-[var(--btn-primary-fg)]/20 text-[var(--btn-primary-fg)] font-bold'
+                        : d.count > 0
+                        ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-bold'
+                        : 'text-slate-400 dark:text-slate-500'
+                    }`}
+                  >
+                    {d.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </details>
+
+      <div className="hidden md:block bg-white dark:bg-slate-900 rounded-xl p-3 border border-slate-200 dark:border-slate-800 shadow-2xs">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+            <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
               Weekly dates
             </span>
             {selectedDateFilter !== 'all' && (
@@ -676,7 +739,7 @@ export const TasksView: React.FC = () => {
                     ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] font-bold shadow-xs'
                     : isToday
                     ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--border-color)]'
-                    : 'text-[#526782] dark:text-[#A8B8CE] hover:bg-slate-100 dark:hover:bg-slate-800'
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
                 title={`${d.name} (${d.iso})`}
               >
@@ -763,15 +826,13 @@ export const TasksView: React.FC = () => {
           {/* Mobile Search & Filters: Single control toggle */}
           <div className="md:hidden space-y-2">
             <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <Search className="w-4 h-4 absolute left-3 top-3 text-[#526782]" />
-                <input
-                  type="text"
+              <div className="flex-1">
+                <SearchInput
                   aria-label="Search tasks"
                   placeholder="Search tasks…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="form-input pl-9 text-xs"
+                  onClear={() => setSearchQuery('')}
                 />
               </div>
 
@@ -858,15 +919,13 @@ export const TasksView: React.FC = () => {
 
           {/* Desktop Search & Filters toolbar */}
           <div className="hidden md:grid md:grid-cols-5 gap-3">
-            <div className="relative md:col-span-2">
-              <Search className="w-4 h-4 absolute left-3 top-3 text-[#526782]" />
-              <input
-                type="text"
+            <div className="md:col-span-2">
+              <SearchInput
                 aria-label="Search tasks"
                 placeholder="Search tasks…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="form-input pl-9 text-xs"
+                onClear={() => setSearchQuery('')}
               />
             </div>
 

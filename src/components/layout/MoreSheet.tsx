@@ -161,7 +161,7 @@ export const MoreSheet: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
               placeholder="Search tools…"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full min-h-[44px] pl-9 pr-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-[var(--accent)] text-[#071A3A] dark:text-[#EDF4FF]"
+              className="w-full min-h-[44px] pl-10 pr-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-[var(--accent)] text-[#071A3A] dark:text-[#EDF4FF]"
             />
           </div>
         </div>

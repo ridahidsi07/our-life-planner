@@ -308,10 +308,10 @@ export const WeeklyReviewModal: React.FC = () => {
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
               <Calendar className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
-              <span className="font-semibold">
+              <span className="font-semibold text-slate-900 dark:text-slate-100">
                 {reviewedWeek.label}
               </span>
-              <span className="text-[11px] font-mono text-[#526782] dark:text-[#A8B8CE]">
+              <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                 ({reviewedWeek.weekStartDate} to {reviewedWeek.weekEndDate})
               </span>
               <button
@@ -327,7 +327,7 @@ export const WeeklyReviewModal: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-between gap-2">
-            <h2 id="review-title" className="text-xl md:text-2xl font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+            <h2 id="review-title" className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100">
               {step === 1 && 'Celebrate Your Accomplishments'}
               {step === 2 && 'Triage Overdue & Loose Ends'}
               {step === 3 && 'Habits & Financial Check-in'}
@@ -343,13 +343,13 @@ export const WeeklyReviewModal: React.FC = () => {
               </span>
             )}
           </div>
-          <p className="text-xs text-[#526782] dark:text-[#A8B8CE] mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             {step === 1 &&
-              `Reflect on what went well during ${reviewedWeek.label} (${reviewedWeek.weekStartDate} – ${reviewedWeek.weekEndDate}).`}
+              `Reflect on what went well during ${reviewedWeek.label}.`}
             {step === 2 && 'Keep your planning loop dependable: clear, reschedule, or archive lingering items.'}
             {step === 3 && `A check of your consistency during ${reviewedWeek.shortLabel} and current spending balance.`}
             {step === 4 &&
-              `Define the 3 major priorities for next week (${reviewedWeek.nextWeekLabel}: ${reviewedWeek.nextWeekStartDate} – ${reviewedWeek.nextWeekEndDate}).`}
+              `Define the 3 major priorities for next week (${reviewedWeek.nextWeekLabel}).`}
           </p>
         </div>
 

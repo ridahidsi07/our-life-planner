@@ -12,11 +12,20 @@ export function formatCurrency(
   decimals?: number
 ): string {
   const isSuffixSymbol = ['DH', 'MAD', 'AED', 'SAR', 'CHF'].includes(symbol);
-  const formattedNumber = amount.toLocaleString('en-US', {
-    minimumFractionDigits: decimals !== undefined ? decimals : 0,
-    maximumFractionDigits: decimals !== undefined ? decimals : 2,
+  const minDigits = decimals !== undefined ? decimals : (amount % 1 !== 0 ? 2 : 0);
+  const maxDigits = decimals !== undefined ? decimals : 2;
+  const formattedNumber = (Number.isFinite(amount) ? amount : 0).toLocaleString('en-US', {
+    minimumFractionDigits: minDigits,
+    maximumFractionDigits: maxDigits,
   });
   return isSuffixSymbol ? `${formattedNumber} ${symbol}` : `${symbol}${formattedNumber}`;
+}
+
+export function formatExactCurrency(
+  amount: number,
+  symbol: string = '$'
+): string {
+  return formatCurrency(amount, symbol, 2);
 }
 
 export function getCurrencySymbol(code: string): string {

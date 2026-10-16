@@ -5,6 +5,7 @@ import { RingProgress } from '../ui/RingProgress';
 import { Modal } from '../ui/Modal';
 import { ContextualDetailPanel } from '../ui/ContextualDetailPanel';
 import { FilterEmptyState } from '../ui/FilterEmptyState';
+import { SearchInput } from '../ui/SearchInput';
 import {
   ShoppingCart,
   Plus,
@@ -289,15 +290,13 @@ export const GroceriesView: React.FC = () => {
       {/* Groceries Search & Filter Bar */}
       {groceries.length > 0 && (
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <div className="relative flex-1 sm:max-w-xs">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-[#526782]" />
-            <input
-              type="text"
+          <div className="flex-1 sm:max-w-xs">
+            <SearchInput
               aria-label="Search grocery items"
               placeholder="Search grocery items…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#152238] text-xs text-[#071A3A] dark:text-[#EDF4FF]"
+              onClear={() => setSearchQuery('')}
             />
           </div>
 

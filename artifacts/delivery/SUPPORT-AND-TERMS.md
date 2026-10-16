@@ -48,5 +48,6 @@ However, we stand behind our product quality:
 * If you experience a genuine technical issue preventing the planner from running on any supported web browser (as listed in `COMPATIBILITY-AND-REQUIREMENTS.md`), and our support team cannot resolve it within a reasonable timeframe, we will honor a full refund.
 * Etsy Purchase Protection policies also apply to all qualified orders.
 
-### 3. Local Privacy Commitment
-Our Life Planner does not collect, transmit, sell, or store your personal data on any remote server. All tasks, schedules, budgets, and personal health metrics remain strictly on your personal device.
+### 3. Privacy & Data Handling Commitment
+* **Standalone Offline Edition & Local Mode**: Our Life Planner does not collect, transmit, sell, or store your personal data on any remote server. All tasks, schedules, budgets, and personal health metrics remain strictly on your personal device.
+* **Optional Cloud Sync**: If you choose to enable cloud synchronization, planner snapshots are transmitted via TLS-encrypted HTTPS solely to synchronize your state across your authenticated devices. We never sell customer data or analyze your planner contents for advertising.

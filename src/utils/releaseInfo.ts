@@ -7,10 +7,13 @@
 export const APP_NAME = 'Our Life Planner';
 export const APP_VERSION = '1.0.0';
 export const APP_RELEASE_NAME = 'Version 1.0.0 Stable Offline Release';
-export const APP_RELEASE_DATE = '2026-10-13';
-export const APP_BUILD_ID = 'olp-2026.10.13-v1.0.0';
-export const APP_COMMIT_HASH = 'f26a23e53209fcc065a2f857a7c6713bd29a9390';
-export const APP_SHORT_COMMIT = 'f26a23e';
+export const APP_RELEASE_DATE = '2026-10-16';
+export const APP_BUILD_ID = 'olp-2026.10.16-v1.0.0';
+export const APP_COMMIT_HASH = '35dafd0b444594ee391a2d17ec378f6449da482c';
+export const APP_SHORT_COMMIT = '35dafd0';
+
+export const PRODUCTION_HOSTED_URL = 'https://ridahidsi07.github.io/our-life-planner/';
+export const REPOSITORY_URL = 'https://github.com/ridahidsi07/our-life-planner';
 
 export const BACKUP_SCHEMA_VERSION = '1.0.0';
 export const CALENDAR_SPEC_VERSION = '2.0';

@@ -149,9 +149,9 @@ export const HydrationView: React.FC = () => {
       </div>
 
       {/* Week Strip Intake Row (Board 17) */}
-      <div className="bg-white dark:bg-[#152238] rounded-2xl p-4 border border-[#E2E8F0] dark:border-[#1E2D4A] shadow-2xs overflow-x-auto">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-2xs overflow-x-auto">
         <div className="min-w-[600px] flex items-center justify-between gap-2 text-center text-xs">
-          <span className="font-bold text-[#526782] dark:text-[#A8B8CE] text-xs px-2">This week:</span>
+          <span className="font-bold text-slate-500 dark:text-slate-400 text-xs px-2 shrink-0">Last 7 days:</span>
           {past7Days.map((d) => (
             <button
               key={d.iso}
@@ -406,7 +406,7 @@ export const HydrationView: React.FC = () => {
               </span>
             </div>
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-              <span className="text-[10px] text-[#526782] block">Weekly average</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 block">7-day average</span>
               <span className="text-base font-bold font-mono text-[var(--accent)] mt-0.5 block">
                 {weeklyAverageL} L
               </span>

@@ -483,8 +483,8 @@ async function runTests() {
   const distIndexHtml = fs.readFileSync(path.resolve(distDir, 'index.html'), 'utf-8');
   assert(
     distIndexHtml.includes('rel="manifest"') &&
-      distIndexHtml.includes('href="/manifest.webmanifest"'),
-    'dist/index.html includes <link rel="manifest" href="/manifest.webmanifest">'
+      (distIndexHtml.includes('href="/manifest.webmanifest"') || distIndexHtml.includes('href="./manifest.webmanifest"')),
+    'dist/index.html includes valid <link rel="manifest"> tag'
   );
 
   const builtSwPath = path.resolve(distDir, 'sw.js');

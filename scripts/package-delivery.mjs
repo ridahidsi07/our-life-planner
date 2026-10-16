@@ -44,18 +44,32 @@ if (fs.existsSync(zipDest)) {
   fs.unlinkSync(zipDest);
 }
 
-console.log('Compressing into zip archive...');
-// Use PowerShell Compress-Archive
-const psCmd = `powershell -NoProfile -Command "Compress-Archive -Path '${pkgDir}\\*' -DestinationPath '${zipDest}' -Force"`;
-execSync(psCmd, { stdio: 'inherit' });
+console.log('Compressing into zip archive using portable zip utility...');
+import('./portable-zip.mjs').then(({ zipDirectory }) => {
+  zipDirectory(pkgDir, zipDest);
+  finishPackaging();
+}).catch((err) => {
+  console.warn('Portable zip failed, attempting fallback...', err);
+  try {
+    const psCmd = `powershell -NoProfile -Command "Compress-Archive -Path '${pkgDir}\\*' -DestinationPath '${zipDest}' -Force"`;
+    execSync(psCmd, { stdio: 'inherit' });
+    finishPackaging();
+  } catch (psErr) {
+    console.error('All packaging methods failed:', psErr);
+    process.exit(1);
+  }
+});
+
+function finishPackaging() {
 
 if (!fs.existsSync(zipDest)) {
   console.error('Failed to create ZIP package!');
   process.exit(1);
 }
 
-const zipStat = fs.statSync(zipDest);
-const zipSizeMb = zipStat.size / (1024 * 1024);
-console.log(`\nSuccessfully created ${path.basename(zipDest)}:`);
-console.log(`  Size: ${zipStat.size} bytes (${zipSizeMb.toFixed(2)} MB)`);
-console.log(`  Etsy Limit Check: ${zipSizeMb < 20 ? 'PASSED (< 20 MB)' : 'FAILED (>= 20 MB)'}`);
+  const zipStat = fs.statSync(zipDest);
+  const zipSizeMb = zipStat.size / (1024 * 1024);
+  console.log(`\nSuccessfully created ${path.basename(zipDest)}:`);
+  console.log(`  Size: ${zipStat.size} bytes (${zipSizeMb.toFixed(2)} MB)`);
+  console.log(`  Etsy Limit Check: ${zipSizeMb < 20 ? 'PASSED (< 20 MB)' : 'FAILED (>= 20 MB)'}`);
+}

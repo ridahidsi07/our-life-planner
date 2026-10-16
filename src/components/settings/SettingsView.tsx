@@ -51,7 +51,7 @@ const SETTINGS_TABS: SegmentedControlOption<SettingsTab>[] = [
 ];
 
 const ACCENT_OPTIONS: { id: AccentColor; name: string; color: string; desc: string }[] = [
-  { id: 'apple', name: 'Apple-inspired', color: '#0071E3', desc: 'Calm neutral canvas with Apple website blue actions' },
+  { id: 'apple', name: 'Modern Neutral', color: '#0071E3', desc: 'Minimalist neutral canvas with clean cobalt blue accents' },
   { id: 'teal', name: 'Teal', color: '#087F83', desc: 'Calm emerald-cyan mineral palette' },
   { id: 'ocean', name: 'Ocean', color: '#1D6AE5', desc: 'Deep nautical blue, focused & clear' },
   { id: 'plum', name: 'Plum', color: '#7E22CE', desc: 'Refined purple-violet, creative & thoughtful' },
@@ -757,41 +757,41 @@ export const SettingsView: React.FC = () => {
               })}
             </div>
 
-            {/* Accent Tokens Preview */}
-            <div className="mt-3 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/40 space-y-2">
-              <div className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF] flex items-center gap-2">
-                <span>Theme tokens active ({currentAccent.toUpperCase()})</span>
+            {/* Theme Live Preview */}
+            <div className="mt-3 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 space-y-2">
+              <div className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <span>Live Theme Preview</span>
                 <span
                   className="px-2 py-0.5 rounded-md text-[10px] font-semibold"
                   style={{ backgroundColor: 'var(--accent-light)', color: 'var(--accent)' }}
                 >
-                  Active badge
+                  Active Theme
                 </span>
               </div>
-              <p className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
-                Semantic warning, error, and success indicators maintain strict meanings. Accent color tints interactive surfaces, active indicators, and charts.
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Interactive preview of your active theme color, button styling, and progress indicators.
               </p>
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <button
                   type="button"
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold shadow-2xs transition-colors"
+                  className="px-3.5 py-2 rounded-xl text-xs font-semibold shadow-2xs transition-colors min-h-[38px]"
                   style={{
                     backgroundColor: 'var(--btn-primary-bg)',
                     color: 'var(--btn-primary-fg)',
                   }}
                 >
-                  Primary button
+                  Sample Action
                 </button>
                 <button
                   type="button"
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors"
+                  className="px-3.5 py-2 rounded-xl text-xs font-semibold border transition-colors min-h-[38px]"
                   style={{
                     backgroundColor: 'var(--btn-tonal-bg)',
                     color: 'var(--btn-tonal-fg)',
                     borderColor: 'var(--btn-tonal-border)',
                   }}
                 >
-                  Tonal button
+                  Secondary Action
                 </button>
                 <div className="flex-1 min-w-[120px] h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
                   <div className="h-full rounded-full w-2/3" style={{ backgroundColor: 'var(--accent)' }} />

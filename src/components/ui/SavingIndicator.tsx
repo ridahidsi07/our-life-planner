@@ -64,12 +64,18 @@ export const SavingIndicator: React.FC<{ className?: string }> = ({ className = 
             <span>Saved & synced</span>
           </div>
         );
-      case 'saved_local':
-      case 'saved_online':
       case 'waiting_to_sync':
         return (
-          <div className={`flex items-center gap-1.5 text-xs text-[#526782] dark:text-[#A8B8CE] transition-opacity duration-150 ${className}`}>
-            <span className="w-2 h-2 rounded-full bg-[#10B981] motion-check-pop" />
+          <div className={`flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 transition-opacity duration-150 ${className}`}>
+            <Cloud className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <span>Saved locally · Sync pending</span>
+          </div>
+        );
+      case 'saved_local':
+      case 'saved_online':
+        return (
+          <div className={`flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 transition-opacity duration-150 ${className}`}>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 motion-check-pop" />
             <span>Saved locally</span>
           </div>
         );
