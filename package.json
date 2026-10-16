@@ -11,6 +11,7 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "test:all": "npx tsx scripts/run-all-tests.ts",
+    "deploy": "node scripts/deploy-gh-pages.mjs",
     "verify": "npm run lint && npm run build && npm run package && npm run test:all"
   },
   "dependencies": {
