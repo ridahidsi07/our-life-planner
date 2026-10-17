@@ -13,7 +13,7 @@ export default defineConfig(() => {
         configureServer(server) {
           server.middlewares.use((req, res, next) => {
             if (req.url && (req.url === '/Our-Life-Planner-Offline.html' || req.url.startsWith('/Our-Life-Planner-Offline.html?'))) {
-              const filePath = path.resolve(__dirname, 'public/Our-Life-Planner-Offline.html');
+              const filePath = path.resolve(import.meta.dirname, 'public/Our-Life-Planner-Offline.html');
               if (fs.existsSync(filePath)) {
                 res.setHeader('Content-Type', 'text/html; charset=utf-8');
                 return fs.createReadStream(filePath).pipe(res);
@@ -28,7 +28,7 @@ export default defineConfig(() => {
     ],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(import.meta.dirname, '.'),
       },
     },
     server: {

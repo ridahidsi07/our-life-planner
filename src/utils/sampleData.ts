@@ -18,6 +18,7 @@ import {
   WeightProfile,
   WeightRecord,
   WorkoutSession,
+  WeeklyReviewEntry,
 } from '../types/planner';
 
 export const INITIAL_SETTINGS: UserSettings = {
@@ -303,6 +304,54 @@ export const SAMPLE_TASKS: TaskItem[] = [
     createdAt: '2026-10-04T20:00:00Z',
     isSample: true,
   },
+  {
+    id: 't-13',
+    title: 'Review quarterly project deliverables',
+    category: 'Career',
+    assignedTo: 'Rida',
+    dueDate: '2026-10-05',
+    dueTime: '14:00',
+    scheduledStart: '14:00',
+    scheduledEnd: '15:00',
+    priority: 'urgent',
+    status: 'in_progress',
+    createdAt: '2026-10-02T09:00:00Z',
+    isSample: true,
+  },
+  {
+    id: 't-14',
+    title: 'Order fresh coffee beans & pantry staples',
+    category: 'Personal',
+    assignedTo: 'Rida',
+    dueDate: '2026-10-05',
+    dueTime: '17:30',
+    priority: 'medium',
+    status: 'not_started',
+    createdAt: '2026-10-03T11:30:00Z',
+    isSample: true,
+  },
+  {
+    id: 't-15',
+    title: 'Schedule seasonal vehicle maintenance',
+    category: 'Personal',
+    assignedTo: 'Partner / Family',
+    dueDate: '2026-10-08',
+    priority: 'low',
+    status: 'not_started',
+    createdAt: '2026-10-04T12:00:00Z',
+    isSample: true,
+  },
+  {
+    id: 't-16',
+    title: 'Review and balance monthly savings allocations',
+    category: 'Finances',
+    assignedTo: 'Rida',
+    dueDate: '2026-10-07',
+    priority: 'high',
+    status: 'not_started',
+    createdAt: '2026-10-03T16:00:00Z',
+    isSample: true,
+  },
 ];
 
 export const SAMPLE_ROUTINES: RoutineItem[] = [
@@ -408,6 +457,35 @@ export const SAMPLE_ROUTINES: RoutineItem[] = [
     skippedDates: [],
     isSample: true,
   },
+  {
+    id: 'r-8',
+    title: 'Evening wind-down & journal',
+    category: 'Personal',
+    assignedTo: 'Rida',
+    priority: 'high',
+    interval: 'daily',
+    startDate: '2026-09-01',
+    startTime: '21:30',
+    isPaused: false,
+    completedDates: ['2026-10-04', '2026-10-03', '2026-10-02'],
+    skippedDates: [],
+    isSample: true,
+  },
+  {
+    id: 'r-9',
+    title: 'Mid-week kitchen & fridge reset',
+    category: 'Personal',
+    assignedTo: 'Rida',
+    priority: 'medium',
+    interval: 'weekly',
+    weekdays: [3],
+    startDate: '2026-09-02',
+    startTime: '19:00',
+    isPaused: false,
+    completedDates: [],
+    skippedDates: [],
+    isSample: true,
+  },
 ];
 
 export const SAMPLE_GOALS: GoalItem[] = [
@@ -443,6 +521,40 @@ export const SAMPLE_GOALS: GoalItem[] = [
       { id: 'gs-8', title: 'Have a 30-min conversation with tutor', isCompleted: false },
     ],
     createdAt: '2026-09-01T10:00:00Z',
+    isSample: true,
+  },
+  {
+    id: 'g-3',
+    title: 'Run a 10K race',
+    category: 'Health',
+    motivation: 'Build endurance, strength, and daily energy.',
+    reward: 'New high-performance running shoes.',
+    deadline: '2026-11-20',
+    status: 'in_progress',
+    steps: [
+      { id: 'gs-9', title: 'Complete 5K baseline test run', isCompleted: true },
+      { id: 'gs-10', title: 'Establish 3x weekly progressive interval routine', isCompleted: true },
+      { id: 'gs-11', title: 'Run continuous 8K weekend training route', isCompleted: false },
+      { id: 'gs-12', title: 'Register and finish official 10K event', isCompleted: false },
+    ],
+    createdAt: '2026-09-10T10:00:00Z',
+    isSample: true,
+  },
+  {
+    id: 'g-4',
+    title: 'Build 6-Month Emergency Reserve',
+    category: 'Finances',
+    motivation: 'Total financial peace of mind and family resilience.',
+    reward: 'Celebratory fine dinner with loved ones.',
+    deadline: '2027-01-31',
+    status: 'in_progress',
+    steps: [
+      { id: 'gs-13', title: 'Audit monthly fixed baseline expenditures', isCompleted: true },
+      { id: 'gs-14', title: 'Automate transfer to high-yield reserve', isCompleted: true },
+      { id: 'gs-15', title: 'Reach $3,000 milestone threshold', isCompleted: true },
+      { id: 'gs-16', title: 'Fully fund $6,000 safety cushion target', isCompleted: false },
+    ],
+    createdAt: '2026-08-15T09:00:00Z',
     isSample: true,
   },
 ];
@@ -528,6 +640,24 @@ export const SAMPLE_BRAIN_DUMP: BrainDumpItem[] = [
     id: 'bd-5',
     text: 'Look into a weekend pottery class',
     createdAt: '2026-10-05T08:50:00Z',
+    isSample: true,
+  },
+  {
+    id: 'bd-6',
+    text: 'Research ergonomic monitor arm and standing desk setup',
+    createdAt: '2026-10-05T08:52:00Z',
+    isSample: true,
+  },
+  {
+    id: 'bd-7',
+    text: 'Look into winter mountain cabin weekend getaway dates',
+    createdAt: '2026-10-05T08:55:00Z',
+    isSample: true,
+  },
+  {
+    id: 'bd-8',
+    text: 'Draft agenda for next month product roadmap sync',
+    createdAt: '2026-10-05T08:58:00Z',
     isSample: true,
   },
 ];
@@ -662,6 +792,16 @@ export const SAMPLE_SAVINGS_POTS: SavingsPot[] = [
     deposits: [],
     isSample: true,
   },
+  {
+    id: 'pot-3',
+    name: 'Tech upgrade & workspace',
+    targetAmount: 1500.0,
+    targetDate: '2027-02-28',
+    openingBalance: 450.0,
+    openingDate: '2026-09-01',
+    deposits: [],
+    isSample: true,
+  },
 ];
 
 export const SAMPLE_DEBTS: DebtItem[] = [
@@ -783,6 +923,39 @@ export const SAMPLE_RECIPES: RecipeItem[] = [
       { name: 'Olive oil & rosemary', amount: 20, unit: 'ml' },
     ],
     instructions: '1. Chop sweet potatoes and zucchini into bite-sized chunks. 2. Toss with olive oil and rosemary. 3. Roast at 200°C for 30 minutes.',
+    isSample: true,
+  },
+  {
+    id: 'rec-8',
+    title: 'Overnight oats with chia & berries',
+    category: 'Quick',
+    baseServings: 2,
+    prepTimeMinutes: 5,
+    cookTimeMinutes: 0,
+    ingredients: [
+      { name: 'Rolled oats', amount: 100, unit: 'g' },
+      { name: 'Almond milk', amount: 250, unit: 'ml' },
+      { name: 'Chia seeds', amount: 20, unit: 'g' },
+      { name: 'Fresh blueberries', amount: 100, unit: 'g' },
+    ],
+    instructions: '1. Mix oats, chia seeds, and almond milk in a jar. 2. Refrigerate overnight. 3. Top with fresh berries before serving.',
+    isSample: true,
+  },
+  {
+    id: 'rec-9',
+    title: 'Mediterranean chopped salad',
+    category: 'Salad',
+    baseServings: 2,
+    prepTimeMinutes: 10,
+    cookTimeMinutes: 0,
+    ingredients: [
+      { name: 'Cucumbers', amount: 2, unit: 'count' },
+      { name: 'Cherry tomatoes', amount: 200, unit: 'g' },
+      { name: 'Kalamata olives', amount: 80, unit: 'g' },
+      { name: 'Feta cheese', amount: 100, unit: 'g' },
+      { name: 'Extra virgin olive oil', amount: 20, unit: 'ml' },
+    ],
+    instructions: '1. Dice cucumbers and halve cherry tomatoes. 2. Toss with olives, crumbled feta, and extra virgin olive oil with dried oregano.',
     isSample: true,
   },
 ];
@@ -908,6 +1081,43 @@ export const SAMPLE_PLANNED_MEALS: PlannedMeal[] = [
     isConsumed: false,
     isSample: true,
   },
+  {
+    id: 'pm-8',
+    date: '2026-10-05',
+    mealType: 'breakfast',
+    plannedTime: '08:00',
+    recipeId: 'rec-8',
+    recipeTitle: 'Overnight oats with chia & berries',
+    plannedServings: 2,
+    baseServings: 2,
+    ingredientsSnapshot: [
+      { name: 'Rolled oats', amount: 100, unit: 'g' },
+      { name: 'Almond milk', amount: 250, unit: 'ml' },
+      { name: 'Chia seeds', amount: 20, unit: 'g' },
+      { name: 'Fresh blueberries', amount: 100, unit: 'g' },
+    ],
+    isConsumed: true,
+    isSample: true,
+  },
+  {
+    id: 'pm-9',
+    date: '2026-10-07',
+    mealType: 'lunch',
+    plannedTime: '12:30',
+    recipeId: 'rec-9',
+    recipeTitle: 'Mediterranean chopped salad',
+    plannedServings: 2,
+    baseServings: 2,
+    ingredientsSnapshot: [
+      { name: 'Cucumbers', amount: 2, unit: 'count' },
+      { name: 'Cherry tomatoes', amount: 200, unit: 'g' },
+      { name: 'Kalamata olives', amount: 80, unit: 'g' },
+      { name: 'Feta cheese', amount: 100, unit: 'g' },
+      { name: 'Extra virgin olive oil', amount: 20, unit: 'ml' },
+    ],
+    isConsumed: false,
+    isSample: true,
+  },
 ];
 
 export const SAMPLE_GROCERIES: GroceryItem[] = [
@@ -996,6 +1206,81 @@ export const SAMPLE_GROCERIES: GroceryItem[] = [
     category: 'Household',
     isPurchased: false,
     sourceType: 'manual',
+    isSample: true,
+  },
+  {
+    id: 'gro-9',
+    name: 'Sourdough bread loaf',
+    amount: 1,
+    unit: 'pcs',
+    category: 'Bakery',
+    isPurchased: true,
+    sourceType: 'manual',
+    isSample: true,
+  },
+  {
+    id: 'gro-10',
+    name: 'Eggs (free-range)',
+    amount: 12,
+    unit: 'pcs',
+    category: 'Chilled',
+    isPurchased: true,
+    sourceType: 'manual',
+    isSample: true,
+  },
+  {
+    id: 'gro-11',
+    name: 'Rolled oats',
+    amount: 500,
+    unit: 'g',
+    category: 'Pantry',
+    isPurchased: false,
+    sourceType: 'generated',
+    sourceMealCount: 1,
+    isSample: true,
+  },
+  {
+    id: 'gro-12',
+    name: 'Chia seeds',
+    amount: 200,
+    unit: 'g',
+    category: 'Pantry',
+    isPurchased: false,
+    sourceType: 'generated',
+    sourceMealCount: 1,
+    isSample: true,
+  },
+  {
+    id: 'gro-13',
+    name: 'Fresh blueberries',
+    amount: 250,
+    unit: 'g',
+    category: 'Produce',
+    isPurchased: true,
+    sourceType: 'generated',
+    sourceMealCount: 1,
+    isSample: true,
+  },
+  {
+    id: 'gro-14',
+    name: 'Cherry tomatoes',
+    amount: 300,
+    unit: 'g',
+    category: 'Produce',
+    isPurchased: false,
+    sourceType: 'generated',
+    sourceMealCount: 1,
+    isSample: true,
+  },
+  {
+    id: 'gro-15',
+    name: 'Feta cheese block',
+    amount: 200,
+    unit: 'g',
+    category: 'Chilled',
+    isPurchased: false,
+    sourceType: 'generated',
+    sourceMealCount: 1,
     isSample: true,
   },
 ];
@@ -1245,6 +1530,47 @@ export const SAMPLE_CALENDAR_EVENTS: CalendarEvent[] = [
     notes: 'Personal work',
     isSample: true,
   },
+  {
+    id: 'ce-4',
+    title: 'Quarterly review & planning',
+    date: '2026-10-06',
+    startTime: '14:00',
+    endTime: '15:00',
+    isAllDay: false,
+    type: 'event',
+    notes: 'Product milestones alignment',
+    isSample: true,
+  },
+  {
+    id: 'ce-5',
+    title: 'Morning mindfulness walk',
+    date: '2026-10-07',
+    startTime: '07:00',
+    endTime: '07:45',
+    isAllDay: false,
+    type: 'free_time',
+    isSample: true,
+  },
+];
+
+export const SAMPLE_WEEKLY_REVIEWS: WeeklyReviewEntry[] = [
+  {
+    id: 'wr-entry-1',
+    weekStartDate: '2026-09-28',
+    weekEndDate: '2026-10-04',
+    reflection: 'Exceptional consistency across habits and daily routines. The portfolio project structure is locked in, and I maintained balanced sleep patterns throughout the work week.',
+    intentions: [
+      'Finalize core portfolio case studies and publish',
+      'Maintain 4x weekly strength and cardio sessions',
+      'Keep grocery spending within the planned $250 threshold',
+    ],
+    completedTasksCount: 2,
+    completedWorkoutsCount: 1,
+    habitCheckInsCount: 14,
+    completedAt: '2026-10-04T19:30:00Z',
+    updatedAt: '2026-10-04T19:30:00Z',
+    isSample: true,
+  },
 ];
 
 export const BASE_SAMPLE_REFERENCE_DATE = '2026-10-05';
@@ -1290,6 +1616,7 @@ export function generateRelativeSampleData(targetReferenceDate: string = '2026-1
       hydrationEntries: SAMPLE_HYDRATION_LOG,
       hydrationTargets: SAMPLE_HYDRATION_TARGETS,
       calendarEvents: SAMPLE_CALENDAR_EVENTS,
+      weeklyReviews: SAMPLE_WEEKLY_REVIEWS,
     };
   }
 
@@ -1317,6 +1644,7 @@ export function generateRelativeSampleData(targetReferenceDate: string = '2026-1
       hydrationEntries: SAMPLE_HYDRATION_LOG,
       hydrationTargets: SAMPLE_HYDRATION_TARGETS,
       calendarEvents: SAMPLE_CALENDAR_EVENTS,
+      weeklyReviews: SAMPLE_WEEKLY_REVIEWS,
     };
   }
 
@@ -1327,8 +1655,21 @@ export function generateRelativeSampleData(targetReferenceDate: string = '2026-1
       createdAt: shiftTimestampStr(t.createdAt, deltaDays),
       completedAt: t.completedAt ? shiftTimestampStr(t.completedAt, deltaDays) : t.completedAt,
     })),
-    routines: SAMPLE_ROUTINES,
-    goals: SAMPLE_GOALS,
+    routines: SAMPLE_ROUTINES.map((r) => ({
+      ...r,
+      startDate: shiftDateStr(r.startDate, deltaDays),
+      completedDates: Array.isArray(r.completedDates)
+        ? r.completedDates.map((d) => shiftDateStr(d, deltaDays))
+        : [],
+      skippedDates: Array.isArray(r.skippedDates)
+        ? r.skippedDates.map((d) => shiftDateStr(d, deltaDays))
+        : [],
+    })),
+    goals: SAMPLE_GOALS.map((g) => ({
+      ...g,
+      deadline: g.deadline ? shiftDateStr(g.deadline, deltaDays) : g.deadline,
+      createdAt: shiftTimestampStr(g.createdAt, deltaDays),
+    })),
     habits: SAMPLE_HABITS.map((h) => ({
       ...h,
       effectiveDate: shiftDateStr(h.effectiveDate, deltaDays),
@@ -1349,7 +1690,17 @@ export function generateRelativeSampleData(targetReferenceDate: string = '2026-1
       dueDate: shiftDateStr(b.dueDate, deltaDays),
       paidDate: b.paidDate ? shiftDateStr(b.paidDate, deltaDays) : b.paidDate,
     })),
-    savingsPots: SAMPLE_SAVINGS_POTS,
+    savingsPots: SAMPLE_SAVINGS_POTS.map((pot) => ({
+      ...pot,
+      openingDate: shiftDateStr(pot.openingDate, deltaDays),
+      targetDate: shiftDateStr(pot.targetDate, deltaDays),
+      deposits: Array.isArray(pot.deposits)
+        ? pot.deposits.map((dep) => ({
+            ...dep,
+            date: shiftDateStr(dep.date, deltaDays),
+          }))
+        : [],
+    })),
     debts: SAMPLE_DEBTS,
     recipes: SAMPLE_RECIPES,
     plannedMeals: SAMPLE_PLANNED_MEALS.map((pm) => ({
@@ -1377,6 +1728,13 @@ export function generateRelativeSampleData(targetReferenceDate: string = '2026-1
     calendarEvents: SAMPLE_CALENDAR_EVENTS.map((ce) => ({
       ...ce,
       date: shiftDateStr(ce.date, deltaDays),
+    })),
+    weeklyReviews: SAMPLE_WEEKLY_REVIEWS.map((wr) => ({
+      ...wr,
+      weekStartDate: shiftDateStr(wr.weekStartDate, deltaDays),
+      weekEndDate: shiftDateStr(wr.weekEndDate, deltaDays),
+      completedAt: wr.completedAt ? shiftTimestampStr(wr.completedAt, deltaDays) : wr.completedAt,
+      updatedAt: wr.updatedAt ? shiftTimestampStr(wr.updatedAt, deltaDays) : wr.updatedAt,
     })),
   };
 }

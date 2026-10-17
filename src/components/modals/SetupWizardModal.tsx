@@ -286,6 +286,35 @@ export const SetupWizardModal: React.FC = () => {
         {/* STEP 1: Profile & Locale */}
         {step === 1 && (
           <form onSubmit={handleStep1Submit} className="space-y-5">
+            {!isRerun && (
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-teal-500/10 via-sky-500/10 to-indigo-500/10 border border-teal-500/30 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-teal-500/20 text-teal-700 dark:text-teal-300 flex items-center justify-center shrink-0">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div className="text-left">
+                    <div className="text-xs font-bold text-[#071A3A] dark:text-[#EDF4FF]">
+                      Want to test drive right away?
+                    </div>
+                    <div className="text-[11px] text-[#526782] dark:text-[#A8B8CE]">
+                      Explore with full realistic demo data across all modules.
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  data-testid="setup-quick-demo-btn"
+                  onClick={() => {
+                    loadSampleData();
+                    setActiveModal(null);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-bold hover:opacity-95 shadow-xs transition-all cursor-pointer whitespace-nowrap shrink-0"
+                >
+                  Load All Demo Data
+                </button>
+              </div>
+            )}
+
             {/* Edition Selection */}
             <div role="radiogroup" aria-label="Planner edition" className="grid grid-cols-2 gap-3">
               <button

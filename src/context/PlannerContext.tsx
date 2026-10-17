@@ -822,6 +822,13 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const storedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
       const storedRevisionRaw = localStorage.getItem(STORAGE_KEY_REVISION);
 
+      const isDemoRequested = typeof window !== 'undefined' && /[?&]demo(=(true|1))?/i.test(window.location.search);
+
+      if (isDemoRequested && (!storedSettings || !storedData)) {
+        loadSampleData();
+        return;
+      }
+
       if (!storedSettings && !storedData) {
         // First visit: open setup wizard
         setActiveModal('setup');
@@ -2525,13 +2532,14 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setHydrationEntries(relative.hydrationEntries); hydrationEntriesRef.current = relative.hydrationEntries;
     setHydrationTargets(relative.hydrationTargets); hydrationTargetsRef.current = relative.hydrationTargets;
     setCalendarEvents(relative.calendarEvents); calendarEventsRef.current = relative.calendarEvents;
-    setWeeklyReviews([]); weeklyReviewsRef.current = [];
+    setWeeklyReviews(relative.weeklyReviews || []); weeklyReviewsRef.current = relative.weeklyReviews || [];
     updateSettings({
       budgetOpeningBalance: INITIAL_SETTINGS.budgetOpeningBalance,
       budgetPlannedIncome: INITIAL_SETTINGS.budgetPlannedIncome,
       budgetPlannedSavings: INITIAL_SETTINGS.budgetPlannedSavings,
       budgetCategoryLimits: INITIAL_SETTINGS.budgetCategoryLimits,
       isSampleDataActive: true,
+      hasCompletedSetup: true,
     });
   };
 
