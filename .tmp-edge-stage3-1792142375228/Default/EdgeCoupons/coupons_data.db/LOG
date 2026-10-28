@@ -1,5 +1,0 @@
-2026/10/16-09:19:37.672 3574 Creating DB C:\Users\Rida\Desktop\web app business\our-life-planner build\dist\.tmp-edge-stage3-1792142375228\Default\EdgeCoupons/coupons_data.db since it was missing.
-2026/10/16-09:19:37.682 3574 Reusing MANIFEST C:\Users\Rida\Desktop\web app business\our-life-planner build\dist\.tmp-edge-stage3-1792142375228\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
-2026/10/16-09:19:37.823 2618 Level-0 table #5: started
-2026/10/16-09:19:37.827 2618 Level-0 table #5: 683273 bytes OK
-2026/10/16-09:19:37.829 2618 Delete type=0 #3

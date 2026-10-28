@@ -1,34 +1,72 @@
-const CACHE_VERSION = 'v1-indexDhShGUpMjs-indexCErgnZ2css';
+const CACHE_VERSION = 'v1-indexGnhAoXeAjs-indexCwg4vGncss';
 const CACHE_PREFIX = 'our-life-planner-shell-';
 const CACHE_NAME = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
+// Precache assets specified relative to the service worker scope
 const PRECACHE_ASSETS = [
-  "/",
-  "/index.html",
-  "/manifest.webmanifest",
-  "/icon-192.svg",
-  "/icon-512.svg",
-  "/assets/index-CErgn_Z2.css",
-  "/assets/index-DhShGUpM.js"
+  "./",
+  "./index.html",
+  "./manifest.webmanifest",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./icon-maskable-192.png",
+  "./icon-maskable-512.png",
+  "./apple-touch-icon.png",
+  "./icon-192.svg",
+  "./icon-512.svg",
+  "./assets/index-Cwg4v-Gn.css",
+  "./assets/index-GnhAoXeA.js"
 ];
+
+function getScopeBaseUrl() {
+  const scope = self.registration ? self.registration.scope : self.location.href;
+  return scope.endsWith('/') ? scope : scope + '/';
+}
+
+function toAbsoluteUrl(relOrAbs) {
+  return new URL(relOrAbs, getScopeBaseUrl()).href;
+}
 
 async function precacheAppShell() {
   const cache = await caches.open(CACHE_NAME);
-  await Promise.all(
-    PRECACHE_ASSETS.map(async (assetUrl) => {
-      try {
-        const response = await fetch(assetUrl, { cache: 'reload' });
-        if (response && response.ok) {
-          await cache.put(assetUrl, response.clone());
-          if (assetUrl === '/index.html') {
-            await cache.put('/', response.clone());
+  const scopeUrl = toAbsoluteUrl('./');
+  const indexUrl = toAbsoluteUrl('./index.html');
+
+  try {
+    await Promise.all(
+      PRECACHE_ASSETS.map(async (assetPath) => {
+        const fullUrl = toAbsoluteUrl(assetPath);
+        const response = await fetch(fullUrl, { cache: 'reload' });
+        if (!response || !response.ok) {
+          throw new Error(
+            `[SW] Precache failed for required asset: ${assetPath} (status: ${
+              response ? response.status : 'network error'
+            })`
+          );
+        }
+        await cache.put(fullUrl, response.clone());
+        const pathname = new URL(fullUrl).pathname;
+        if (pathname !== fullUrl) {
+          await cache.put(pathname, response.clone());
+        }
+        if (assetPath === './index.html' || fullUrl === indexUrl) {
+          await cache.put(scopeUrl, response.clone());
+          const scopePath = new URL(scopeUrl).pathname;
+          if (scopePath !== scopeUrl) {
+            await cache.put(scopePath, response.clone());
           }
         }
-      } catch (err) {
-        console.warn('[SW] Could not precache asset:', assetUrl, err);
-      }
-    })
-  );
+      })
+    );
+  } catch (err) {
+    console.error('[SW] Precache failed; aborting install to preserve previous release:', err);
+    try {
+      await caches.delete(CACHE_NAME);
+    } catch {
+      // ignore deletion errors
+    }
+    throw err;
+  }
 }
 
 self.addEventListener('install', (event) => {
@@ -74,20 +112,40 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       (async () => {
         const cache = await caches.open(CACHE_NAME);
+        const scopeUrl = toAbsoluteUrl('./');
+        const indexUrl = toAbsoluteUrl('./index.html');
+        const scopePath = new URL(scopeUrl).pathname;
+        const indexPath = new URL(indexUrl).pathname;
+
         try {
           const networkResponse = await fetch(request);
           if (networkResponse && networkResponse.ok) {
-            await cache.put('/index.html', networkResponse.clone());
-            await cache.put('/', networkResponse.clone());
+            await cache.put(indexUrl, networkResponse.clone());
+            await cache.put(scopeUrl, networkResponse.clone());
+            await cache.put(indexPath, networkResponse.clone());
+            await cache.put(scopePath, networkResponse.clone());
           }
           return networkResponse;
         } catch {
+          // Offline navigation fallback: check exact URL, then index/scope URLs, then pathnames
           const cachedExact = await cache.match(request);
           if (cachedExact) return cachedExact;
-          const cachedIndex = await cache.match('/index.html');
-          if (cachedIndex) return cachedIndex;
-          const cachedRoot = await cache.match('/');
-          if (cachedRoot) return cachedRoot;
+
+          const cachedIndexUrl = await cache.match(indexUrl);
+          if (cachedIndexUrl) return cachedIndexUrl;
+
+          const cachedScopeUrl = await cache.match(scopeUrl);
+          if (cachedScopeUrl) return cachedScopeUrl;
+
+          const cachedIndexPath = await cache.match(indexPath);
+          if (cachedIndexPath) return cachedIndexPath;
+
+          const cachedScopePath = await cache.match(scopePath);
+          if (cachedScopePath) return cachedScopePath;
+
+          const cachedFallback = (await cache.match('/index.html')) || (await cache.match('/'));
+          if (cachedFallback) return cachedFallback;
+
           return new Response(
             '<!doctype html><html><head><meta charset="utf-8"><title>Offline</title></head><body><h1>Our Life Planner</h1><p>Offline cache is not yet initialized. Please reconnect once and reload.</p></body></html>',
             {
@@ -109,18 +167,26 @@ self.addEventListener('fetch', (event) => {
       if (cached) {
         return cached;
       }
+
+      const cachedPath = await cache.match(url.pathname);
+      if (cachedPath) {
+        return cachedPath;
+      }
+
       try {
         const networkResponse = await fetch(request);
         if (
           networkResponse &&
           networkResponse.ok &&
-          (url.pathname.startsWith('/assets/') ||
+          (url.pathname.includes('/assets/') ||
+            url.pathname.endsWith('.png') ||
             url.pathname.endsWith('.svg') ||
             url.pathname.endsWith('.webmanifest') ||
             url.pathname.endsWith('.css') ||
             url.pathname.endsWith('.js'))
         ) {
           await cache.put(request, networkResponse.clone());
+          await cache.put(url.pathname, networkResponse.clone());
         }
         return networkResponse;
       } catch (err) {
@@ -149,20 +215,68 @@ self.addEventListener('message', (event) => {
         try {
           const cache = await caches.open(CACHE_NAME);
           const keys = await cache.keys();
-          const cachedPaths = keys.map((req) => new URL(req.url).pathname);
+          const cachedUrls = keys.map((req) => req.url);
+          const cachedPaths = keys.map((req) => {
+            try {
+              return new URL(req.url).pathname;
+            } catch {
+              return req.url;
+            }
+          });
+
+          const indexUrl = toAbsoluteUrl('./index.html');
+          const scopeUrl = toAbsoluteUrl('./');
+          const indexPath = new URL(indexUrl).pathname;
+          const scopePath = new URL(scopeUrl).pathname;
+
           const hasHtml =
-            cachedPaths.includes('/index.html') || cachedPaths.includes('/');
-          const hasBundle =
-            PRECACHE_ASSETS.filter((p) => p.startsWith('/assets/')).every((p) =>
-              cachedPaths.includes(p)
-            );
+            cachedUrls.includes(indexUrl) ||
+            cachedUrls.includes(scopeUrl) ||
+            cachedPaths.includes(indexPath) ||
+            cachedPaths.includes(scopePath) ||
+            cachedPaths.includes('/index.html') ||
+            cachedPaths.includes('/');
+
+          const jsAssets = PRECACHE_ASSETS.filter((p) => p.endsWith('.js') || p.includes('.js?'));
+          const cssAssets = PRECACHE_ASSETS.filter((p) => p.endsWith('.css') || p.includes('.css?'));
+
+          const hasAnyJs =
+            cachedPaths.some((p) => p.endsWith('.js')) ||
+            cachedUrls.some((u) => u.includes('.js'));
+          const hasAnyCss =
+            cachedPaths.some((p) => p.endsWith('.css')) ||
+            cachedUrls.some((u) => u.includes('.css'));
+
+          const hasJs =
+            jsAssets.length > 0
+              ? jsAssets.every((p) => {
+                  const full = toAbsoluteUrl(p);
+                  const pth = new URL(full).pathname;
+                  return cachedUrls.includes(full) || cachedPaths.includes(pth);
+                })
+              : hasAnyJs;
+
+          const hasCss =
+            cssAssets.length > 0
+              ? cssAssets.every((p) => {
+                  const full = toAbsoluteUrl(p);
+                  const pth = new URL(full).pathname;
+                  return cachedUrls.includes(full) || cachedPaths.includes(pth);
+                })
+              : hasAnyCss;
+
+          const isShellComplete = Boolean(hasHtml && hasJs && hasCss);
+
           if (replyPort) {
             replyPort.postMessage({
               ok: true,
               cacheName: CACHE_NAME,
               version: CACHE_VERSION,
               cachedPaths,
-              isShellComplete: hasHtml && hasBundle,
+              hasHtml,
+              hasJs,
+              hasCss,
+              isShellComplete,
             });
           }
         } catch (err) {
@@ -191,7 +305,13 @@ self.addEventListener('message', (event) => {
           await precacheAppShell();
           const cache = await caches.open(CACHE_NAME);
           const keys = await cache.keys();
-          const cachedPaths = keys.map((req) => new URL(req.url).pathname);
+          const cachedPaths = keys.map((req) => {
+            try {
+              return new URL(req.url).pathname;
+            } catch {
+              return req.url;
+            }
+          });
           if (replyPort) {
             replyPort.postMessage({
               ok: true,
